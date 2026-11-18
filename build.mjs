@@ -15,7 +15,7 @@ html=html.replace(cspOld,cspNew);
 // Surgical replacement of existing scripts; all other scripts stay unchanged.
 for(const [id,file] of [
  ['cruzclick-firebase-config-v420','firebase-config-4.5.4.js'],
- ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.6.js'],
+ ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.9.js'],
  ['cru443-search-engine','search-engine-4.5.7.js']
 ]){
  const start=html.search(new RegExp(`<script\\b[^>]*\\bid="${id}"[^>]*>`));
@@ -25,13 +25,22 @@ for(const [id,file] of [
  if(contentEnd<0)throw Error(`Unclosed ${id}`);
  html=html.slice(0,contentStart)+readFileSync(file,'utf8')+html.slice(contentEnd);
 }
-const stepperCss=readFileSync('checkout-stepper-4.5.8.css','utf8');
-const stepperJs=readFileSync('checkout-stepper-4.5.8.js','utf8');
-if(!html.includes('</body>')||html.includes('crx-checkout-stepper-v458'))throw Error('Checkout injection point mismatch');
-html=html.replace('</body>', `<style id="crx-checkout-stepper-v458-style">\n${stepperCss}\n</style><script id="crx-checkout-stepper-v458">\n${stepperJs}\n</script>\n</body>`);
+// Adjuntar el comprobante al pedido original antes de persistirlo, sin cambiar el carrito.
+const originalPayment="payment:{method:String($('jmv2PaymentMethod')?.value||'Coordinar por WhatsApp'),reference:String($('jmv2PaymentReference')?.value||'').trim().slice(0,80),status:'Pendiente',confirmedAt:null}";
+const updatedPayment="payment:{method:String($('jmv2PaymentMethod')?.value||'Coordinar por WhatsApp'),reference:String($('jmv2PaymentReference')?.value||'').trim().slice(0,80),status:'Comprobante enviado',confirmedAt:null,receiptDataUrl:String(window.CruLoxCheckoutReceipt?.dataUrl||''),receiptName:String(window.CruLoxCheckoutReceipt?.fileName||'').slice(0,120),receiptUploadedAt:new Date().toISOString()}";
+if(html.split(originalPayment).length!==2)throw Error('Original payment contract changed');
+html=html.replace(originalPayment,updatedPayment);
+const oldSave='state.orders.unshift(order);safeWrite(KEYS.orders,state.orders);';
+const safeSave="state.orders.unshift(order);if(!safeWrite(KEYS.orders,state.orders)){state.orders.shift();restoreReservation(order,'storage-failed');throw new Error('No fue posible guardar el pedido y el comprobante en este dispositivo.');}";
+if(html.split(oldSave).length!==2)throw Error('Original order storage contract changed');
+html=html.replace(oldSave,safeSave);
+const stepperCss=readFileSync('checkout-stepper-4.5.9.css','utf8');
+const stepperJs=readFileSync('checkout-stepper-4.5.9.js','utf8');
+if(!html.includes('</body>')||html.includes('crx-checkout-stepper-v459'))throw Error('Checkout injection point mismatch');
+html=html.replace('</body>', `<style id="crx-checkout-stepper-v459-style">\n${stepperCss}\n</style><script id="crx-checkout-stepper-v459">\n${stepperJs}\n</script>\n</body>`);
 const output=Buffer.from(html,'utf8');
-const expected='97bae6c4bb588e70cc53100d1788a555eaacbd2579a784b3d2647a82dcd6bf02';
+const expected='8bc9ad8465a9ce289f653a6d3a24f7a8cc5d1d5516dd360735337ac9b0bf09fe';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.8 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.9 generated, ${output.length} bytes, SHA-256 ${expected}`);

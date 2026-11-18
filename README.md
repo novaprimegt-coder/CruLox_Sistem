@@ -1,15 +1,7 @@
-# CruLox Sistem V4.5.8
+# CruLox Sistem V4.5.9
 
-Base V4.5.7 íntegra. Único cambio funcional: checkout en asistente animado de 3 pasos secuenciales obligatorios.
+Actualización limitada al diseño y flujo de compra, información de cuentas existentes, carga previa obligatoria de comprobante y restauración de fotografía en el encabezado.
 
-## Flujo de compra
+La evidencia del pedido se guarda en almacenamiento del navegador porque Firestore restringe los pedidos y Firebase Storage no está habilitado. **Esto no garantiza disponibilidad del comprobante en otros dispositivos ni en el panel remoto.** No se han añadido cuentas bancarias inventadas: solo Banrural y Banco Azteca usan las cuentas que ya estaban publicadas en el detalle de pedidos. Para otros métodos se bloquea el avance hasta configurar detalles oficiales.
 
-1. Datos de activación (validación obligatoria).
-2. Pago y entrega (validación obligatoria).
-3. Revisión final y envío por el manejador anterior, sin modificar pedidos, carrito ni precios.
-
-Los controles no permiten saltar pasos. Se conserva la información reutilizable por cuenta en el mismo navegador: identificadores de juego, correos de activación y método de pago escogido. No se guardan contraseñas, credenciales financieras, referencia de pago ni notas específicas de cada pedido.
-
-El navegador respeta la preferencia de movimiento reducido. Las animaciones y el estilo son una implementación HTML/CSS/JS autocontenida del Stepper suministrado, evitando migrar el sistema a React.
-
-Para compilar: `npm run build`. El script comprueba SHA-256 del HTML reconstruido. No implica sincronización de pedidos con Firestore ni cambios en su base de datos.
+El build conserva el HTML aprobado y reemplaza exclusivamente los módulos identificados. Las operaciones comerciales no deben declararse sincronizadas hasta disponer de backend y reglas seguras.
