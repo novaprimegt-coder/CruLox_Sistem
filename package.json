@@ -1,9 +1,7 @@
 {
   "name": "crulox-sistem",
-  "version": "4.5.2",
+  "version": "4.5.4",
   "private": true,
   "type": "module",
-  "scripts": {
-    "build": "node build.mjs"
-  }
+  "scripts": {"build": "node build.mjs"}
 }
