@@ -12,10 +12,11 @@ const cspOld="script-src 'self' 'unsafe-inline' blob:;";
 const cspNew="script-src 'self' 'unsafe-inline' blob: https://www.gstatic.com;";
 if(html.split(cspOld).length!==2)throw Error('CSP baseline mismatch');
 html=html.replace(cspOld,cspNew);
-// Surgical replacement of two existing Firebase scripts; all other scripts stay unchanged.
+// Surgical replacement of existing scripts; all other scripts stay unchanged.
 for(const [id,file] of [
  ['cruzclick-firebase-config-v420','firebase-config-4.5.4.js'],
- ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.6.js']
+ ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.6.js'],
+ ['cru443-search-engine','search-engine-4.5.7.js']
 ]){
  const start=html.search(new RegExp(`<script\\b[^>]*\\bid="${id}"[^>]*>`));
  if(start<0)throw Error(`Missing ${id}`);
@@ -25,8 +26,8 @@ for(const [id,file] of [
  html=html.slice(0,contentStart)+readFileSync(file,'utf8')+html.slice(contentEnd);
 }
 const output=Buffer.from(html,'utf8');
-const expected='a25f06c95579e389788a791403dc9c06ea92398c977e983c31fc4f74fd779ed2';
+const expected='7b2b59897f142aa0e9314c2831fd342ef3a40469fed57a757b15470428b06aea';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.6 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.7 generated, ${output.length} bytes, SHA-256 ${expected}`);
