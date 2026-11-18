@@ -1,0 +1,1119 @@
+gar respaldo completo · privado';fullMobile._np110BaseTitle=fullMobile.title;fullMobile.desc='Descarga el respaldo restaurable completo. Puede incluir hashes de acceso: no lo compartas públicamente.';fullMobile.group='system';fullMobile.icon='🔒';fullMobile.action=()=>typeof exportBackup==='function'?exportBackup():notify('El respaldo completo no está disponible.','warn');fullMobile._np116Wrapped=false}
+}
+
+function rerankTools(){const forced=['go-orders','go-inventory','go-products','v105-team-chat','go-users','v105-team-assign','v105-team-agents','v105-team-permissions','go-combos','go-promos','price-at-least-10','price-at-least-20','price-at-least-75','price-at-least-50','price-at-least-40','reviews-at-least-100','v111-order-value-5','v111-order-value-3','v111-order-value-2','v111-order-value-1','system-backup','v111-inventory-value-4','v111-inventory-value-5','v111-inventory-value-6','go-backup','go-activity','go-dashboard','go-categories','go-store','go-faq'];const fm=new Map(forced.map((id,i)=>[id,100000-i*1000]));const gs={operations:9000,catalog:8200,team:7900,customers:7100,growth:6100,system:5600,analytics:4800,home:4000};tools.forEach((t,i)=>{if(t._np116Origin==null)t._np116Origin=i;t._np110BaseTitle=String(t.title||'').replace(/^\s*#?\d+\s*[·.\-:]\s*/,'').trim()});const score=t=>{if(fm.has(t.id))return fm.get(t.id);let v=gs[t.group]||3000,s=normx(`${t.title} ${t.desc} ${t.id}`);if(/alerta|sin responsable|agotad|stock bajo|integridad|diagnostico/.test(s))v+=1200;if(/compartir|imprimir|exportar|respaldo/.test(s))v+=420;if(/rango|exacto|≥|≤|q\d+|control .* \d+$/.test(s))v-=1300;if(/^v105-qa-/.test(t.id))v-=3000;return v-(t._np116Origin||0)/1000};tools.sort((a,b)=>score(b)-score(a)||(a._np116Origin-b._np116Origin));tools.forEach((t,i)=>{t.rank=i+1;t.title=t._np110BaseTitle})}
+
+const ROLE_PRESETS={packing:{label:'Empaque',groups:['operations'],sections:['orders','np-fulfillment','inventory','np-order-chat','np-assignments']},support:{label:'Atención',groups:['customers','operations'],sections:['users','orders','np-customer-notes','np-order-chat','np-assignments']},catalog:{label:'Catálogo',groups:['catalog'],sections:['products','combos','categories','inventory','np-media']},sales:{label:'Ventas',groups:['operations','growth','analytics'],sections:['orders','promotions','np-sales','np-order-analytics','np-customer-analytics','np-order-chat']},supervisor:{label:'Supervisor',groups:['catalog','operations','customers','growth','analytics','team'],sections:['products','combos','categories','inventory','orders','users','promotions','faqs','settings','np-order-chat','np-assignments','np-team-load']},custom:{label:'Personalizado',groups:[],sections:[]}};
+function renderPermissionsCenter(){if(state.session?.role!=='admin')return notify('Solo el administrador puede modificar permisos.','warn');state.adminSection='np-permissions';if(byId('adminTitle'))byId('adminTitle').textContent='Roles y permisos';const agents=currentAgents(),active=agents.filter(a=>a.active!==false),toolGrants=agents.reduce((s,a)=>s+arr(a.permissions?.tools).length,0),sectionGrants=agents.reduce((s,a)=>s+arr(a.permissions?.sections).length,0);byId('adminContent').innerHTML=`<section class="np-v116-perm-shell"><header class="np-v116-report-head"><div><h2>Control real de acceso</h2><p>Configura exactamente qué módulos y herramientas puede utilizar cada agente. Los permisos se convierten a acceso explícito para que una cuenta no vea funciones no autorizadas.</p></div><button class="btn btn-primary btn-sm" id="npV116AddAgent">+ Agente</button></header><div class="np-v116-perm-summary"><div><small>Agentes</small><b>${agents.length}</b></div><div><small>Activos</small><b>${active.length}</b></div><div><small>Herramientas concedidas</small><b>${toolGrants}</b></div><div><small>Módulos concedidos</small><b>${sectionGrants}</b></div></div><div class="np-v116-agent-perm-list">${agents.length?agents.map(a=>`<article class="np-v116-agent-perm"><div><h3>${h(a.name||a.username||'Agente')}</h3><p>${h(a.email||'')} · ${h(ROLE_PRESETS[a.preset]?.label||a.area||'Personalizado')} · ${a.active===false?'Suspendido':'Activo'}</p><div class="np-v116-agent-perm-tags"><span>${arr(a.permissions?.tools).length} herramientas</span><span>${arr(a.permissions?.sections).length} módulos</span><span>${a.permissions?.strictV110?'Acceso estricto':'Requiere normalización'}</span></div></div><button class="btn btn-secondary btn-sm" data-v116-perm-agent="${h(a.id)}">Administrar</button></article>`).join(''):`<div class="np-v116-empty"><b>No hay agentes creados.</b><span>Crea una cuenta interna antes de configurar permisos.</span></div>`}</div></section>`;byId('npV116AddAgent').onclick=()=>team?.renderAgents?.();qsa('[data-v116-perm-agent]',byId('adminContent')).forEach(b=>b.onclick=()=>openPermissionEditor(b.dataset.v116PermAgent));scrollAdminTop();}
+function openPermissionEditor(agentId){const agent=team?.agentById?.(agentId);if(!agent||!byId('crudModal'))return;const modules=[];Object.entries(team.modules||{}).forEach(([group,items])=>arr(items).forEach(item=>{const [section,icon,label,desc]=item;if(['np-agents','np-permissions'].includes(section))return;modules.push({section,group,icon,label,desc})}));const selectedTools=new Set(arr(agent.permissions?.tools)),selectedSections=new Set(arr(agent.permissions?.sections));byId('crudTitle').textContent=`Permisos · ${agent.name||agent.username}`;byId('crudBody').innerHTML=`<form id="npV116PermForm" class="np-v116-perm-editor"><div class="np-v116-perm-toolbar"><input id="npV116PermSearch" type="search" placeholder="Buscar #, herramienta o función…"><select id="npV116PermPreset">${Object.entries(ROLE_PRESETS).map(([k,v])=>`<option value="${k}" ${agent.preset===k?'selected':''}>${h(v.label)}</option>`).join('')}</select><button type="button" class="btn btn-secondary btn-sm" id="npV116ApplyPreset">Aplicar plantilla</button></div><div class="np-v116-perm-count"><span>Selecciona módulos o herramientas concretas.</span><b id="npV116PermCount">${selectedTools.size} herramientas · ${selectedSections.size} módulos</b></div><div><div class="np-v116-report-head"><div><h2>Módulos</h2><p>Permiten entrar a una sección administrativa concreta.</p></div></div><div class="np-v116-module-grid" id="npV116ModuleGrid">${modules.map(m=>`<label class="np-v116-module-item"><input type="checkbox" data-v116-section="${h(m.section)}" ${selectedSections.has(m.section)?'checked':''}><span><b>${m.icon||'•'} ${h(m.label)}</b><small>${h(m.desc||m.group)}</small></span><em>${h(m.group)}</em></label>`).join('')}</div></div><div><div class="np-v116-report-head"><div><h2>Herramientas</h2><p>El agente solo verá herramientas incluidas explícitamente en su acceso.</p></div><div class="np-ac24-inline"><button type="button" class="np-ac24-mini" id="npV116SelectVisible">Seleccionar visibles</button><button type="button" class="np-ac24-mini" id="npV116ClearTools">Limpiar</button></div></div><div class="np-v116-tool-list" id="npV116PermTools">${tools.map(t=>`<label class="np-v116-tool-item" data-v116-tool-row><input type="checkbox" data-v116-tool="${h(t.id)}" ${selectedTools.has(t.id)?'checked':''}><span><b>#${t.rank} · ${h(t.title)}</b><small>${h(t.desc||'')}</small></span><em>${h(t.group)}</em></label>`).join('')}</div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar acceso estricto</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`;openModal('crudModal');const form=byId('npV116PermForm'),search=byId('npV116PermSearch'),count=byId('npV116PermCount'),list=byId('npV116PermTools');const repaint=()=>{count.textContent=`${qsa('[data-v116-tool]:checked',form).length} herramientas · ${qsa('[data-v116-section]:checked',form).length} módulos`};let npPermSearchTimer=0;search.oninput=()=>{clearTimeout(npPermSearchTimer);npPermSearchTimer=setTimeout(()=>{const q=normx(search.value);qsa('[data-v116-tool-row]',list).forEach(row=>{row.hidden=!!q&&!normx(row.textContent).includes(q)&&!normx(row.querySelector('[data-v116-tool]')?.dataset.v116Tool).includes(q)})},110)};byId('npV116SelectVisible').onclick=()=>{qsa('[data-v116-tool-row]:not([hidden]) input',list).forEach(x=>x.checked=true);repaint()};byId('npV116ClearTools').onclick=()=>{qsa('[data-v116-tool]',form).forEach(x=>x.checked=false);repaint()};form.onchange=repaint;byId('npV116ApplyPreset').onclick=()=>{const key=byId('npV116PermPreset').value,p=ROLE_PRESETS[key]||ROLE_PRESETS.custom;qsa('[data-v116-section]',form).forEach(x=>x.checked=p.sections.includes(x.dataset.v116Section));qsa('[data-v116-tool]',form).forEach(x=>{const t=toolById.get(x.dataset.v116Tool);x.checked=!!t&&(p.groups.includes(t.group)||(t.section&&p.sections.includes(t.section)))});repaint()};form.onsubmit=e=>{e.preventDefault();const sections=qsa('[data-v116-section]:checked',form).map(x=>x.dataset.v116Section);const selected=qsa('[data-v116-tool]:checked',form).map(x=>x.dataset.v116Tool);const expanded=new Set(selected);tools.forEach(t=>{if(t.section&&sections.includes(t.section))expanded.add(t.id)});agent.preset=byId('npV116PermPreset').value;agent.permissions={tools:[...expanded].filter(id=>tools.some(t=>t.id===id)),sections:[...new Set([...sections,...[...expanded].map(id=>toolById.get(id)?.section).filter(Boolean)])],groups:[],strictV110:true};agent.updatedAt=new Date().toISOString();team.saveAgents?.();closeModal('crudModal');notify('Permisos guardados y normalizados.','success');renderPermissionsCenter()};}
+
+document.addEventListener('click',e=>{const b=e.target.closest?.('[data-agent-perms]');if(!b||state.session?.role!=='admin')return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openPermissionEditor(b.dataset.agentPerms)},true);
+
+function saveAssignments(){try{localStorage.setItem('jm_digital_v1_assignments',JSON.stringify(currentAssignments()));return true}catch(e){recordIssue('assignments-save',e);notify('No fue posible guardar la asignación.','error');return false}}
+function renderAssignmentsCenter(){if(state.session?.role==='agent'&&!team?.canUseSection?.('np-assignments')&&!team?.canUseSection?.('orders'))return notify('Esta cuenta no tiene permiso para asignaciones.','warn');state.adminSection='np-assignments';if(byId('adminTitle'))byId('adminTitle').textContent='Asignaciones';const orders=state.orders,agents=currentAgents().filter(a=>a.active!==false),as=currentAssignments(),assigned=orders.filter(o=>as[o.id]).length;byId('adminContent').innerHTML=`<section class="np-v116-report"><header class="np-v116-report-head"><div><h2>Responsables por pedido</h2><p>Asigna cada pedido a una persona concreta y detecta inmediatamente qué pedidos siguen sin responsable.</p></div></header><div class="np-v116-home-strip"><div class="np-v116-now"><small>Pedidos</small><strong>${orders.length}</strong></div><div class="np-v116-now ok"><small>Asignados</small><strong>${assigned}</strong></div><div class="np-v116-now ${orders.length-assigned?'warn':'ok'}"><small>Sin asignar</small><strong>${orders.length-assigned}</strong></div><div class="np-v116-now"><small>Agentes activos</small><strong>${agents.length}</strong></div></div><div class="np-v116-assign-toolbar"><input id="npV116AssignSearch" type="search" placeholder="Buscar pedido o cliente…"><select id="npV116AssignFilter"><option value="all">Todos</option><option value="unassigned">Sin asignar</option><option value="active">Activos</option><option value="closed">Cerrados</option></select></div><div class="np-v116-assignment-list" id="npV116AssignmentList"></div></section>`;const draw=()=>{const q=normx(byId('npV116AssignSearch').value),f=byId('npV116AssignFilter').value;let list=orders.filter(o=>!q||normx(`${o.id} ${o.customer?.fullName} ${o.customer?.email} ${o.status}`).includes(q));if(f==='unassigned')list=list.filter(o=>!as[o.id]);if(f==='active')list=list.filter(o=>!['entregado','cancelado'].includes(normx(o.status)));if(f==='closed')list=list.filter(o=>['entregado','cancelado'].includes(normx(o.status)));byId('npV116AssignmentList').innerHTML=list.length?list.map(o=>`<article class="np-v116-assignment"><div><b>${h(o.id)} · ${h(o.customer?.fullName||'Cliente')}</b><small>${h(o.status||'Nuevo')} · ${h(cash(o.total))}</small></div><select data-v116-assign-select="${h(o.id)}"><option value="">Sin asignar</option>${agents.map(a=>`<option value="${h(a.id)}" ${as[o.id]===a.id?'selected':''}>${h(a.name)} · ${h(a.area||'')}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" data-v116-open-order="${h(o.id)}">Seguimiento</button></article>`).join(''):`<div class="np-v116-empty"><b>No hay pedidos con este filtro.</b><span>Cambia el filtro o espera a que existan pedidos reales.</span></div>`;qsa('[data-v116-assign-select]',byId('npV116AssignmentList')).forEach(s=>s.onchange=()=>{if(s.value)as[s.dataset.v116AssignSelect]=s.value;else delete as[s.dataset.v116AssignSelect];if(saveAssignments())notify('Responsable actualizado.','success')});qsa('[data-v116-open-order]',byId('npV116AssignmentList')).forEach(b=>b.onclick=()=>team?.renderOrderConversation?.(b.dataset.v116OpenOrder))};let npAssignSearchTimer=0;byId('npV116AssignSearch').oninput=()=>{clearTimeout(npAssignSearchTimer);npAssignSearchTimer=setTimeout(draw,110)};byId('npV116AssignFilter').onchange=draw;draw();scrollAdminTop();}
+
+function renderMobileCenter(){state.adminSection='np-mobile-center';if(byId('adminTitle'))byId('adminTitle').textContent='AppCreator24';const cap=ac?.capabilityData?.()||{};const cards=[['Compartir Android','Envía texto o archivos con navigator.share().',()=>ac?.shareOperationalSummary?.()],['Imprimir','Abre la impresión nativa con window.print().',()=>ac?.printOperationalSummary?.()],['Cámara','Captura una foto desde el dispositivo.',()=>ac?.capturePhotoStandalone?.()],['Micrófono','Graba una nota temporal de hasta 60 segundos.',()=>ac?.openVoiceRecorder?.('Nota operativa CRULOX')],['Descarga dinámica','Prueba Blob con fallback Data URL.',()=>ac?.dynamicDownload?.(`prueba-${Date.now()}.txt`,'CRULOX','text/plain')],['Diagnóstico','Comprueba las APIs expuestas por la WebView.',()=>ac?.openCompatibilityCenter?.()]];byId('adminContent').innerHTML=`<section class="np-v116-mobile-center"><header class="np-v116-report-head"><div><h2>Centro móvil AppCreator24</h2><p>Accesos prácticos para las capacidades nuevas de la sección HTML/Web. Compartir e imprimir también deben estar activados en la configuración de AppCreator24.</p></div></header><div class="np-v116-home-strip"><div class="np-v116-now ${cap.blob?'ok':'bad'}"><small>Blob</small><strong>${cap.blob?'Sí':'No'}</strong></div><div class="np-v116-now ${cap.share?'ok':'warn'}"><small>Compartir</small><strong>${cap.share?'Sí':'No'}</strong></div><div class="np-v116-now ${cap.print?'ok':'warn'}"><small>Imprimir</small><strong>${cap.print?'Sí':'No'}</strong></div><div class="np-v116-now ${cap.cameraApi?'ok':'warn'}"><small>Cámara/mic.</small><strong>${cap.cameraApi?'Sí':'No'}</strong></div></div><div class="np-v116-mobile-grid">${cards.map((c,i)=>`<article class="np-v116-mobile-card"><b>${h(c[0])}</b><p>${h(c[1])}</p><button data-v116-mobile="${i}">Abrir</button></article>`).join('')}</div></section>`;qsa('[data-v116-mobile]',byId('adminContent')).forEach(b=>b.onclick=()=>cards[n(b.dataset.v116Mobile)]?.[2]?.());scrollAdminTop();}
+function renderMediaCaptureCenter(){if(!byId('crudModal'))return;byId('crudTitle').textContent='Captura multimedia';byId('crudBody').innerHTML=`<div class="np-v116-mobile-grid"><article class="np-v116-mobile-card"><b>📷 Cámara</b><p>Captura una imagen y decide si compartirla o descargarla.</p><button id="npV116Camera">Abrir cámara</button></article><article class="np-v116-mobile-card"><b>🎙 Nota de voz</b><p>Graba audio temporal sin guardarlo en localStorage.</p><button id="npV116Voice">Grabar voz</button></article></div><div class="form-actions"><button class="btn btn-secondary" data-close="crudModal">Cerrar</button></div>`;openModal('crudModal');byId('npV116Camera').onclick=()=>ac?.capturePhotoStandalone?.();byId('npV116Voice').onclick=()=>ac?.openVoiceRecorder?.('Nota operativa CRULOX')}
+
+function enhanceHome(){if(state.session?.role!=='admin'||state.adminSection!=='home')return;const content=byId('adminContent');if(!content||content.querySelector('.np-v116-home-wrap'))return;const as=currentAssignments(),open=activeOrders().length,unassigned=activeOrders().filter(o=>!as[o.id]).length,low=state.products.filter(p=>n(p.stock)>0&&n(p.stock)<=lowLimit()).length,out=state.products.filter(p=>n(p.stock)<=0).length,issues=invalidDataRows().length;const wrap=document.createElement('section');wrap.className='np-v116-home-wrap';wrap.innerHTML=`<div class="np-v116-home-strip"><div class="np-v116-now ${open?'warn':'ok'}"><small>Pedidos abiertos</small><strong>${open}</strong></div><div class="np-v116-now ${unassigned?'bad':'ok'}"><small>Sin responsable</small><strong>${unassigned}</strong></div><div class="np-v116-now ${low?'warn':'ok'}"><small>Stock bajo</small><strong>${low}</strong></div><div class="np-v116-now ${out||issues?'bad':'ok'}"><small>Agotados / datos</small><strong>${out} / ${issues}</strong></div></div><div class="np-v116-actions"><button class="primary" data-v116-home="orders">Pedidos</button><button data-v116-home="assign">Asignaciones</button><button data-v116-home="stock">Inventario crítico</button><button data-v116-home="permissions">Permisos</button><button data-v116-home="mobile">AppCreator24</button><button data-v116-home="diagnostic">Diagnóstico</button></div>`;content.prepend(wrap);wrap.querySelector('[data-v116-home="orders"]').onclick=()=>renderAdminSection('orders');wrap.querySelector('[data-v116-home="assign"]').onclick=renderAssignmentsCenter;wrap.querySelector('[data-v116-home="stock"]').onclick=()=>report('Inventario crítico','Agotados y productos bajo el límite configurado.',productRows(state.products.filter(p=>n(p.stock)<=lowLimit())));wrap.querySelector('[data-v116-home="permissions"]').onclick=renderPermissionsCenter;wrap.querySelector('[data-v116-home="mobile"]').onclick=renderMobileCenter;wrap.querySelector('[data-v116-home="diagnostic"]').onclick=openDiagnostics;setTimeout(()=>{const strip=content.querySelector('.np-v110-priority-strip');if(strip){qsa('.np-v110-priority-item',strip).slice(8).forEach(x=>x.remove());const p=strip.querySelector('.np-v110-priority-head p');if(p)p.textContent='Los accesos de mayor impacto se muestran aquí; el resto está disponible en Herramientas.'}},30)}
+
+function scrollAdminTop(){const o=byId('adminOverlay');if(!o)return;try{o.scrollTo({top:0,behavior:'auto'})}catch(e){o.scrollTop=0}}
+function ensureScroll(){const o=byId('adminOverlay');if(!o||!o.classList.contains('open'))return;o.style.overflowY='auto';o.style.overflowX='hidden';o.style.webkitOverflowScrolling='touch';o.style.touchAction='pan-y pinch-zoom';const sh=o.querySelector('.admin-shell');if(sh){sh.style.height='auto';sh.style.minHeight='100dvh'}}
+function ensureScrollTopButton(){let b=byId('npV116ScrollTop');if(!b){b=document.createElement('button');b.id='npV116ScrollTop';b.className='np-v116-scrolltop';b.type='button';b.textContent='↑';b.setAttribute('aria-label','Volver arriba');document.body.appendChild(b);b.onclick=scrollAdminTop}const o=byId('adminOverlay');if(o&&!o.dataset.v116Scroll){o.dataset.v116Scroll='1';o.addEventListener('scroll',()=>b.classList.toggle('show',o.classList.contains('open')&&o.scrollTop>550),{passive:true})}}
+
+function addMobileModule(){const mods=team?.modules?.system;if(Array.isArray(mods)&&!mods.some(x=>x[0]==='np-mobile-center'))mods.splice(1,0,['np-mobile-center','📱','AppCreator24','Compartir, imprimir, descargas, cámara y micrófono.'])}
+function ensureToolModel(){const safe=tools.find(t=>t.id==='v111-order-value-3'),full=tools.find(t=>t.id==='v111-order-value-4');if(!safe||safe.title!=='Compartir exportación segura'||!full||full.title!=='Descargar respaldo completo · privado'){repurposeLowValueTools();rerankTools();wrapToolActions()}}
+function refreshEnhancements(){ensureToolModel();ensureScroll();ensureScrollTopButton();enhanceToolCards(byId('adminOverlay')||document);enhanceHome()}
+
+repurposeLowValueTools();rerankTools();wrapToolActions();addMobileModule();
+const baseRender=window.renderAdminSection;
+window.renderAdminSection=function(section){
+ if(section==='np-permissions')return renderPermissionsCenter();
+ if(section==='np-assignments')return renderAssignmentsCenter();
+ if(section==='np-mobile-center')return renderMobileCenter();
+ const r=baseRender(section);requestAnimationFrame(()=>{ensureScroll();enhanceToolCards(byId('adminOverlay')||document);if(section==='home'||state.adminSection==='home')enhanceHome();if(section!=='home'&&section!=='dashboard')scrollAdminTop()});return r;
+};
+const baseOpen=window.openAdmin;
+window.openAdmin=function(section='home'){const r=baseOpen(section);requestAnimationFrame(refreshEnhancements);setTimeout(refreshEnhancements,50);return r};
+/* v11.8: sin observador global; renderAdminSection/openAdmin actualizan solo cuando corresponde. */
+refreshEnhancements();
+
+function runSelfTest(){const ids=tools.map(t=>t.id),dups=qsa('[id]').map(x=>x.id).filter((id,i,a)=>a.indexOf(id)!==i);const result={version:VERSION,toolCount:tools.length,uniqueToolIds:new Set(ids).size,callableTools:tools.filter(t=>typeof t.action==='function').length,ranksComplete:tools.length===400&&tools.every((t,i)=>t.rank===i+1),duplicateDomIds:[...new Set(dups)],teamApi:!!team,appCreatorApi:!!ac,permissionRouter:typeof window.renderAdminSection==='function',runtimeIssues:runtimeIssues.length};result.ok=result.toolCount===400&&result.uniqueToolIds===400&&result.callableTools===400&&result.ranksComplete&&!result.duplicateDomIds.length&&result.teamApi;window.NP_V116_SELF_TEST=result;document.documentElement.dataset.npV116=result.ok?'ok':'review';if(!result.ok)console.warn('CRULOX v11.6 self-test',result);else console.info('CRULOX v11.6 self-test OK',result);return result}
+setTimeout(runSelfTest,80);window.NP_V116={VERSION,report,diagnostics,openDiagnostics,renderPermissionsCenter,openPermissionEditor,renderAssignmentsCenter,renderMobileCenter,renderMediaCaptureCenter,downloadSafeExport,shareSafeExport,optimizeStoredImages,runSelfTest,enhanceToolCards,refreshEnhancements};
+})();
+</script>
+
+<style id="np-v117-style">
+/* =====================================================================
+   CRULOX v11.7 · Panel premium + Centro de atención conversacional
+   ===================================================================== */
+:root{--np117-cyan:#18dcff;--np117-blue:#2288ff;--np117-violet:#7d65ff;--np117-green:#2be48b;--np117-orange:#ffb650;--np117-red:#ff6682;--np117-panel:#071522;--np117-panel2:#091c2d;--np117-line:rgba(122,203,255,.11)}
+#adminOverlay{background:radial-gradient(circle at 10% -8%,rgba(24,220,255,.08),transparent 26%),radial-gradient(circle at 95% 12%,rgba(125,101,255,.06),transparent 22%),#020812!important}
+#adminOverlay .admin-sidebar{background:linear-gradient(180deg,#061522 0%,#04101a 100%)!important;border-bottom:1px solid rgba(126,203,255,.09)!important;box-shadow:0 10px 30px rgba(0,0,0,.18)!important}
+#adminOverlay .admin-brand{filter:drop-shadow(0 8px 16px rgba(0,211,255,.18))!important}
+#adminOverlay .admin-nav button{position:relative!important;overflow:hidden!important;background:linear-gradient(180deg,rgba(255,255,255,.032),rgba(255,255,255,.014))!important;border:1px solid rgba(126,203,255,.075)!important;color:#a9c1d9!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.018)!important;transition:transform .16s ease,border-color .16s ease,background .16s ease!important}
+#adminOverlay .admin-nav button:hover{border-color:rgba(24,220,255,.22)!important;color:#e8f7ff!important;transform:translateY(-1px)!important}
+#adminOverlay .admin-nav button.active{color:#03101b!important;background:linear-gradient(135deg,#17e2ff 0%,#22a1ff 58%,#6976ff 100%)!important;border-color:rgba(255,255,255,.16)!important;box-shadow:0 12px 26px rgba(0,171,255,.17),inset 0 1px 0 rgba(255,255,255,.3)!important}
+#adminOverlay .admin-top{background:linear-gradient(180deg,rgba(3,10,18,.97),rgba(3,10,18,.89))!important;border-bottom:1px solid rgba(126,203,255,.075)!important;backdrop-filter:blur(18px)!important}
+#adminOverlay .admin-top h1{letter-spacing:-.035em!important}
+#adminOverlay .admin-content{background:linear-gradient(180deg,rgba(5,15,25,.24),transparent 260px)!important}
+#adminOverlay .admin-card,#adminOverlay .np-v10-tool,#adminOverlay .np-v10-kpi,#adminOverlay .np-v105-agent-card,#adminOverlay .np-v116-report,#adminOverlay .np-v116-now,#adminOverlay .np-v116-mobile-card{background:linear-gradient(155deg,rgba(9,27,44,.94),rgba(5,18,30,.94))!important;border-color:rgba(126,203,255,.09)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.024),0 12px 30px rgba(0,0,0,.13)!important}
+#adminOverlay .np-v110-priority-strip{background:linear-gradient(150deg,rgba(8,29,47,.96),rgba(5,18,31,.96))!important;border-color:rgba(24,220,255,.12)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 16px 36px rgba(0,0,0,.15)!important}
+#adminOverlay .np-v110-priority-item{background:linear-gradient(150deg,#081b2b,#061522)!important;border-color:rgba(126,203,255,.075)!important;transition:.16s ease!important}
+#adminOverlay .np-v110-priority-item:hover{transform:translateY(-1px)!important;border-color:rgba(24,220,255,.2)!important}
+#adminOverlay .btn-primary{background:linear-gradient(135deg,#17e2ff,#1ba6ff 68%,#6978ff)!important;box-shadow:0 10px 22px rgba(0,183,255,.15)!important}
+#adminOverlay .btn-secondary{background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02))!important;border-color:rgba(126,203,255,.1)!important}
+.np-v117-nav-badge{position:absolute;right:5px;top:4px;min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:grid;place-items:center;background:#ff5577;color:white;font-size:.42rem;font-weight:950;border:2px solid #071522;box-shadow:0 4px 12px rgba(255,85,119,.26)}
+
+/* Atención pública */
+.np-v117-support{position:fixed;inset:0;z-index:4200;display:none;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.68);backdrop-filter:blur(10px);padding:12px}
+.np-v117-support.open{display:flex}
+.np-v117-support-card{width:min(760px,100%);height:min(780px,92dvh);display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;border-radius:25px;background:linear-gradient(180deg,#071827,#040d17);border:1px solid rgba(91,201,255,.18);box-shadow:0 32px 100px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.035)}
+.np-v117-support-head{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:10px;align-items:center;padding:13px 14px;border-bottom:1px solid rgba(126,203,255,.08);background:linear-gradient(180deg,rgba(11,32,51,.96),rgba(7,24,39,.96))}
+.np-v117-support-avatar{width:44px;height:44px;border-radius:15px;display:grid;place-items:center;font-size:1.15rem;background:linear-gradient(145deg,rgba(24,220,255,.15),rgba(90,103,255,.13));border:1px solid rgba(24,220,255,.18);box-shadow:0 8px 20px rgba(0,183,255,.1)}
+.np-v117-support-head h2{font-size:.88rem;margin:0;letter-spacing:-.025em}.np-v117-support-head p{font-size:.55rem;color:#8ea8c0;margin-top:3px;line-height:1.3}
+.np-v117-support-close{width:36px;height:36px;border-radius:12px;border:1px solid rgba(126,203,255,.1);background:rgba(255,255,255,.035);color:#cfe2f4;font-size:1rem}
+.np-v117-support-status{display:inline-flex;align-items:center;gap:5px;margin-top:4px;padding:4px 8px;border-radius:999px;background:rgba(43,228,139,.07);border:1px solid rgba(43,228,139,.12);color:#38e995;font-size:.47rem;font-weight:850}.np-v117-support-status.wait{color:#ffc56f;background:rgba(255,182,80,.07);border-color:rgba(255,182,80,.13)}.np-v117-support-status.closed{color:#9cb0c5;background:rgba(255,255,255,.035);border-color:rgba(255,255,255,.07)}
+.np-v117-support-body{min-height:0;overflow:auto;padding:14px 12px 18px;display:flex;flex-direction:column;gap:8px;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.np-v117-welcome{align-self:center;max-width:92%;padding:10px 12px;border-radius:14px;text-align:center;background:rgba(24,220,255,.045);border:1px solid rgba(24,220,255,.08);color:#8eabc4;font-size:.54rem;line-height:1.5;margin-bottom:4px}
+.np-v117-msg{max-width:84%;padding:9px 11px;border-radius:15px;box-shadow:0 8px 20px rgba(0,0,0,.12)}.np-v117-msg.client{align-self:flex-end;border-bottom-right-radius:5px;background:linear-gradient(135deg,#15d9f5,#168cf4);color:#03101b}.np-v117-msg.staff{align-self:flex-start;border-bottom-left-radius:5px;background:#0b2134;border:1px solid rgba(126,203,255,.09);color:#e7f5ff}.np-v117-msg.system{align-self:center;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.055);color:#91a8bf;text-align:center;max-width:92%}
+.np-v117-msg b{display:block;font-size:.48rem;margin-bottom:3px;opacity:.82}.np-v117-msg p{font-size:.61rem;line-height:1.46;white-space:pre-wrap;overflow-wrap:anywhere}.np-v117-msg time{display:block;font-size:.41rem;margin-top:4px;opacity:.62;text-align:right}
+.np-v117-support-compose{padding:10px 12px max(10px,env(safe-area-inset-bottom));border-top:1px solid rgba(126,203,255,.08);background:rgba(4,14,24,.98)}
+.np-v117-guest-row{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:7px}.np-v117-guest-row input,.np-v117-compose-row textarea{width:100%;border:1px solid rgba(126,203,255,.1);background:#081a2a;color:#eef8ff;outline:none}.np-v117-guest-row input{min-height:34px;border-radius:10px;padding:7px 9px;font-size:.55rem}.np-v117-compose-row{display:grid;grid-template-columns:minmax(0,1fr) 42px;gap:7px;align-items:end}.np-v117-compose-row textarea{min-height:43px;max-height:110px;resize:none;border-radius:14px;padding:10px 11px;font-size:.61rem;line-height:1.35}.np-v117-compose-row textarea:focus,.np-v117-guest-row input:focus{border-color:rgba(24,220,255,.35);box-shadow:0 0 0 3px rgba(24,220,255,.055)}
+.np-v117-send{width:42px;height:42px;border:0;border-radius:14px;background:linear-gradient(135deg,#16e0f8,#1b8fff);color:#04111d;font-weight:950;box-shadow:0 9px 20px rgba(0,180,255,.16)}
+.np-v117-closed-actions{display:grid;grid-template-columns:1fr;gap:7px}.np-v117-closed-actions button{min-height:38px;border-radius:12px;border:1px solid rgba(24,220,255,.14);background:rgba(24,220,255,.07);color:#30ddff;font-size:.57rem;font-weight:850}
+.np-v117-support-unread{position:absolute;right:-5px;top:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:999px;background:#ff5577;color:white;border:2px solid #071522;display:none;place-items:center;font-size:.48rem;font-weight:950}.np-v117-support-unread.show{display:grid}
+#floatSupport{position:relative;background:linear-gradient(145deg,#16dff5,#168bf4)!important;box-shadow:0 14px 30px rgba(0,178,255,.22)!important}
+
+/* Bandeja interna de atención */
+.np-v117-service-shell{display:grid;gap:11px}.np-v117-service-hero{position:relative;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:15px;border-radius:19px;background:radial-gradient(circle at 88% 16%,rgba(24,220,255,.13),transparent 28%),radial-gradient(circle at 55% 120%,rgba(125,101,255,.09),transparent 35%),linear-gradient(145deg,#0a2237,#071727);border:1px solid rgba(24,220,255,.12);box-shadow:0 15px 36px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.025)}
+.np-v117-service-hero small{display:block;color:#2ddfff;font-size:.45rem;font-weight:900;letter-spacing:.13em;text-transform:uppercase}.np-v117-service-hero h2{font-size:.9rem;margin:4px 0 5px;letter-spacing:-.03em}.np-v117-service-hero p{font-size:.54rem;line-height:1.48;color:#93abc1;max-width:720px}.np-v117-service-live{display:flex;align-items:center;gap:6px;padding:7px 10px;border-radius:999px;background:rgba(43,228,139,.07);border:1px solid rgba(43,228,139,.13);color:#37e891;font-size:.5rem;font-weight:850}.np-v117-service-live i{width:7px;height:7px;border-radius:50%;background:#31e58e;box-shadow:0 0 0 5px rgba(49,229,142,.07)}
+.np-v117-service-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.np-v117-service-kpi{padding:10px 11px;border-radius:14px;background:linear-gradient(150deg,#091c2c,#061522);border:1px solid rgba(126,203,255,.08)}.np-v117-service-kpi small{display:block;color:#718ca5;font-size:.45rem}.np-v117-service-kpi b{display:block;font-size:.95rem;margin-top:3px;color:#eff9ff}.np-v117-service-kpi.wait b{color:#ffc46b}.np-v117-service-kpi.active b{color:#36e994}.np-v117-service-kpi.unread b{color:#2bdfff}
+.np-v117-inbox{display:grid;grid-template-columns:minmax(235px,.72fr) minmax(0,1.55fr);gap:8px;min-height:520px}
+.np-v117-inbox-side,.np-v117-chat-panel{min-width:0;border-radius:17px;background:linear-gradient(180deg,#071825,#05111d);border:1px solid rgba(126,203,255,.08);overflow:hidden}
+.np-v117-inbox-tools{padding:8px;border-bottom:1px solid rgba(126,203,255,.07);display:grid;gap:6px}.np-v117-inbox-tools input,.np-v117-inbox-tools select{width:100%;min-height:34px;border-radius:10px;border:1px solid rgba(126,203,255,.09);background:#091a2a;color:#e9f5ff;padding:6px 8px;font-size:.52rem;outline:none}.np-v117-inbox-filter-row{display:grid;grid-template-columns:1fr 1fr;gap:5px}.np-v117-chat-list{max-height:575px;overflow:auto;padding:5px;display:grid;align-content:start;gap:4px;-webkit-overflow-scrolling:touch}
+.np-v117-chat-item{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:7px;align-items:center;padding:8px;border-radius:11px;border:1px solid transparent;background:transparent;color:#dcebf8;text-align:left;transition:.14s}.np-v117-chat-item:hover,.np-v117-chat-item.active{background:#092034;border-color:rgba(24,220,255,.11)}.np-v117-chat-icon{width:34px;height:34px;border-radius:11px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(24,220,255,.09),rgba(125,101,255,.06));font-size:.72rem}.np-v117-chat-item b{display:block;font-size:.55rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np-v117-chat-item p{font-size:.43rem;color:#718ba3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}.np-v117-chat-item aside{display:grid;justify-items:end;gap:3px}.np-v117-chat-item time{font-size:.37rem;color:#61798f}.np-v117-chat-item .dot{min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:grid;place-items:center;background:#19cffa;color:#03111d;font-size:.4rem;font-weight:950}.np-v117-chat-item .priority{font-size:.36rem;color:#ffbd61}
+.np-v117-chat-panel{display:grid;grid-template-rows:auto 1fr auto}.np-v117-chat-empty{display:grid;place-items:center;text-align:center;padding:25px;color:#7892aa}.np-v117-chat-empty span{font-size:2rem;opacity:.5}.np-v117-chat-empty b{font-size:.72rem;color:#cfe2f3;margin-top:8px}.np-v117-chat-empty p{font-size:.5rem;line-height:1.45;margin-top:4px;max-width:330px}
+.np-v117-chat-head{padding:9px 10px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;border-bottom:1px solid rgba(126,203,255,.07);background:#071a2a}.np-v117-chat-head h3{font-size:.65rem}.np-v117-chat-head p{font-size:.45rem;color:#7892aa;margin-top:2px}.np-v117-chat-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap;justify-content:flex-end}.np-v117-chat-actions select,.np-v117-chat-actions button{min-height:30px;border-radius:9px;border:1px solid rgba(126,203,255,.09);background:#0a2134;color:#cfe1f1;padding:5px 7px;font-size:.44rem;font-weight:800}.np-v117-chat-actions .resolve{color:#37e890;border-color:rgba(43,228,139,.15);background:rgba(43,228,139,.06)}
+.np-v117-admin-thread{min-height:0;overflow:auto;padding:10px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch}.np-v117-admin-compose{padding:8px;border-top:1px solid rgba(126,203,255,.07);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;background:#061522}.np-v117-admin-compose textarea{min-height:39px;max-height:100px;resize:none;border-radius:11px;border:1px solid rgba(126,203,255,.1);background:#091e30;color:#eef8ff;padding:8px 9px;font-size:.53rem;outline:none}.np-v117-admin-compose button{min-width:72px;border:0;border-radius:11px;background:linear-gradient(135deg,#17e1fa,#1b91f8);color:#04111d;font-size:.51rem;font-weight:900;padding:7px 10px}
+.np-v117-local-note{padding:8px 10px;border-radius:12px;background:rgba(255,182,80,.055);border:1px solid rgba(255,182,80,.1);color:#d9b77e;font-size:.47rem;line-height:1.45}
+
+@media(max-width:920px){
+ #adminOverlay .admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}
+ #adminOverlay .admin-nav button{min-height:36px!important;font-size:.47rem!important;padding:5px 3px!important;border-radius:10px!important}
+ .np-v117-inbox{grid-template-columns:1fr;min-height:0}.np-v117-chat-list{max-height:280px}.np-v117-chat-panel{min-height:470px}.np-v117-service-hero{grid-template-columns:1fr}.np-v117-service-live{justify-self:start}.np-v117-service-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
+@media(max-width:560px){
+ .np-v117-support{padding:0;align-items:stretch}.np-v117-support-card{width:100%;height:100dvh;border-radius:0;border:0}.np-v117-support-head{padding-top:max(11px,env(safe-area-inset-top))}
+ .np-v117-service-kpis{grid-template-columns:1fr 1fr}.np-v117-service-kpi{padding:9px}.np-v117-chat-panel{min-height:430px}.np-v117-chat-head{grid-template-columns:1fr}.np-v117-chat-actions{justify-content:flex-start}.np-v117-admin-compose{grid-template-columns:1fr}.np-v117-admin-compose button{min-height:36px}.np-v117-guest-row{grid-template-columns:1fr}.np-v117-inbox-filter-row{grid-template-columns:1fr 1fr}
+}
+@media(max-width:360px){#adminOverlay .admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(prefers-reduced-motion:reduce){#adminOverlay .admin-nav button,.np-v117-chat-item{transition:none!important}.np-v117-support-body{scroll-behavior:auto}}
+</style>
+<script id="np-v117-script">
+(function(){
+  const VERSION='11.7';
+  const CHAT_KEY='jm_digital_v1_support_chats';
+  const GUEST_KEY='np_support_guest_v117';
+  const team=window.NP_TEAM_API_V105||null;
+  const $id=id=>document.getElementById(id);
+  const qa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const normText=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const escapeHtml=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const now=()=>new Date().toISOString();
+  const id=(p='id')=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,9)}`;
+  const read=(key,fallback)=>{try{const x=localStorage.getItem(key);return x?JSON.parse(x):fallback}catch(e){return fallback}};
+  const save=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){console.warn('NovaPrime chat storage',e);return false}};
+  let chatCache=null,chatCacheRaw=null;
+  const chats=()=>{let raw='[]';try{raw=localStorage.getItem(CHAT_KEY)||'[]'}catch(e){}if(chatCacheRaw===raw&&Array.isArray(chatCache))return chatCache;let x=[];try{x=JSON.parse(raw)}catch(e){x=[]}chatCache=Array.isArray(x)?x:[];chatCacheRaw=raw;return chatCache};
+  const saveChats=value=>{try{const raw=JSON.stringify(value);localStorage.setItem(CHAT_KEY,raw);chatCache=value;chatCacheRaw=raw;return true}catch(e){console.warn('NovaPrime chat storage',e);return false}};
+  const activeStaff=()=>Array.isArray(team?.agents?.())?team.agents().filter(a=>a&&a.active!==false):[];
+  const supportAgents=()=>{const all=activeStaff(),preferred=all.filter(a=>a.preset==='support'||/(atencion|soporte|cliente|servicio)/.test(normText(a.area)));return preferred.length?preferred:all.filter(a=>a.preset==='supervisor')};
+  const agentById=agentId=>String(agentId)==='owner'?{id:'owner',name:'Administrador CRULOX',area:'Administración',active:true}:team?.agentById?.(agentId)||activeStaff().find(a=>String(a.id)===String(agentId))||null;
+  const isStaff=()=>state?.session?.role==='admin'||state?.session?.role==='agent';
+  const currentStaff=()=>state?.session?.role==='agent'?team?.sessionAgent?.():state?.session?.role==='admin'?{id:'owner',name:'Administrador CRULOX',area:'Administración',active:true}:null;
+  const formatTime=iso=>{try{return new Date(iso).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}catch(e){return''}};
+  const formatShort=iso=>{try{const d=new Date(iso),today=new Date();return d.toDateString()===today.toDateString()?formatTime(iso):d.toLocaleDateString('es-GT',{day:'2-digit',month:'2-digit'})}catch(e){return''}};
+
+  function clientIdentity(){
+    if(state?.session?.role==='client'){
+      const u=state.users.find(x=>String(x.id)===String(state.session.userId));
+      if(u)return {id:`user:${u.id}`,name:u.fullName||u.username||'Cliente',email:u.email||'',phone:u.phone||'',registered:true};
+    }
+    let g=read(GUEST_KEY,null);
+    if(!g||!g.id){g={id:`guest:${id('g')}`,name:'',email:'',createdAt:now()};save(GUEST_KEY,g)}
+    return {...g,registered:false};
+  }
+  function updateGuest(name,email){const g=clientIdentity();if(g.registered)return g;const next={...g,name:String(name||'').trim().slice(0,80),email:String(email||'').trim().slice(0,120),updatedAt:now()};save(GUEST_KEY,next);return next}
+  function chatForClient(clientId){return chats().filter(c=>c.clientId===clientId&&c.status!=='closed').sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))[0]||null}
+  function chooseAgent(allChats){const agents=supportAgents();if(!agents.length)return null;const loads=new Map(agents.map(a=>[String(a.id),0]));allChats.filter(c=>c.status!=='closed'&&c.assignedAgentId).forEach(c=>loads.set(String(c.assignedAgentId),(loads.get(String(c.assignedAgentId))||0)+1));return agents.slice().sort((a,b)=>(loads.get(String(a.id))||0)-(loads.get(String(b.id))||0))[0]||null}
+  function subjectFrom(extra,message){return String(extra?.Producto||extra?.Combo||extra?.Tipo||message||'Consulta general').replace(/^Hola\.\s*/i,'').slice(0,90)}
+  function newChat(identity,context={}){const all=chats(),assigned=chooseAgent(all),c={id:id('chat'),clientId:identity.id,customerName:identity.name||'Cliente',customerEmail:identity.email||'',customerPhone:identity.phone||'',subject:subjectFrom(context.extra,context.message),context:context.extra||{},status:assigned?'active':'waiting',priority:'normal',assignedAgentId:assigned?String(assigned.id):'',createdAt:now(),updatedAt:now(),messages:[]};c.messages.push({id:id('msg'),role:'system',senderId:'system',senderName:'CRULOX',text:assigned?`Tu conversación fue asignada a ${assigned.name||'un agente de atención'}.`:'Tu consulta fue recibida. Un agente de atención podrá tomarla.',at:now(),readByClient:true,readByStaff:false});all.unshift(c);saveChats(all);return c}
+  function getChat(chatId){return chats().find(c=>String(c.id)===String(chatId))||null}
+  function mutateChat(chatId,fn,{touch=true}={}){const all=chats(),i=all.findIndex(c=>String(c.id)===String(chatId));if(i<0)return null;fn(all[i],all);if(touch)all[i].updatedAt=now();saveChats(all);return all[i]}
+  function appendMessage(chatId,{role,senderId,senderName,text}){text=String(text||'').trim();if(!text)return null;return mutateChat(chatId,c=>{c.messages=Array.isArray(c.messages)?c.messages:[];c.messages.push({id:id('msg'),role,senderId:String(senderId||''),senderName:String(senderName||''),text:text.slice(0,2000),at:now(),readByClient:role==='client',readByStaff:role!=='client'});if(role==='client'&&c.status==='closed')c.status=c.assignedAgentId?'active':'waiting'})}
+  function unreadForClient(c){return (c.messages||[]).filter(m=>m.role==='staff'&&!m.readByClient).length}
+  function unreadForStaff(c){return (c.messages||[]).filter(m=>m.role==='client'&&!m.readByStaff).length}
+  function markClientRead(chatId){const c=getChat(chatId);if(!c||(c.messages||[]).every(m=>m.role!=='staff'||m.readByClient))return;mutateChat(chatId,x=>(x.messages||[]).forEach(m=>{if(m.role==='staff')m.readByClient=true}),{touch:false})}
+  function markStaffRead(chatId){const c=getChat(chatId);if(!c||(c.messages||[]).every(m=>m.role!=='client'||m.readByStaff))return;mutateChat(chatId,x=>(x.messages||[]).forEach(m=>{if(m.role==='client')m.readByStaff=true}),{touch:false})}
+
+  function ensurePublicSupport(){
+    let root=$id('npV117Support');if(root)return root;
+    root=document.createElement('div');root.id='npV117Support';root.className='np-v117-support';root.innerHTML=`<section class="np-v117-support-card" role="dialog" aria-modal="true" aria-label="Atención CRULOX"><header class="np-v117-support-head"><div class="np-v117-support-avatar">💬</div><div><h2>Atención CRULOX</h2><p id="npV117SupportSubtitle">Conversa directamente con nuestro equipo.</p><span id="npV117SupportStatus" class="np-v117-support-status wait">En espera</span></div><button class="np-v117-support-close" id="npV117SupportClose" type="button" aria-label="Cerrar">×</button></header><div class="np-v117-support-body" id="npV117SupportBody"></div><footer class="np-v117-support-compose" id="npV117SupportCompose"></footer></section>`;document.body.appendChild(root);$id('npV117SupportClose').onclick=closePublicSupport;root.onclick=e=>{if(e.target===root)closePublicSupport()};return root
+  }
+  let publicChatId='';let publicDraft='';let publicContext={message:'',extra:{}};let publicPoll=0;
+  function publicMessageMarkup(m){const cls=m.role==='client'?'client':m.role==='staff'?'staff':'system';return `<article class="np-v117-msg ${cls}"><b>${escapeHtml(m.senderName|| (m.role==='client'?'Tú':'CRULOX'))}</b><p>${escapeHtml(m.text)}</p><time>${escapeHtml(formatTime(m.at))}</time></article>`}
+  function renderPublicSupport({stickBottom=false}={}){
+    const root=ensurePublicSupport(),identity=clientIdentity();let c=getChat(publicChatId);if(!c){c=chatForClient(identity.id);if(c)publicChatId=c.id}
+    const body=$id('npV117SupportBody'),compose=$id('npV117SupportCompose'),status=$id('npV117SupportStatus'),subtitle=$id('npV117SupportSubtitle');
+    if(!c){body.innerHTML='<div class="np-v117-welcome">Escribe tu consulta y la enviaremos al equipo de atención. Si hay un agente disponible, la conversación se asignará automáticamente.</div>';status.className='np-v117-support-status wait';status.textContent='Nueva consulta';subtitle.textContent='Conversa directamente con nuestro equipo.'}
+    else{const agent=agentById(c.assignedAgentId);body.innerHTML=`<div class="np-v117-welcome">${c.context?.Producto?`Consulta sobre <b>${escapeHtml(c.context.Producto)}</b>. `:''}Historial de esta conversación.</div>${(c.messages||[]).map(publicMessageMarkup).join('')}`;if(c.status==='closed'){status.className='np-v117-support-status closed';status.textContent='Conversación finalizada';subtitle.textContent='Puedes iniciar una nueva consulta cuando lo necesites.'}else if(agent){status.className='np-v117-support-status';status.textContent=`Atendido por ${agent.name||'Agente'}`;subtitle.textContent=`${agent.area||'Equipo de atención'} · CRULOX`}else{status.className='np-v117-support-status wait';status.textContent='Esperando agente';subtitle.textContent='Tu consulta está en la bandeja de atención.'};markClientRead(c.id)}
+    if(c?.status==='closed')compose.innerHTML=`<div class="np-v117-closed-actions"><button type="button" id="npV117NewChat">Iniciar nueva conversación</button></div>`;
+    else compose.innerHTML=`${identity.registered?'':`<div class="np-v117-guest-row"><input id="npV117GuestName" placeholder="Tu nombre" value="${escapeHtml(identity.name||'')}"><input id="npV117GuestEmail" type="email" placeholder="Correo (opcional)" value="${escapeHtml(identity.email||'')}"></div>`}<div class="np-v117-compose-row"><textarea id="npV117ClientText" maxlength="2000" placeholder="Escribe tu mensaje…">${escapeHtml(publicDraft)}</textarea><button class="np-v117-send" id="npV117ClientSend" type="button" aria-label="Enviar">➤</button></div>`;
+    if($id('npV117NewChat'))$id('npV117NewChat').onclick=()=>{publicChatId='';publicDraft='';renderPublicSupport({stickBottom:true});setTimeout(()=>$id('npV117ClientText')?.focus(),30)};
+    if($id('npV117ClientSend')){$id('npV117ClientSend').onclick=sendClientMessage;$id('npV117ClientText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendClientMessage()}}}
+    updatePublicUnread();if(stickBottom)requestAnimationFrame(()=>{body.scrollTop=body.scrollHeight})
+  }
+  function sendClientMessage(){const text=String($id('npV117ClientText')?.value||'').trim();if(!text)return;let identity=clientIdentity();if(!identity.registered){const name=String($id('npV117GuestName')?.value||'').trim();const email=String($id('npV117GuestEmail')?.value||'').trim();if(name.length<2){toast('Escribe tu nombre para que el equipo pueda atenderte.','warn');$id('npV117GuestName')?.focus();return}identity=updateGuest(name,email)}let c=getChat(publicChatId)||chatForClient(identity.id);if(!c){c=newChat(identity,{message:publicContext.message||text,extra:Object.keys(publicContext.extra||{}).length?publicContext.extra:{Tipo:'Consulta general'}});publicChatId=c.id}else mutateChat(c.id,x=>{x.customerName=identity.name||x.customerName;x.customerEmail=identity.email||x.customerEmail});appendMessage(c.id,{role:'client',senderId:identity.id,senderName:identity.name||'Cliente',text});publicDraft='';renderPublicSupport({stickBottom:true});toast('Mensaje enviado al equipo de atención.','success')}
+  function openPublicSupport(message='',extra={}){const identity=clientIdentity();let c=chatForClient(identity.id);publicChatId=c?.id||'';publicContext={message:String(message||''),extra:{...(extra||{})}};publicDraft=String(message||'').replace(/^Hola\.\s*/i,'').slice(0,1200);const root=ensurePublicSupport();root.classList.add('open');document.body.classList.add('lock');renderPublicSupport({stickBottom:true});setTimeout(()=>{$id('npV117ClientText')?.focus()},40);clearInterval(publicPoll);publicPoll=setInterval(()=>{if(root.classList.contains('open'))renderPublicSupport()},6500);return true}
+  function closePublicSupport(){const root=$id('npV117Support');if(root)root.classList.remove('open');document.body.classList.remove('lock');clearInterval(publicPoll);publicPoll=0;updatePublicUnread()}
+  function updatePublicUnread(){const identity=clientIdentity(),c=chatForClient(identity.id),count=c?unreadForClient(c):0;let b=$id('npV117SupportUnread');const float=$id('floatSupport');if(float&&!b){b=document.createElement('span');b.id='npV117SupportUnread';b.className='np-v117-support-unread';float.appendChild(b)}if(b){b.textContent=String(Math.min(count,99));b.classList.toggle('show',count>0)}}
+
+  /* Sustituye soporte externo por conversación interna. Los pedidos conservan el fallback anterior. */
+  const legacyOpenBot=typeof openBot==='function'?openBot:null;
+  openBot=function(kind,message,extra={}){if(kind==='support')return openPublicSupport(message,extra);return legacyOpenBot?legacyOpenBot(kind,message,extra):false};
+  window.openBot=openBot;
+
+  function visibleChatsForStaff(){const all=chats();if(state.session?.role!=='agent')return all;const me=currentStaff();return all.filter(c=>!c.assignedAgentId||String(c.assignedAgentId)===String(me?.id))}
+  function staffCanHandle(c){if(state.session?.role==='admin')return true;const me=currentStaff();return !!me&&(!c.assignedAgentId||String(c.assignedAgentId)===String(me.id))}
+  let adminSelectedChat='';let adminPoll=0;
+  function adminThreadMarkup(c){return (c.messages||[]).map(m=>`<article class="np-v117-msg ${m.role==='client'?'client':m.role==='staff'?'staff':'system'}"><b>${escapeHtml(m.senderName||'')}</b><p>${escapeHtml(m.text)}</p><time>${escapeHtml(formatTime(m.at))}</time></article>`).join('')}
+  function serviceCounts(list){return {waiting:list.filter(c=>c.status==='waiting'||!c.assignedAgentId).length,active:list.filter(c=>c.status==='active'&&c.assignedAgentId).length,closed:list.filter(c=>c.status==='closed').length,unread:list.reduce((n,c)=>n+unreadForStaff(c),0)}}
+  function renderServiceInbox(){
+    if(!isStaff()){toast('Necesitas acceso de equipo para abrir Atención.','warn');return false}
+    state.adminSection='bots';if($id('adminTitle'))$id('adminTitle').textContent='Atención al cliente';if(typeof renderAdminNav==='function')renderAdminNav();const breadcrumb=$id('adminBreadcrumb');if(breadcrumb)breadcrumb.innerHTML='<span>Administración</span><span>›</span><span>Atención</span><span>›</span><b>Conversaciones</b>';const sub=$id('adminSubnavWrap');if(sub){sub.innerHTML=`<nav class="np-admin-subnav"><button class="active" data-v117-sub="chats">💬 Conversaciones</button><button data-v117-sub="agents">👥 Agentes</button>${state.session?.role==='admin'?'<button data-v117-sub="permissions">🔐 Roles y permisos</button>':''}<button data-v117-sub="orders">📦 Seguimiento pedidos</button></nav>`;sub.onclick=e=>{const b=e.target.closest('[data-v117-sub]');if(!b)return;if(b.dataset.v117Sub==='chats')return renderServiceInbox();if(b.dataset.v117Sub==='agents')return team?.renderAgents?.();if(b.dataset.v117Sub==='permissions')return renderAdminSection('np-permissions');if(b.dataset.v117Sub==='orders')return team?.renderOrderChat?.()}};const overlay=$id('adminOverlay');if(overlay){try{overlay.scrollTo({top:0,behavior:'auto'})}catch(e){overlay.scrollTop=0}}
+    const allowed=visibleChatsForStaff(),k=serviceCounts(allowed);$id('adminContent').innerHTML=`<section class="np-v117-service-shell"><header class="np-v117-service-hero"><div><small>Centro de atención</small><h2>Conversaciones con clientes</h2><p>Recibe consultas desde el botón 💬 de la tienda, asígnalas al equipo y conserva el contexto de cada conversación.</p></div><span class="np-v117-service-live"><i></i> Atención activa</span></header><div class="np-v117-service-kpis"><article class="np-v117-service-kpi wait"><small>En espera</small><b>${k.waiting}</b></article><article class="np-v117-service-kpi active"><small>Asignados</small><b>${k.active}</b></article><article class="np-v117-service-kpi unread"><small>Sin leer</small><b>${k.unread}</b></article><article class="np-v117-service-kpi"><small>Finalizados</small><b>${k.closed}</b></article></div><div class="np-v117-inbox"><aside class="np-v117-inbox-side"><div class="np-v117-inbox-tools"><input id="npV117ChatSearch" type="search" placeholder="Buscar cliente o consulta…"><div class="np-v117-inbox-filter-row"><select id="npV117ChatFilter"><option value="open">Abiertos</option><option value="waiting">En espera</option><option value="mine">Mis chats</option><option value="closed">Finalizados</option><option value="all">Todos</option></select><select id="npV117PriorityFilter"><option value="all">Toda prioridad</option><option value="high">Alta</option><option value="normal">Normal</option></select></div></div><div class="np-v117-chat-list" id="npV117ChatList"></div></aside><main class="np-v117-chat-panel" id="npV117ChatPanel"><div class="np-v117-chat-empty"><div><span>💬</span><b>Selecciona una conversación</b><p>Las consultas nuevas aparecerán aquí y podrán asignarse a un agente de atención.</p></div></div></main></div><div class="np-v117-local-note"><b>Importante:</b> esta versión guarda las conversaciones localmente en esta instalación. Para que clientes y agentes conversen desde teléfonos diferentes en producción, esta misma interfaz debe conectarse a un backend o base de datos compartida.</div></section>`;
+    const refresh=()=>drawChatList();let npChatSearchTimer=0;$id('npV117ChatSearch').oninput=()=>{clearTimeout(npChatSearchTimer);npChatSearchTimer=setTimeout(refresh,100)};$id('npV117ChatFilter').onchange=refresh;$id('npV117PriorityFilter').onchange=refresh;drawChatList();if(adminSelectedChat&&allowed.some(c=>c.id===adminSelectedChat))openAdminChat(adminSelectedChat,false);updateAdminBadge();clearInterval(adminPoll);adminPoll=setInterval(()=>{if($id('adminOverlay')?.classList.contains('open')&&state.adminSection==='bots'){drawChatList(false);if(adminSelectedChat)refreshAdminChat(adminSelectedChat)}},6500);return true
+  }
+  function filteredAdminChats(){let list=visibleChatsForStaff();const q=normText($id('npV117ChatSearch')?.value||''),f=$id('npV117ChatFilter')?.value||'open',p=$id('npV117PriorityFilter')?.value||'all',me=currentStaff();if(q)list=list.filter(c=>normText(`${c.customerName} ${c.customerEmail} ${c.subject} ${c.context?.Producto||''}`).includes(q));if(f==='open')list=list.filter(c=>c.status!=='closed');if(f==='waiting')list=list.filter(c=>c.status!=='closed'&&!c.assignedAgentId);if(f==='mine')list=list.filter(c=>c.status!=='closed'&&String(c.assignedAgentId)===String(me?.id));if(f==='closed')list=list.filter(c=>c.status==='closed');if(p!=='all')list=list.filter(c=>(c.priority||'normal')===p);return list.sort((a,b)=>String(b.updatedAt).localeCompare(String(a.updatedAt)))}
+  function drawChatList(keepSelection=true){const root=$id('npV117ChatList');if(!root)return;const list=filteredAdminChats();root.innerHTML=list.length?list.map(c=>{const unread=unreadForStaff(c),agent=agentById(c.assignedAgentId),last=(c.messages||[]).slice(-1)[0];return `<button class="np-v117-chat-item ${adminSelectedChat===c.id?'active':''}" data-v117-chat="${escapeHtml(c.id)}"><span class="np-v117-chat-icon">${c.status==='closed'?'✓':c.assignedAgentId?'💬':'⏳'}</span><span><b>${escapeHtml(c.customerName||'Cliente')}</b><p>${escapeHtml(last?.text||c.subject||'Nueva conversación')}</p></span><aside><time>${escapeHtml(formatShort(c.updatedAt))}</time>${unread?`<span class="dot">${unread}</span>`:''}${c.priority==='high'?'<span class="priority">ALTA</span>':''}</aside></button>`}).join(''):'<div class="np-v117-chat-empty"><div><span>✓</span><b>Sin conversaciones</b><p>No hay chats que coincidan con este filtro.</p></div></div>';qa('[data-v117-chat]',root).forEach(b=>b.onclick=()=>openAdminChat(b.dataset.v117Chat));if(!keepSelection&&adminSelectedChat&&!list.some(c=>c.id===adminSelectedChat))adminSelectedChat=''}
+  function openAdminChat(chatId,redraw=true){const c=getChat(chatId);if(!c||!staffCanHandle(c))return;adminSelectedChat=c.id;markStaffRead(c.id);if(redraw)drawChatList();refreshAdminChat(c.id,true)}
+  function refreshAdminChat(chatId,stick=false){const panel=$id('npV117ChatPanel'),c=getChat(chatId);if(!panel||!c)return;const me=currentStaff(),agents=supportAgents(),assigned=agentById(c.assignedAgentId),can=staffCanHandle(c);panel.innerHTML=`<header class="np-v117-chat-head"><div><h3>${escapeHtml(c.customerName||'Cliente')}</h3><p>${escapeHtml(c.customerEmail||'Sin correo')} · ${escapeHtml(c.subject||'Consulta general')} ${assigned?`· ${escapeHtml(assigned.name)}`:'· Sin asignar'}</p></div><div class="np-v117-chat-actions">${state.session?.role==='admin'?`<select id="npV117AssignAgent"><option value="">Sin asignar</option>${agents.map(a=>`<option value="${escapeHtml(a.id)}" ${String(c.assignedAgentId)===String(a.id)?'selected':''}>${escapeHtml(a.name)} · ${escapeHtml(a.area||'Atención')}</option>`).join('')}</select>`:(!c.assignedAgentId?'<button id="npV117TakeChat">Tomar chat</button>':'')}<select id="npV117Priority"><option value="normal" ${c.priority!=='high'?'selected':''}>Prioridad normal</option><option value="high" ${c.priority==='high'?'selected':''}>Prioridad alta</option></select><button class="resolve" id="npV117Resolve">${c.status==='closed'?'Reabrir':'Finalizar'}</button></div></header><div class="np-v117-admin-thread" id="npV117AdminThread">${adminThreadMarkup(c)}</div>${c.status==='closed'?'<div class="np-v117-admin-compose"><textarea disabled>Conversación finalizada.</textarea><button id="npV117ReopenBottom">Reabrir</button></div>':`<div class="np-v117-admin-compose"><textarea id="npV117StaffText" maxlength="2000" placeholder="Responder al cliente…"></textarea><button id="npV117StaffSend">Enviar</button></div>`}`;
+    if($id('npV117AssignAgent'))$id('npV117AssignAgent').onchange=e=>{mutateChat(c.id,x=>{x.assignedAgentId=e.target.value;x.status=e.target.value?'active':'waiting';x.messages.push({id:id('msg'),role:'system',senderId:'system',senderName:'CRULOX',text:e.target.value?`Conversación asignada a ${agentById(e.target.value)?.name||'agente'}.`:'Conversación devuelta a la bandeja de espera.',at:now(),readByClient:false,readByStaff:true})});refreshAdminChat(c.id,true);drawChatList()};
+    if($id('npV117TakeChat'))$id('npV117TakeChat').onclick=()=>{if(!me)return;mutateChat(c.id,x=>{x.assignedAgentId=String(me.id);x.status='active';x.messages.push({id:id('msg'),role:'system',senderId:'system',senderName:'CRULOX',text:`${me.name||'Un agente'} tomó la conversación.`,at:now(),readByClient:false,readByStaff:true})});refreshAdminChat(c.id,true);drawChatList()};
+    if($id('npV117Priority'))$id('npV117Priority').onchange=e=>{mutateChat(c.id,x=>x.priority=e.target.value);drawChatList()};
+    const toggle=()=>{const current=getChat(c.id);if(current?.lifecycleLocked&&current.status==='closed'){toast('Chat expirado. El cliente debe iniciar uno nuevo.','warn');return}mutateChat(c.id,x=>{x.status=x.status==='closed'?(x.assignedAgentId?'active':'waiting'):'closed';x.messages.push({id:id('msg'),role:'system',senderId:'system',senderName:'CRULOX',text:x.status==='closed'?'El equipo marcó esta conversación como finalizada.':'La conversación fue reabierta.',at:now(),readByClient:false,readByStaff:true})});refreshAdminChat(c.id,true);drawChatList()};if($id('npV117Resolve'))$id('npV117Resolve').onclick=toggle;if($id('npV117ReopenBottom'))$id('npV117ReopenBottom').onclick=toggle;
+    const sendStaff=()=>{const text=String($id('npV117StaffText')?.value||'').trim();if(!text||!me)return;if(!c.assignedAgentId)mutateChat(c.id,x=>{x.assignedAgentId=String(me.id);x.status='active'});appendMessage(c.id,{role:'staff',senderId:me.id,senderName:me.name||'Equipo CRULOX',text});refreshAdminChat(c.id,true);drawChatList();toast('Respuesta enviada.','success')};if($id('npV117StaffSend')){$id('npV117StaffSend').onclick=sendStaff;$id('npV117StaffText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendStaff()}}}
+    if(stick)requestAnimationFrame(()=>{const t=$id('npV117AdminThread');if(t)t.scrollTop=t.scrollHeight});updateAdminBadge()
+  }
+  function updateAdminBadge(){const visible=visibleChatsForStaff(),unread=visible.reduce((n,c)=>n+unreadForStaff(c),0),waiting=visible.filter(c=>c.status!=='closed'&&!c.assignedAgentId).length,count=unread||waiting;const nav=qa('#adminNav button').find(b=>/atencion/i.test(normText(b.textContent))||b.dataset.admin==='bots'||b.dataset.v10Group==='growth');let badge=nav?.querySelector('.np-v117-nav-badge');if(nav&&!badge){badge=document.createElement('span');badge.className='np-v117-nav-badge';nav.appendChild(badge)}if(badge){badge.textContent=String(Math.min(count,99));badge.style.display=count?'grid':'none'}}
+
+  function migrateSupportPermissions(){if(!team)return;const tool=Array.isArray(team.tools)?team.tools.find(t=>t.id==='go-attention'):null;let changed=false;for(const a of team.agents()){if(a?.preset!=='support')continue;a.permissions=a.permissions||{tools:[],sections:[],groups:[],strictV110:true};a.permissions.tools=Array.isArray(a.permissions.tools)?a.permissions.tools:[];a.permissions.sections=Array.isArray(a.permissions.sections)?a.permissions.sections:[];if(tool&&!a.permissions.tools.includes('go-attention')){a.permissions.tools.push('go-attention');changed=true}if(!a.permissions.sections.includes('bots')){a.permissions.sections.push('bots');changed=true}a.permissions.strictV110=true}if(changed)team.saveAgents?.()}
+  function enhanceAttentionTool(){const tools=window.NP_ADMIN_TOOLS_V105;if(!Array.isArray(tools))return;const t=tools.find(x=>x.id==='go-attention');if(t){t.title='Bandeja de atención';t._np110BaseTitle=t.title;t.desc='Conversaciones de clientes asignables al equipo de atención, con historial, prioridad y cierre.';t.group='operations';t.section='bots';t.icon='💬';t.action=()=>renderAdminSection('bots');const current=tools.indexOf(t);if(current>5){tools.splice(current,1);tools.splice(4,0,t);tools.forEach((x,i)=>x.rank=i+1)}}}
+  function decorateMessageButtons(){const hero=$id('heroSupport');if(hero)hero.textContent='💬 Enviar mensaje';const foot=$id('footerSupport');if(foot)foot.textContent='💬 Mensajes';const fl=$id('floatSupport');if(fl)fl.setAttribute('aria-label','Mensajes');qa('[data-support]').forEach(b=>b.setAttribute('aria-label','Enviar mensaje'));qa('[data-combo-support]').forEach(b=>{if(/whatsapp/i.test(b.textContent))b.textContent='💬 Mensaje'});qa('[data-social-support]').forEach(b=>b.textContent='Mensajes')}
+
+  const baseRender=window.renderAdminSection;
+  window.renderAdminSection=function(section){if(section==='bots')return renderServiceInbox();const r=baseRender(section);requestAnimationFrame(()=>{decorateMessageButtons();updateAdminBadge()});return r};
+  const baseOpen=window.openAdmin;
+  window.openAdmin=function(section='home'){if($id('npV117Support')?.classList.contains('open'))closePublicSupport();migrateSupportPermissions();const r=baseOpen(section);requestAnimationFrame(()=>{decorateMessageButtons();updateAdminBadge()});return r};
+  document.addEventListener('submit',e=>{if(e.target?.id==='npAgentForm'||e.target?.id==='npV116PermForm'){setTimeout(migrateSupportPermissions,250);setTimeout(migrateSupportPermissions,900)}},true);
+  window.addEventListener('storage',e=>{if(e.key===CHAT_KEY){chatCache=null;chatCacheRaw=null;if($id('npV117Support')?.classList.contains('open'))renderPublicSupport();if(state?.adminSection==='bots'&&$id('adminOverlay')?.classList.contains('open')){drawChatList(false);if(adminSelectedChat)refreshAdminChat(adminSelectedChat)}updatePublicUnread();updateAdminBadge()}});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden){clearInterval(publicPoll);clearInterval(adminPoll)}else{updatePublicUnread();updateAdminBadge();if($id('npV117Support')?.classList.contains('open'))publicPoll=setInterval(()=>renderPublicSupport(),6500);if(state?.adminSection==='bots'&&$id('adminOverlay')?.classList.contains('open'))adminPoll=setInterval(()=>{drawChatList(false);if(adminSelectedChat)refreshAdminChat(adminSelectedChat)},6500)}});
+  /* v11.8: botones de mensaje se decoran en los renders, sin observar todo el documento. */
+  enhanceAttentionTool();migrateSupportPermissions();decorateMessageButtons();updatePublicUnread();updateAdminBadge();
+  window.NP_V117_SUPPORT={VERSION,chats,getChat,open:openPublicSupport,renderInbox:renderServiceInbox,appendMessage,supportAgents,updateBadges:()=>{updatePublicUnread();updateAdminBadge()}};
+})();
+</script>
+
+
+<style id="np-v118-performance-style">
+/* v11.8 · rendimiento WebView sin alterar identidad visual */
+.product,.combo,.np-v10-tool,.np-v10-module,.np-v116-row,.np-v116-assignment,.np-v117-chat-item,.np-v105-agent-card{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 150px;
+}
+.np-v118-tool-progress{display:flex;justify-content:flex-end;min-height:22px;margin:2px 0 7px;color:#7894ad;font-size:.49rem;font-weight:800}
+.np-v118-tool-sentinel{display:flex;justify-content:center;padding:10px 0 2px}
+.np-v118-tool-sentinel[hidden]{display:none!important}
+.np-v118-tool-sentinel button{min-height:32px;padding:6px 13px;border-radius:10px;border:1px solid rgba(77,213,255,.13);background:#081927;color:#59ddff;font-size:.52rem;font-weight:900}
+@media(max-width:920px){
+  body{background-attachment:scroll!important}
+  .header,#adminOverlay .admin-top,.fav-btn,.np-v10-palette,.np-v117-support{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+  .header{background:rgba(5,10,18,.985)!important}
+  #adminOverlay .admin-top{background:rgba(3,10,18,.985)!important}
+  .np-v117-support{background:rgba(0,0,0,.76)!important}
+  .product .stock,.np-combo-stock,.product-actions .add:disabled{animation:none!important}
+  .product,.combo,.np-v10-tool,.np-v10-module,.np-v116-row,.np-v116-assignment,.np-v117-chat-item{contain:layout paint style}
+}
+</style>
+<script id="np-v118-performance-script">
+(function(){
+'use strict';
+const VERSION='11.8-VELOCIDAD-PRO';
+const idle=window.requestIdleCallback||((fn)=>setTimeout(()=>fn({didTimeout:false,timeRemaining:()=>0}),120));
+function lazyImageHints(root=document){root.querySelectorAll?.('img:not([fetchpriority])').forEach(img=>{if(!img.closest('.hero-brand-top,.admin-brand-row'))img.setAttribute('fetchpriority','low');if(!img.hasAttribute('decoding'))img.setAttribute('decoding','async')})}
+function trimTransientMedia(){document.querySelectorAll('video:not([controls])').forEach(v=>{if(document.hidden)try{v.pause()}catch(e){}})}
+idle(()=>lazyImageHints(document));
+document.addEventListener('visibilitychange',()=>{if(document.hidden)trimTransientMedia()},{passive:true});
+const tools=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+window.NP_V118_PERF={VERSION,toolCount:tools.length,progressiveTools:true,chatPollMs:6500,globalObserversRemoved:3,createdAt:new Date().toISOString()};
+const ok=tools.length===400&&new Set(tools.map(t=>t.id)).size===400&&tools.every(t=>typeof t.action==='function');
+window.NP_V118_PERF.ok=ok;document.documentElement.dataset.npV118=ok?'ok':'review';
+})();
+</script>
+
+
+<style id="np-v119-chat-identity-style">
+#npV117Support .np-v119-support-avatar-img{width:100%;height:100%;object-fit:cover;border-radius:inherit;display:block}
+#npV117Support .np-v117-support-avatar{padding:0;overflow:hidden;background:linear-gradient(145deg,rgba(24,220,255,.12),rgba(90,103,255,.12));border:1px solid rgba(24,220,255,.24)}
+#npV117Support .np-v119-support-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:4px}
+#npV117Support .np-v119-profile-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:rgba(17,34,51,.88);border:1px solid rgba(126,203,255,.12);font-size:.5rem;color:#a9bfd6;line-height:1.2;max-width:100%;overflow:hidden}
+#npV117Support .np-v119-profile-chip b{color:#ecf8ff;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#npV117Support .np-v119-profile-chip span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+#npV117Support .np-v117-support-head h2{font-size:.92rem}
+#npV117Support .np-v117-support-head p{font-size:.56rem}
+</style>
+<script id="np-v119-chat-identity-script">
+(function(){
+  const CHAT_KEY='jm_digital_v1_support_chats';
+  const GUEST_KEY='np_support_guest_v117';
+  const MASCOT_SRC='data:image/webp;base64,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';
+  const team=window.NP_TEAM_API_V105||null;
+  const $=id=>document.getElementById(id);
+  const escHtml=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm=v=>String(v??'').normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();
+  const now=()=>new Date().toISOString();
+  const uid=(p='id')=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+  const read=(k,f)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):f}catch(e){return f}};
+  const write=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){console.warn('NovaPrime support write',e);return false}};
+  const getState=()=>state||{};
+  function allChats(){const arr=read(CHAT_KEY,[]);return Array.isArray(arr)?arr:[];}
+  function saveChats(arr){return write(CHAT_KEY,arr);}
+  function openChatForClient(clientId){return allChats().filter(c=>String(c.clientId)===String(clientId)&&c.status!=='closed').sort((a,b)=>String(b.updatedAt||'').localeCompare(String(a.updatedAt||'')))[0]||null;}
+  function getChat(chatId){return allChats().find(c=>String(c.id)===String(chatId))||null;}
+  function mutateChat(chatId,fn,{touch=true}={}){const arr=allChats();const i=arr.findIndex(c=>String(c.id)===String(chatId));if(i<0)return null;fn(arr[i],arr);if(touch)arr[i].updatedAt=now();saveChats(arr);return arr[i];}
+  function supportAgents(){
+    if(window.NP_V117_SUPPORT?.supportAgents){
+      try{return window.NP_V117_SUPPORT.supportAgents()||[]}catch(e){}
+    }
+    const all=Array.isArray(team?.agents?.())?team.agents().filter(a=>a&&a.active!==false):[];
+    const preferred=all.filter(a=>a.preset==='support'||/(atencion|soporte|cliente|servicio)/.test(norm(a.area)));
+    return preferred.length?preferred:all.filter(a=>a.preset==='supervisor');
+  }
+  function agentById(id){
+    if(String(id)==='owner')return {id:'owner',name:'Administrador CRULOX',area:'Administración',active:true};
+    return team?.agentById?.(id)||supportAgents().find(a=>String(a.id)===String(id))||null;
+  }
+  function chooseAgent(chats){
+    const agents=supportAgents();
+    if(!agents.length)return null;
+    const loads=new Map(agents.map(a=>[String(a.id),0]));
+    chats.filter(c=>c.status!=='closed'&&c.assignedAgentId).forEach(c=>loads.set(String(c.assignedAgentId),(loads.get(String(c.assignedAgentId))||0)+1));
+    return agents.slice().sort((a,b)=>(loads.get(String(a.id))||0)-(loads.get(String(b.id))||0))[0]||null;
+  }
+  function resolveClientIdentity(){
+    const state=getState();
+    if(state?.session?.role==='client' && Array.isArray(state.users)){
+      const u=state.users.find(x=>String(x.id)===String(state.session.userId));
+      if(u)return {id:`user:${u.id}`,name:u.fullName||u.username||'Cliente',email:u.email||'',phone:u.phone||'',registered:true};
+    }
+    const guest=read(GUEST_KEY,null);
+    if(guest && guest.id) return {...guest, name:guest.name||'Cliente CRULOX', email:guest.email||'', registered:false};
+    const fresh={id:`guest:${uid('g')}`,name:'Cliente CRULOX',email:'',createdAt:now(),registered:false};
+    write(GUEST_KEY,fresh);
+    return fresh;
+  }
+  function syncIdentityCache(identity){
+    if(identity?.registered)return identity;
+    const current=read(GUEST_KEY,{})||{};
+    const next={...current,...identity,registered:false,updatedAt:now()};
+    if(!next.id)next.id=`guest:${uid('g')}`;
+    if(!next.name)next.name='Cliente CRULOX';
+    if(!('email' in next))next.email='';
+    write(GUEST_KEY,next);
+    return next;
+  }
+  function subjectFrom(extra,message){return String(extra?.Producto||extra?.Combo||extra?.Tipo||message||'Consulta general').replace(/^Hola\.\s*/i,'').slice(0,90);}
+  function newChat(identity,context={}){
+    const arr=allChats();
+    const assigned=chooseAgent(arr);
+    const c={id:uid('chat'),clientId:identity.id,customerName:identity.name||'Cliente CRULOX',customerEmail:identity.email||'',customerPhone:identity.phone||'',subject:subjectFrom(context.extra,context.message),context:context.extra||{},status:assigned?'active':'waiting',priority:'normal',assignedAgentId:assigned?String(assigned.id):'',createdAt:now(),updatedAt:now(),messages:[]};
+    c.messages.push({id:uid('msg'),role:'system',senderId:'system',senderName:'CRULOX',text:assigned?`Tu conversación fue asignada a ${assigned.name||'un agente de atención'}.`:'Tu consulta fue recibida. Un agente de atención podrá tomarla.',at:now(),readByClient:true,readByStaff:false});
+    arr.unshift(c);saveChats(arr);return c;
+  }
+  function appendClientMessage(chatId,identity,text){
+    text=String(text||'').trim();
+    if(!text)return null;
+    return mutateChat(chatId,c=>{
+      c.customerName=identity.name||c.customerName||'Cliente CRULOX';
+      c.customerEmail=identity.email||c.customerEmail||'';
+      c.customerPhone=identity.phone||c.customerPhone||'';
+      c.messages=Array.isArray(c.messages)?c.messages:[];
+      c.messages.push({id:uid('msg'),role:'client',senderId:identity.id,senderName:identity.name||'Cliente CRULOX',text:text.slice(0,2000),at:now(),readByClient:true,readByStaff:false});
+      if(c.status==='closed')c.status=c.assignedAgentId?'active':'waiting';
+    });
+  }
+  function unreadForClient(c){return (c.messages||[]).filter(m=>m.role==='staff'&&!m.readByClient).length;}
+  function markClientRead(chatId){const c=getChat(chatId);if(!c)return;mutateChat(chatId,x=>{(x.messages||[]).forEach(m=>{if(m.role==='staff')m.readByClient=true})},{touch:false});}
+  function renderMsg(m){const cls=m.role==='client'?'client':m.role==='staff'?'staff':'system';const author=m.senderName || (m.role==='client'?'Tú':'CRULOX');let tm='';try{tm=new Date(m.at).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}catch(e){}return `<article class="np-v117-msg ${cls}"><b>${escHtml(author)}</b><p>${escHtml(m.text||'')}</p><time>${escHtml(tm)}</time></article>`;}
+  let chatId='';
+  let draft='';
+  let context={message:'',extra:{}};
+  let poll=0;
+  function clearPoll(){clearInterval(poll);poll=0;}
+  function updateUnreadBadge(){const identity=resolveClientIdentity();const c=openChatForClient(identity.id);const count=c?unreadForClient(c):0;let badge=$('npV117SupportUnread');const float=$('floatSupport');if(float&&!badge){badge=document.createElement('span');badge.id='npV117SupportUnread';badge.className='np-v117-support-unread';float.appendChild(badge)}if(badge){badge.textContent=String(Math.min(count,99));badge.classList.toggle('show',count>0)}}
+  function ensureRoot(){
+    let root=$('npV117Support');
+    if(!root){root=document.createElement('div');root.id='npV117Support';root.className='np-v117-support';document.body.appendChild(root);}
+    root.innerHTML=`<section class="np-v117-support-card" role="dialog" aria-modal="true" aria-label="Atención CRULOX"><header class="np-v117-support-head"><div class="np-v117-support-avatar"><img class="np-v119-support-avatar-img" src="${MASCOT_SRC}" alt="Mascota CRULOX"></div><div><h2 id="npV119SupportTitle">CRULOX</h2><p id="npV117SupportSubtitle">Conversa directamente con nuestro equipo.</p><div class="np-v119-support-meta"><span id="npV117SupportStatus" class="np-v117-support-status wait">En espera</span><span class="np-v119-profile-chip" id="npV119ProfileChip"></span></div></div><button class="np-v117-support-close" id="npV117SupportClose" type="button" aria-label="Cerrar">×</button></header><div class="np-v117-support-body" id="npV117SupportBody"></div><footer class="np-v117-support-compose" id="npV117SupportCompose"></footer></section>`;
+    $('npV117SupportClose').onclick=closeSupport;
+    root.onclick=e=>{if(e.target===root)closeSupport()};
+    return root;
+  }
+  function renderSupport({stickBottom=false}={}){
+    const root=ensureRoot();
+    const identity=syncIdentityCache(resolveClientIdentity());
+    let c=getChat(chatId); if(!c){c=openChatForClient(identity.id); if(c)chatId=c.id;}
+    const body=$('npV117SupportBody'), compose=$('npV117SupportCompose'), title=$('npV119SupportTitle'), subtitle=$('npV117SupportSubtitle'), status=$('npV117SupportStatus'), chip=$('npV119ProfileChip');
+    if(chip){
+      const emailText=identity.email?` · <span>${escHtml(identity.email)}</span>`:'';
+      chip.innerHTML=`<b>${escHtml(identity.name||'Cliente CRULOX')}</b>${emailText}`;
+      chip.title=(identity.name||'Cliente CRULOX')+(identity.email?` · ${identity.email}`:'');
+    }
+    if(!c){
+      title.textContent='CRULOX';
+      subtitle.textContent='Conversa directamente con nuestro equipo.';
+      status.className='np-v117-support-status wait';
+      status.textContent='Nueva consulta';
+      body.innerHTML='<div class="np-v117-welcome">Escribe tu consulta y la enviaremos al equipo de atención. Si hay un agente disponible, la conversación se asignará automáticamente.</div>';
+    } else {
+      const agent=agentById(c.assignedAgentId);
+      title.textContent=agent?.name || 'CRULOX';
+      body.innerHTML=`<div class="np-v117-welcome">${c.context?.Producto?`Consulta sobre <b>${escHtml(c.context.Producto)}</b>. `:''}Historial de esta conversación.</div>${(c.messages||[]).map(renderMsg).join('')}`;
+      if(c.status==='closed'){
+        subtitle.textContent='Puedes iniciar una nueva consulta cuando lo necesites.';
+        status.className='np-v117-support-status closed';
+        status.textContent='Conversación finalizada';
+      } else if(agent) {
+        subtitle.textContent=`${agent.area||'Equipo de atención'} · CRULOX`;
+        status.className='np-v117-support-status';
+        status.textContent=`Atendido por ${agent.name||'Agente'}`;
+      } else {
+        subtitle.textContent='Tu consulta está en la bandeja de atención.';
+        status.className='np-v117-support-status wait';
+        status.textContent='Esperando agente';
+      }
+      markClientRead(c.id);
+    }
+    if(c?.status==='closed'){
+      compose.innerHTML='<div class="np-v117-closed-actions"><button type="button" id="npV119NewChat">Iniciar nueva conversación</button></div>';
+      $('npV119NewChat').onclick=()=>{chatId='';draft='';renderSupport({stickBottom:true});setTimeout(()=>$('npV117ClientText')?.focus(),30)};
+    } else {
+      compose.innerHTML=`<div class="np-v117-compose-row"><textarea id="npV117ClientText" maxlength="2000" placeholder="Escribe tu mensaje…">${escHtml(draft)}</textarea><button class="np-v117-send" id="npV117ClientSend" type="button" aria-label="Enviar">➤</button></div>`;
+      $('npV117ClientSend').onclick=sendClient;
+      $('npV117ClientText').onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendClient();}};
+    }
+    updateUnreadBadge();
+    if(stickBottom)requestAnimationFrame(()=>{body.scrollTop=body.scrollHeight});
+  }
+  function sendClient(){
+    const txt=String($('npV117ClientText')?.value||'').trim();
+    if(!txt)return;
+    const identity=syncIdentityCache(resolveClientIdentity());
+    let c=getChat(chatId)||openChatForClient(identity.id);
+    if(!c){
+      c=newChat(identity,{message:context.message||txt,extra:Object.keys(context.extra||{}).length?context.extra:{Tipo:'Consulta general'}});
+      chatId=c.id;
+    } else {
+      mutateChat(c.id,x=>{x.customerName=identity.name||x.customerName||'Cliente CRULOX';x.customerEmail=identity.email||x.customerEmail||'';x.customerPhone=identity.phone||x.customerPhone||'';});
+    }
+    appendClientMessage(c.id,identity,txt);
+    draft='';
+    renderSupport({stickBottom:true});
+    if(typeof toast==='function')toast('Mensaje enviado al equipo de atención.','success');
+  }
+  function openSupport(message='',extra={}){
+    const identity=syncIdentityCache(resolveClientIdentity());
+    const openChat=openChatForClient(identity.id);
+    chatId=openChat?.id||'';
+    context={message:String(message||''),extra:{...(extra||{})}};
+    draft=String(message||'').replace(/^Hola\.\s*/i,'').slice(0,1200);
+    const root=ensureRoot();
+    root.classList.add('open');
+    document.body.classList.add('lock');
+    renderSupport({stickBottom:true});
+    setTimeout(()=>$('npV117ClientText')?.focus(),40);
+    clearPoll();
+    poll=setInterval(()=>{if(root.classList.contains('open'))renderSupport();},6500);
+    return true;
+  }
+  function closeSupport(){const root=$('npV117Support'); if(root)root.classList.remove('open'); document.body.classList.remove('lock'); clearPoll(); updateUnreadBadge();}
+  const previousOpenBot=window.openBot;
+  window.openBot=function(kind,message,extra={}){if(kind==='support')return openSupport(message,extra); return typeof previousOpenBot==='function'?previousOpenBot(kind,message,extra):false;};
+  if(window.NP_V117_SUPPORT)window.NP_V117_SUPPORT.open=openSupport;
+  window.addEventListener('storage',e=>{if(e.key===CHAT_KEY){if($('npV117Support')?.classList.contains('open'))renderSupport();updateUnreadBadge();}});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearPoll(); else if($('npV117Support')?.classList.contains('open')){clearPoll();poll=setInterval(()=>renderSupport(),6500);renderSupport();}});
+  updateUnreadBadge();
+})();
+</script>
+
+
+<style id="np-v120-chat-lifecycle-style">
+#npV117Support .np-v120-time-chip{display:inline-flex;align-items:center;gap:4px;min-height:25px;padding:5px 8px;border-radius:999px;border:1px solid rgba(126,203,255,.1);background:rgba(7,25,40,.82);color:#a8c0d8;font-size:.46rem;font-weight:800;white-space:nowrap}
+#npV117Support .np-v120-time-chip.idle{color:#ffd27b;border-color:rgba(255,194,80,.14);background:rgba(255,177,48,.055)}
+#npV117Support .np-v120-time-chip.life{color:#76e7ff;border-color:rgba(34,213,255,.13);background:rgba(20,202,255,.05)}
+#npV117Support .np-v119-support-avatar-img{image-rendering:auto!important;object-fit:cover!important;object-position:center 44%!important;transform:none!important;filter:none!important}
+@media(max-width:520px){#npV117Support .np-v120-time-chip{font-size:.43rem;padding:4px 7px;min-height:23px}#npV117Support .np-v119-support-meta{gap:5px}}
+</style>
+<script id="np-v120-chat-lifecycle-script">
+(function(){
+  const VERSION='11.10';
+  const CHAT_KEY='jm_digital_v1_support_chats';
+  const GUEST_KEY='np_support_guest_v117';
+  const INACTIVITY_MS=10*60*1000;
+  const LIFETIME_MS=24*60*60*1000;
+  const $=id=>document.getElementById(id);
+  let lifecycleTimer=0;
+  let displayTimer=0;
+  let lastLifecycleSignature='';
+
+  function parseTime(value,fallback=0){const n=Date.parse(value||'');return Number.isFinite(n)?n:fallback}
+  function readChats(){try{const raw=localStorage.getItem(CHAT_KEY)||'[]';const value=JSON.parse(raw);return Array.isArray(value)?value:[]}catch(e){return[]}}
+  function saveChats(chats){try{localStorage.setItem(CHAT_KEY,JSON.stringify(chats));return true}catch(e){console.warn('NovaPrime chat lifecycle',e);return false}}
+  function currentClientId(){
+    try{
+      if(state?.session?.role==='client')return `user:${state.session.userId}`;
+      const guest=JSON.parse(localStorage.getItem(GUEST_KEY)||'null');
+      return guest?.id||'';
+    }catch(e){return''}
+  }
+  function createdMs(chat){return parseTime(chat?.createdAt,parseTime(chat?.updatedAt,Date.now()))}
+  function lastActivityMs(chat){
+    let last=Math.max(createdMs(chat),parseTime(chat?.updatedAt,0));
+    const messages=Array.isArray(chat?.messages)?chat.messages:[];
+    if(messages.length)last=Math.max(last,parseTime(messages[messages.length-1]?.at,0));
+    return last||Date.now();
+  }
+  function isOpen(chat){return chat&&chat.status!=='closed'}
+  function activeChatFor(clientId,chats=readChats()){
+    return chats.filter(c=>String(c.clientId)===String(clientId)&&isOpen(c)).sort((a,b)=>lastActivityMs(b)-lastActivityMs(a))[0]||null;
+  }
+  function systemMessageExists(chat,kind){return (chat.messages||[]).some(m=>m?.lifecycleKind===kind)}
+  function lifecycleMessage(chat,kind,text,at){
+    chat.messages=Array.isArray(chat.messages)?chat.messages:[];
+    if(systemMessageExists(chat,kind))return;
+    chat.messages.push({id:`life_${kind}_${Date.now().toString(36)}`,role:'system',senderId:'system',senderName:'CRULOX',text,lifecycleKind:kind,at,readByClient:false,readByStaff:true});
+  }
+  function closePublicWindow(message='Chat cerrado por inactividad.'){
+    const root=$('npV117Support');
+    if(root?.classList.contains('open')){
+      root.classList.remove('open');
+      document.body.classList.remove('lock');
+      if(typeof window.toast==='function')window.toast(message,'info');
+    }
+  }
+  function refreshRelatedUI(){
+    try{window.NP_V117_SUPPORT?.updateBadges?.()}catch(e){}
+    if(state?.adminSection==='bots'&&$('adminOverlay')?.classList.contains('open')){
+      try{window.NP_V117_SUPPORT?.renderInbox?.()}catch(e){}
+    }
+  }
+  function runLifecycle(){
+    const now=Date.now(),clientId=currentClientId();
+    const chats=readChats();
+    let changed=false,currentClosed=false,currentPurged=false;
+    const next=[];
+    for(const chat of chats){
+      const born=createdMs(chat);
+      if(now-born>=LIFETIME_MS){
+        changed=true;
+        if(clientId&&String(chat.clientId)===String(clientId))currentPurged=true;
+        continue;
+      }
+      if(isOpen(chat)&&now-lastActivityMs(chat)>=INACTIVITY_MS){
+        const closedAt=new Date(now).toISOString();
+        chat.status='closed';
+        chat.autoClosed=true;
+        chat.closedReason='inactive';
+        chat.closedAt=closedAt;
+        chat.lifecycleLocked=true;
+        lifecycleMessage(chat,'inactive-close','Conversación cerrada por 10 min de inactividad.',closedAt);
+        changed=true;
+        if(clientId&&String(chat.clientId)===String(clientId))currentClosed=true;
+      }
+      next.push(chat);
+    }
+    if(changed){
+      saveChats(next);
+      if(currentClosed)closePublicWindow('Chat cerrado por inactividad.');else if(currentPurged)closePublicWindow('Chat eliminado al cumplir 24 h.');
+      refreshRelatedUI();
+    }
+    scheduleLifecycle(next);
+    updateVisibleTimers(next);
+    return {changed,closed:chats.length-next.filter(c=>!c.autoClosed).length,purged:chats.length-next.length,total:next.length};
+  }
+  function nextDeadline(chats){
+    const now=Date.now();let min=Infinity;
+    for(const c of chats){
+      min=Math.min(min,createdMs(c)+LIFETIME_MS);
+      if(isOpen(c))min=Math.min(min,lastActivityMs(c)+INACTIVITY_MS);
+    }
+    return Number.isFinite(min)?Math.max(250,min-now+30):60000;
+  }
+  function scheduleLifecycle(chats=readChats()){
+    clearTimeout(lifecycleTimer);
+    lifecycleTimer=setTimeout(runLifecycle,Math.min(nextDeadline(chats),60000));
+  }
+  function formatIdle(ms){
+    const total=Math.max(0,Math.ceil(ms/1000));
+    const m=Math.floor(total/60),s=total%60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+  function formatLife(ms){
+    const total=Math.max(0,Math.ceil(ms/1000));
+    const h=Math.floor(total/3600),m=Math.floor((total%3600)/60);
+    return h>0?`${h}h ${String(m).padStart(2,'0')}m`:`${m}m ${String(total%60).padStart(2,'0')}s`;
+  }
+  function ensureTimerChips(){
+    const meta=document.querySelector('#npV117Support .np-v119-support-meta');
+    if(!meta)return null;
+    let idle=$('npV120IdleTimer'),life=$('npV120LifeTimer');
+    if(!idle){idle=document.createElement('span');idle.id='npV120IdleTimer';idle.className='np-v120-time-chip idle';meta.appendChild(idle)}
+    if(!life){life=document.createElement('span');life.id='npV120LifeTimer';life.className='np-v120-time-chip life';meta.appendChild(life)}
+    return {idle,life};
+  }
+  function updateVisibleTimers(chats=readChats()){
+    const root=$('npV117Support');
+    if(!root?.classList.contains('open'))return;
+    const chat=activeChatFor(currentClientId(),chats),chips=ensureTimerChips();
+    if(!chips)return;
+    if(!chat){chips.idle.style.display='none';chips.life.style.display='none';return}
+    const now=Date.now();
+    chips.idle.style.display='inline-flex';chips.life.style.display='inline-flex';
+    chips.idle.textContent=`Inactividad ${formatIdle(lastActivityMs(chat)+INACTIVITY_MS-now)}`;
+    chips.life.textContent=`Elimina ${formatLife(createdMs(chat)+LIFETIME_MS-now)}`;
+  }
+  function startDisplayTimer(){
+    clearInterval(displayTimer);
+    displayTimer=setInterval(()=>{
+      if(document.hidden)return;
+      updateVisibleTimers();
+      const root=$('npV117Support');
+      if(root?.classList.contains('open')){
+        const chat=activeChatFor(currentClientId());
+        if(chat&&Date.now()-lastActivityMs(chat)>=INACTIVITY_MS)runLifecycle();
+      }
+    },1000);
+  }
+  function activityChanged(){setTimeout(()=>{runLifecycle();},0)}
+
+  document.addEventListener('click',e=>{
+    const id=e.target?.closest?.('button')?.id||'';
+    if(['npV117ClientSend','npV117StaffSend','npV117TakeChat','npV117Resolve','npV117ReopenBottom'].includes(id))activityChanged();
+  });
+  document.addEventListener('change',e=>{
+    if(['npV117AssignAgent','npV117Priority'].includes(e.target?.id||''))activityChanged();
+  });
+  document.addEventListener('keydown',e=>{
+    if(e.key==='Enter'&&!e.shiftKey&&['npV117ClientText','npV117StaffText'].includes(e.target?.id||''))activityChanged();
+  });
+  window.addEventListener('storage',e=>{if(e.key===CHAT_KEY){runLifecycle();}});
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){runLifecycle();updateVisibleTimers();}});
+
+  runLifecycle();
+  startDisplayTimer();
+  window.NP_V120_CHAT_LIFECYCLE={VERSION,INACTIVITY_MS,LIFETIME_MS,runLifecycle,readChats,activeChatFor,lastActivityMs,createdMs};
+})();
+</script>
+
+
+<style id="np-v121-chat-header-clean-style">
+#npV117Support #npV119ProfileChip,
+#npV117Support #npV120IdleTimer,
+#npV117Support #npV120LifeTimer{
+  display:none !important;
+}
+#npV117Support .np-v119-support-meta{
+  gap:8px !important;
+}
+</style>
+<script id="np-v121-chat-header-clean-script">
+(function(){
+  function pruneSupportHeader(){
+    const root=document.getElementById('npV117Support');
+    if(!root) return;
+    ['npV119ProfileChip','npV120IdleTimer','npV120LifeTimer'].forEach(id=>{
+      const el=document.getElementById(id);
+      if(el) el.remove();
+    });
+  }
+  const baseOpenBot=window.openBot;
+  if(typeof baseOpenBot==='function'){
+    window.openBot=function(kind,message,extra={}){
+      const result=baseOpenBot(kind,message,extra);
+      if(kind==='support') requestAnimationFrame(pruneSupportHeader);
+      return result;
+    };
+  }
+  if(window.NP_V117_SUPPORT && typeof window.NP_V117_SUPPORT.open==='function'){
+    const baseOpenSupport=window.NP_V117_SUPPORT.open;
+    window.NP_V117_SUPPORT.open=function(message='',extra={}){
+      const result=baseOpenSupport(message,extra);
+      requestAnimationFrame(pruneSupportHeader);
+      return result;
+    };
+  }
+  let observer=null;
+  function attachObserver(){
+    const root=document.getElementById('npV117Support');
+    if(!root)return false;
+    observer?.disconnect();
+    observer=new MutationObserver(()=>pruneSupportHeader());
+    observer.observe(root,{childList:true,subtree:true});
+    pruneSupportHeader();
+    return true;
+  }
+  if(!attachObserver()){
+    observer=new MutationObserver(()=>{if(attachObserver())return});
+    observer.observe(document.body,{childList:true,subtree:false});
+  }
+  pruneSupportHeader();
+})();
+</script>
+
+
+<style id="np-v122-messages-primary-style">
+#adminOverlay #npV122MessagesQuick{
+  position:relative;
+  min-height:34px!important;
+  padding:6px 11px!important;
+  border-radius:11px!important;
+  border:1px solid rgba(30,218,255,.22)!important;
+  background:linear-gradient(135deg,rgba(18,214,244,.14),rgba(31,133,255,.13))!important;
+  color:#dff8ff!important;
+  font-weight:900!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+}
+#adminOverlay #npV122MessagesQuick:hover{
+  border-color:rgba(30,218,255,.38)!important;
+  background:linear-gradient(135deg,rgba(18,214,244,.2),rgba(31,133,255,.18))!important;
+}
+#adminOverlay #npV122MessagesQuick.active{
+  color:#04111d!important;
+  background:linear-gradient(135deg,#16daf5,#198ff8)!important;
+}
+#adminOverlay .np-v122-msg-count{
+  display:none;
+  min-width:18px;
+  height:18px;
+  padding:0 5px;
+  margin-left:2px;
+  place-items:center;
+  border-radius:999px;
+  background:#ff4f75;
+  color:#fff;
+  font-size:.44rem;
+  line-height:1;
+  font-weight:950;
+  box-shadow:0 0 0 2px rgba(3,10,18,.9);
+}
+#adminOverlay .np-v122-msg-count.show{display:grid}
+@media(max-width:520px){
+  #adminOverlay #npV122MessagesQuick{padding:6px 8px!important;font-size:.5rem!important}
+  #adminOverlay #npV122MessagesQuick .np-v122-label{display:none}
+}
+</style>
+<script id="np-v122-messages-primary-script">
+(function(){
+  const CHAT_KEY='jm_digital_v1_support_chats';
+  const TOOLS=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+  function escText(v){return String(v??'')}
+  function promoteMessages(){
+    if(!TOOLS.length)return;
+    const t=TOOLS.find(x=>x&&x.id==='go-attention');
+    if(!t)return;
+    t.title='Mensajes y atención';
+    t._np110BaseTitle=t.title;
+    t.desc='Herramienta principal para mensajes, chat, atención, soporte y conversaciones con clientes. Abre la bandeja, asigna agentes, responde consultas y gestiona seguimiento.';
+    t.aliases='mensaje mensajes chat chats conversación conversaciones atencion atención soporte ayuda cliente clientes bandeja responder respuesta agente agentes servicio';
+    t.icon='💬';
+    t.group='operations';
+    t.section='bots';
+    t.action=()=>window.renderAdminSection?.('bots');
+    const idx=TOOLS.indexOf(t);
+    if(idx>0)TOOLS.splice(idx,1);
+    if(TOOLS[0]!==t)TOOLS.unshift(t);
+    TOOLS.forEach((x,i)=>{x.rank=i+1});
+  }
+  function chatCounts(){
+    let arr=[];
+    try{const raw=localStorage.getItem(CHAT_KEY);arr=raw?JSON.parse(raw):[]}catch(e){arr=[]}
+    if(!Array.isArray(arr))arr=[];
+    const open=arr.filter(c=>c&&c.status!=='closed');
+    const waiting=open.filter(c=>!c.assignedAgentId||c.status==='waiting').length;
+    const unread=open.reduce((n,c)=>n+(Array.isArray(c.messages)?c.messages.filter(m=>m?.role==='client'&&!m.readByStaff).length:0),0);
+    return {waiting,unread,total:waiting+unread};
+  }
+  function ensureQuickButton(){
+    const overlay=document.getElementById('adminOverlay');
+    const toolbar=overlay?.querySelector('.admin-top .toolbar');
+    if(!toolbar)return null;
+    let btn=document.getElementById('npV122MessagesQuick');
+    if(!btn){
+      btn=document.createElement('button');
+      btn.type='button';
+      btn.id='npV122MessagesQuick';
+      btn.className='btn btn-secondary btn-sm';
+      btn.innerHTML='<span aria-hidden="true">💬</span><span class="np-v122-label">Mensajes</span><span class="np-v122-msg-count" id="npV122MessagesCount">0</span>';
+      const store=document.getElementById('adminStoreBtn');
+      toolbar.insertBefore(btn,store||toolbar.firstChild);
+      btn.onclick=()=>window.renderAdminSection?.('bots');
+    }
+    return btn;
+  }
+  function updateQuickButton(){
+    const btn=ensureQuickButton();
+    if(!btn)return;
+    const c=chatCounts();
+    const badge=document.getElementById('npV122MessagesCount');
+    if(badge){badge.textContent=String(Math.min(c.total,99));badge.classList.toggle('show',c.total>0)}
+    btn.classList.toggle('active',state?.adminSection==='bots');
+    btn.title=c.total?`Mensajes · ${c.unread} sin leer · ${c.waiting} en espera`:'Abrir mensajes y atención al cliente';
+  }
+  function reinforcePrimaryNav(){
+    const nav=document.getElementById('adminNav');
+    if(!nav)return;
+    const buttons=[...nav.querySelectorAll('button')];
+    const attention=buttons.find(b=>b.dataset.admin==='bots'||/atenci[oó]n|mensajes/i.test(b.textContent||''));
+    if(!attention)return;
+    const first=nav.querySelector('button');
+    if(first&&attention!==first&&first.nextSibling!==attention)nav.insertBefore(attention,first.nextSibling);
+  }
+  function refresh(){promoteMessages();ensureQuickButton();updateQuickButton();reinforcePrimaryNav()}
+  promoteMessages();
+  const baseOpen=window.openAdmin;
+  if(typeof baseOpen==='function')window.openAdmin=function(section='home'){promoteMessages();const r=baseOpen(section);requestAnimationFrame(refresh);return r};
+  const baseRender=window.renderAdminSection;
+  if(typeof baseRender==='function')window.renderAdminSection=function(section){promoteMessages();const r=baseRender(section);requestAnimationFrame(refresh);return r};
+  window.addEventListener('storage',e=>{if(e.key===CHAT_KEY)updateQuickButton()});
+  document.addEventListener('click',e=>{if(e.target.closest?.('[data-v117-chat],#npV117StaffSend,#npV117Resolve,#npV117ClientSend'))setTimeout(updateQuickButton,50)},true);
+  setInterval(()=>{if(!document.hidden&&document.getElementById('adminOverlay')?.classList.contains('open'))updateQuickButton()},7000);
+  requestAnimationFrame(refresh);
+  window.NP_V122_MESSAGES_PRIMARY={promote:promoteMessages,refresh,counts:chatCounts};
+})();
+</script>
+
+
+<style id="np-v123-attention-safe-style">
+#adminOverlay .np-v123-attention{display:grid;gap:10px;min-width:0}
+#adminOverlay .np-v123-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;padding:12px 13px;border:1px solid rgba(72,202,255,.12);border-radius:16px;background:linear-gradient(145deg,#081b2b,#061421)}
+#adminOverlay .np-v123-head small{display:block;color:#25ddff;font-size:.47rem;font-weight:900;letter-spacing:.11em;text-transform:uppercase}
+#adminOverlay .np-v123-head h2{margin:3px 0 4px;font-size:.86rem;line-height:1.15}
+#adminOverlay .np-v123-head p{max-width:720px;color:#8fa7bf;font-size:.54rem;line-height:1.45}
+#adminOverlay .np-v123-live{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:6px 9px;border-radius:999px;border:1px solid rgba(53,229,148,.14);background:rgba(53,229,148,.055);color:#44e699;font-size:.48rem;font-weight:850}
+#adminOverlay .np-v123-live i{width:6px;height:6px;border-radius:50%;background:#44e699;box-shadow:0 0 0 4px rgba(68,230,153,.08)}
+#adminOverlay .np-v123-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#adminOverlay .np-v123-kpi{padding:9px 10px;border-radius:13px;border:1px solid rgba(126,203,255,.075);background:#071624}
+#adminOverlay .np-v123-kpi small{display:block;color:#7f9ab4;font-size:.47rem}.np-v123-kpi b{display:block;margin-top:2px;font-size:.88rem;color:#eaf7ff}
+#adminOverlay .np-v123-kpi.wait b{color:#ffd16a}#adminOverlay .np-v123-kpi.active b{color:#51e6ff}#adminOverlay .np-v123-kpi.unread b{color:#ff7790}
+#adminOverlay .np-v123-layout{display:grid;grid-template-columns:minmax(260px,340px) minmax(0,1fr);gap:9px;min-height:520px}
+#adminOverlay .np-v123-list-pane,#adminOverlay .np-v123-chat-pane{min-width:0;border:1px solid rgba(126,203,255,.08);border-radius:16px;background:#06131f;overflow:hidden}
+#adminOverlay .np-v123-list-pane{display:grid;grid-template-rows:auto minmax(0,1fr)}
+#adminOverlay .np-v123-tools{padding:9px;border-bottom:1px solid rgba(126,203,255,.07);display:grid;gap:6px;background:#071725}
+#adminOverlay .np-v123-tools input,#adminOverlay .np-v123-tools select{width:100%;min-width:0;min-height:33px!important;padding:6px 8px!important;border-radius:10px!important;font-size:.51rem!important}
+#adminOverlay .np-v123-filter-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#adminOverlay .np-v123-list{display:grid;align-content:start;gap:5px;padding:7px;max-height:590px;overflow:auto}
+#adminOverlay .np-v123-chat-row{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid transparent;border-radius:12px;background:#071725;color:#e8f5ff;text-align:left}
+#adminOverlay .np-v123-chat-row:hover{background:#081b2b;border-color:rgba(56,214,255,.12)}#adminOverlay .np-v123-chat-row.active{background:linear-gradient(135deg,rgba(20,214,244,.11),rgba(30,131,255,.08));border-color:rgba(31,215,255,.2)}
+#adminOverlay .np-v123-row-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:#0a2032;font-size:.76rem}
+#adminOverlay .np-v123-chat-row b{display:block;font-size:.58rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v123-chat-row p{margin:2px 0 0!important;color:#829cb5!important;font-size:.46rem!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v123-chat-row aside{display:grid;justify-items:end;gap:3px}.np-v123-chat-row time{font-size:.42rem;color:#6f89a3}.np-v123-chat-row em{font-style:normal;font-size:.4rem;color:#63ddff}.np-v123-chat-row .np-v123-dot{min-width:16px;height:16px;padding:0 4px;display:grid;place-items:center;border-radius:999px;background:#ff5475;color:white;font-size:.39rem;font-weight:900}
+#adminOverlay .np-v123-chat-pane{display:grid;grid-template-rows:auto minmax(0,1fr) auto;min-height:520px}
+#adminOverlay .np-v123-empty{min-height:350px;display:grid;place-items:center;padding:20px;text-align:center;color:#7f99b1}.np-v123-empty div{max-width:300px}.np-v123-empty span{display:block;font-size:1.5rem;margin-bottom:7px}.np-v123-empty b{display:block;color:#e5f3ff;font-size:.68rem}.np-v123-empty p{font-size:.51rem!important;line-height:1.45!important;margin-top:4px!important}
+#adminOverlay .np-v123-chat-head{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:10px 11px;border-bottom:1px solid rgba(126,203,255,.07);background:#071725}
+#adminOverlay .np-v123-chat-head h3{font-size:.72rem;margin:0}.np-v123-chat-head p{font-size:.48rem!important;color:#819ab3!important;margin:3px 0 0!important;line-height:1.35!important}
+#adminOverlay .np-v123-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:5px}.np-v123-actions select,.np-v123-actions button{min-height:30px;border-radius:9px;padding:5px 8px;border:1px solid rgba(126,203,255,.1);background:#091b2b;color:#dcecf8;font-size:.47rem;font-weight:800}.np-v123-actions button.resolve{color:#ff9eb0;border-color:rgba(255,83,116,.16);background:rgba(255,83,116,.055)}.np-v123-actions button:disabled,.np-v123-actions select:disabled{opacity:.5;cursor:not-allowed}
+#adminOverlay .np-v123-context{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;padding:7px 10px;border-bottom:1px solid rgba(126,203,255,.06);background:#061522}
+#adminOverlay .np-v123-context div{min-width:0;padding:6px 7px;border-radius:9px;background:#081a29;border:1px solid rgba(126,203,255,.05)}.np-v123-context small{display:block;font-size:.39rem;color:#69839d;text-transform:uppercase}.np-v123-context b{display:block;margin-top:2px;font-size:.47rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v123-thread{display:flex;flex-direction:column;gap:7px;padding:10px;overflow:auto;min-height:0;max-height:470px}
+#adminOverlay .np-v123-message{max-width:82%;padding:8px 10px;border-radius:13px}.np-v123-message.client{align-self:flex-start;background:#0a2032;border:1px solid rgba(126,203,255,.08)}.np-v123-message.staff{align-self:flex-end;background:linear-gradient(135deg,#12cfea,#168ff4);color:#03111c}.np-v123-message.system{align-self:center;max-width:92%;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.045);color:#839bb1;text-align:center}.np-v123-message b{display:block;font-size:.43rem;margin-bottom:3px}.np-v123-message p{margin:0!important;font-size:.54rem!important;line-height:1.42!important;white-space:pre-wrap;overflow-wrap:anywhere}.np-v123-message time{display:block;margin-top:4px;text-align:right;font-size:.38rem;opacity:.62}
+#adminOverlay .np-v123-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:8px;border-top:1px solid rgba(126,203,255,.07);background:#071725}.np-v123-compose textarea{min-height:42px;max-height:110px;resize:none;border:1px solid rgba(126,203,255,.1);border-radius:11px;background:#081a29;color:#e9f6ff;padding:8px 9px;font-size:.53rem;outline:none}.np-v123-compose button{min-width:64px;border:0;border-radius:11px;background:linear-gradient(135deg,#16daf4,#198ff8);color:#04111d;font-size:.5rem;font-weight:950}.np-v123-compose.locked{grid-template-columns:1fr}.np-v123-compose.locked div{padding:9px;border-radius:10px;background:rgba(255,170,55,.045);border:1px solid rgba(255,180,70,.1);color:#d4b372;font-size:.49rem;text-align:center}
+#adminOverlay .np-v123-status{display:inline-flex;margin-left:5px;padding:3px 6px;border-radius:999px;font-size:.38rem;font-weight:900;background:#0a2032;color:#82dfff}.np-v123-status.wait{color:#ffd16a}.np-v123-status.closed{color:#a0afbd}
+@media(max-width:760px){#adminOverlay .np-v123-layout{grid-template-columns:1fr;min-height:0}#adminOverlay .np-v123-list{max-height:300px}#adminOverlay .np-v123-chat-pane{min-height:480px}#adminOverlay .np-v123-context{grid-template-columns:1fr 1fr}#adminOverlay .np-v123-kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:480px){#adminOverlay .np-v123-head{padding:10px}.np-v123-head p{display:none}#adminOverlay .np-v123-chat-head{grid-template-columns:1fr}.np-v123-actions{justify-content:flex-start}#adminOverlay .np-v123-filter-row{grid-template-columns:1fr 1fr}#adminOverlay .np-v123-chat-row{grid-template-columns:31px minmax(0,1fr) auto;padding:7px}.np-v123-row-icon{width:31px;height:31px}.np-v123-context{grid-template-columns:1fr 1fr!important}}
+</style>
+<script id="np-v123-attention-safe-script">
+(function(){
+  const VERSION='11.15';
+  const CHAT_KEY='jm_digital_v1_support_chats';
+  const INACTIVITY_MS=10*60*1000;
+  const LIFETIME_MS=24*60*60*1000;
+  const POLL_MS=6500;
+  const team=window.NP_TEAM_API_V105||null;
+  const $=id=>document.getElementById(id);
+  const escHtml=v=>typeof window.esc==='function'?window.esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const norm=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+  const isoNow=()=>new Date().toISOString();
+  const uid=(p='id')=>`${p}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+  let selectedId='';
+  let poll=0;
+  let filterState={q:'',status:'open',priority:'all'};
+
+  function readRaw(){try{const raw=localStorage.getItem(CHAT_KEY)||'[]';const arr=JSON.parse(raw);return Array.isArray(arr)?arr:[]}catch(e){console.warn('NovaPrime Atención: almacenamiento inválido',e);return[]}}
+  function saveRaw(arr){try{localStorage.setItem(CHAT_KEY,JSON.stringify(arr));return true}catch(e){console.warn('NovaPrime Atención: no se pudo guardar',e);return false}}
+  function parseMs(v,f=0){const n=Date.parse(v||'');return Number.isFinite(n)?n:f}
+  function agentList(){try{return Array.isArray(team?.agents?.())?team.agents().filter(a=>a&&a.active!==false):[]}catch(e){return[]}}
+  function supportAgents(){const all=agentList(),preferred=all.filter(a=>a.preset==='support'||/(atencion|soporte|cliente|servicio)/.test(norm(a.area)));return preferred.length?preferred:all.filter(a=>a.preset==='supervisor')}
+  function agentById(id){if(String(id)==='owner')return{id:'owner',name:'Administrador CRULOX',area:'Administración',active:true};try{return team?.agentById?.(id)||agentList().find(a=>String(a.id)===String(id))||null}catch(e){return null}}
+  function currentStaff(){if(state?.session?.role==='agent'){try{return team?.sessionAgent?.()||null}catch(e){return null}}if(state?.session?.role==='admin')return{id:'owner',name:'Administrador CRULOX',area:'Administración',active:true};return null}
+  function isAdmin(){return state?.session?.role==='admin'}
+  function isAgent(){if(state?.session?.role!=='agent')return false;const me=currentStaff();if(!me||me.active===false)return false;try{return !!team?.canUseSection?.('bots')}catch(e){return false}}
+  function createdMs(c){return parseMs(c?.createdAt,parseMs(c?.updatedAt,Date.now()))}
+  function lastActivityMs(c){let last=Math.max(createdMs(c),parseMs(c?.updatedAt,0));for(const m of Array.isArray(c?.messages)?c.messages:[])last=Math.max(last,parseMs(m?.at,0));return last||Date.now()}
+  function addSystem(c,text,kind){c.messages=Array.isArray(c.messages)?c.messages:[];if(kind&&c.messages.some(m=>m?.consistencyKind===kind||m?.lifecycleKind===kind))return;c.messages.push({id:uid('sys'),role:'system',senderId:'system',senderName:'CRULOX',text,at:isoNow(),readByClient:false,readByStaff:true,consistencyKind:kind||''})}
+  function profileForClientId(clientId){if(!String(clientId).startsWith('user:')||!Array.isArray(state?.users))return null;const id=String(clientId).slice(5);return state.users.find(u=>String(u.id)===id)||null}
+
+  function normalizeChats({persist=true}={}){
+    try{window.NP_V120_CHAT_LIFECYCLE?.runLifecycle?.()}catch(e){}
+    const original=readRaw(),now=Date.now(),activeAgents=new Set(agentList().map(a=>String(a.id))),next=[];
+    for(const source of original){
+      if(!source||typeof source!=='object')continue;
+      const c={...source};
+      c.id=String(c.id||uid('chat'));
+      c.clientId=String(c.clientId||`unknown:${c.id}`);
+      c.createdAt=Number.isFinite(parseMs(c.createdAt,NaN))?c.createdAt:(c.updatedAt||isoNow());
+      c.updatedAt=Number.isFinite(parseMs(c.updatedAt,NaN))?c.updatedAt:c.createdAt;
+      if(now-createdMs(c)>=LIFETIME_MS)continue;
+      c.messages=(Array.isArray(c.messages)?c.messages:[]).filter(m=>m&&typeof m==='object').map(m=>({...m,id:String(m.id||uid('msg')),role:['client','staff','system'].includes(m.role)?m.role:'system',senderName:String(m.senderName||''),text:String(m.text||''),at:Number.isFinite(parseMs(m.at,NaN))?m.at:c.createdAt})).sort((a,b)=>parseMs(a.at,0)-parseMs(b.at,0));
+      const profile=profileForClientId(c.clientId);
+      if(profile){c.customerName=profile.fullName||profile.username||c.customerName||'Cliente';c.customerEmail=profile.email||c.customerEmail||'';c.customerPhone=profile.phone||c.customerPhone||''}
+      c.customerName=String(c.customerName||'Cliente');c.customerEmail=String(c.customerEmail||'');c.customerPhone=String(c.customerPhone||'');c.subject=String(c.subject||'Consulta general');c.context=(c.context&&typeof c.context==='object')?c.context:{};c.priority=c.priority==='high'?'high':'normal';c.assignedAgentId=String(c.assignedAgentId||'');
+      if(c.assignedAgentId&&c.assignedAgentId!=='owner'&&!activeAgents.has(c.assignedAgentId)){c.assignedAgentId='';if(c.status!=='closed')addSystem(c,'El agente anterior ya no está disponible. La conversación volvió a la bandeja de espera.','agent-unavailable')}
+      if(c.lifecycleLocked)c.status='closed';
+      if(c.status!=='closed')c.status=c.assignedAgentId?'active':'waiting';
+      if(c.status!=='closed'&&now-lastActivityMs(c)>=INACTIVITY_MS){c.status='closed';c.autoClosed=true;c.closedReason='inactive';c.closedAt=isoNow();c.lifecycleLocked=true;addSystem(c,'Conversación cerrada por 10 min de inactividad.','inactive-close')}
+      next.push(c);
+    }
+    const byClient=new Map();
+    for(const c of next.filter(x=>x.status!=='closed').sort((a,b)=>lastActivityMs(b)-lastActivityMs(a))){if(!byClient.has(c.clientId)){byClient.set(c.clientId,c.id);continue}c.status='closed';c.closedReason='duplicate-open';c.closedAt=isoNow();c.lifecycleLocked=true;addSystem(c,'Conversación cerrada porque ya existe una conversación más reciente activa.','duplicate-open')}
+    next.sort((a,b)=>lastActivityMs(b)-lastActivityMs(a));
+    if(persist&&JSON.stringify(original)!==JSON.stringify(next))saveRaw(next);
+    return next;
+  }
+
+  function canSee(c){if(isAdmin())return true;const me=currentStaff();if(!me)return false;if(c.status!=='closed'&&!c.assignedAgentId)return true;return String(c.assignedAgentId)===String(me.id)}
+  function canHandle(c){if(!c||c.status==='closed')return false;if(isAdmin())return true;const me=currentStaff();return !!me&&(!c.assignedAgentId||String(c.assignedAgentId)===String(me.id))}
+  function visibleChats(){return normalizeChats().filter(canSee)}
+  function getChat(id){return normalizeChats().find(c=>String(c.id)===String(id))||null}
+  function unread(c){return (c.messages||[]).filter(m=>m.role==='client'&&!m.readByStaff).length}
+  function markRead(id){const all=normalizeChats(),i=all.findIndex(c=>c.id===id);if(i<0||!canSee(all[i]))return false;let changed=false;for(const m of all[i].messages||[]){if(m.role==='client'&&!m.readByStaff){m.readByStaff=true;changed=true}}if(changed)saveRaw(all);return changed}
+  function mutate(id,fn,{requireHandle=false,allowClosed=false}={}){const all=normalizeChats(),i=all.findIndex(c=>c.id===id);if(i<0)return null;const c=all[i];if(!canSee(c))return null;if(requireHandle&&!canHandle(c))return null;if(c.lifecycleLocked&&!allowClosed)return null;fn(c,all);c.updatedAt=isoNow();saveRaw(all);return c}
+  function timeText(v){try{return new Date(v).toLocaleTimeString('es-GT',{hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
+  function dateText(v){try{return new Date(v).toLocaleString('es-GT',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}catch(e){return''}}
+  function contextLabel(c){return String(c.context?.Producto||c.context?.Combo||c.context?.Tipo||c.subject||'Consulta general')}
+  function messageSearchText(c){return (c.messages||[]).map(m=>`${m.senderName||''} ${m.text||''}`).join(' ')}
+  function statusText(c){if(c.status==='closed')return c.lifecycleLocked?'Cerrado automático':'Finalizado';if(c.assignedAgentId)return'En atención';return'En espera'}
+  function statusClass(c){if(c.status==='closed')return'closed';if(c.assignedAgentId)return'active';return'wait'}
+  function closeReason(c){if(c.lifecycleLocked&&c.closedReason==='inactive')return'Cerrado automáticamente por 10 minutos de inactividad.';if(c.lifecycleLocked)return'Chat cerrado definitivamente por regla del sistema.';return'Conversación finalizada manualmente por el equipo.'}
+
+  function filtered(){
+    let list=visibleChats();const q=norm(filterState.q),me=currentStaff();
+    if(q)list=list.filter(c=>norm(`${c.id} ${c.customerName} ${c.customerEmail} ${c.customerPhone} ${c.subject} ${contextLabel(c)} ${agentById(c.assignedAgentId)?.name||''} ${messageSearchText(c)}`).includes(q));
+    if(filterState.status==='open')list=list.filter(c=>c.status!=='closed');
+    else if(filterState.status==='waiting')list=list.filter(c=>c.status==='waiting'&&!c.assignedAgentId);
+    else if(filterState.status==='assigned')list=list.filter(c=>c.status==='active'&&!!c.assignedAgentId);
+    else if(filterState.status==='unread')list=list.filter(c=>c.status!=='closed'&&unread(c)>0);
+    else if(filterState.status==='mine')list=list.filter(c=>c.status!=='closed'&&String(c.assignedAgentId)===String(me?.id));
+    else if(filterState.status==='closed')list=list.filter(c=>c.status==='closed');
+    if(filterState.priority!=='all')list=list.filter(c=>c.priority===filterState.priority);
+    return list.sort((a,b)=>lastActivityMs(b)-lastActivityMs(a));
+  }
+  function counts(list=visibleChats()){return{waiting:list.filter(c=>c.status==='waiting'&&!c.assignedAgentId).length,active:list.filter(c=>c.status==='active'&&!!c.assignedAgentId).length,unread:list.filter(c=>c.status!=='closed').reduce((n,c)=>n+unread(c),0),closed:list.filter(c=>c.status==='closed').length}}
+  function emptyPanel(){return '<div class="np-v124-empty-panel"><div class="np-v124-empty-icon">💬</div><h3>Selecciona una conversación</h3><p>Abre un chat para revisar el contexto, asignar responsable y responder sin mezclar historiales.</p><div class="np-v124-empty-steps"><span><b>1</b> Revisar</span><span><b>2</b> Asignar</span><span><b>3</b> Responder</span><span><b>4</b> Finalizar</span></div></div>'}
+  function listEmptyMarkup(){const all=visibleChats(),closed=all.filter(c=>c.status==='closed').length;if(filterState.status==='open'&&closed>0)return `<div class="np-v124-list-empty"><span>✓</span><b>No hay conversaciones abiertas</b><p>La bandeja operativa está al día.</p><button type="button" data-v124-show-closed>Ver historial (${closed})</button></div>`;return '<div class="np-v124-list-empty"><span>✓</span><b>Sin conversaciones</b><p>No hay chats que coincidan con este filtro.</p></div>'}
+  function listMarkup(){const list=filtered();if(!list.length)return listEmptyMarkup();return list.map(c=>{const a=agentById(c.assignedAgentId),last=(c.messages||[]).slice(-1)[0],n=unread(c),ctx=contextLabel(c);return `<button type="button" class="np-v124-chat-row ${selectedId===c.id?'active':''}" data-v124-chat="${escHtml(c.id)}"><span class="np-v124-row-icon ${statusClass(c)}">${c.status==='closed'?'✓':c.assignedAgentId?'💬':'⏳'}</span><span class="np-v124-row-main"><span class="np-v124-row-title"><b>${escHtml(c.customerName)}</b>${c.priority==='high'?'<em>ALTA</em>':''}</span><small>${escHtml(ctx)}</small><p>${escHtml(last?.text||c.subject)}</p></span><aside><time>${escHtml(timeText(c.updatedAt))}</time><span class="np-v124-row-state ${statusClass(c)}">${escHtml(a?.name||statusText(c))}</span>${n?`<i>${n}</i>`:''}</aside></button>`}).join('')}
+  function threadMarkup(c){return (c.messages||[]).map(m=>`<article class="np-v124-message ${m.role==='client'?'client':m.role==='staff'?'staff':'system'}"><b>${escHtml(m.senderName|| (m.role==='client'?c.customerName:'CRULOX'))}</b><p>${escHtml(m.text)}</p><time>${escHtml(timeText(m.at))}</time></article>`).join('')||'<div class="np-v124-thread-empty">Sin mensajes todavía.</div>'}
+  const QUICK=['Hola, estoy revisando tu consulta.','Permíteme verificar la información y te confirmo.','Gracias. ¿Hay algo más en lo que pueda ayudarte?'];
+
+  function panelMarkup(c){
+    const assigned=agentById(c.assignedAgentId),agents=supportAgents(),closed=c.status==='closed',locked=!!c.lifecycleLocked,ctx=contextLabel(c),last=dateText(new Date(lastActivityMs(c)).toISOString()),contact=c.customerPhone||c.customerEmail||'—';
+    let actions='';
+    if(!closed){const assignment=isAdmin()?`<label><span>Responsable</span><select id="npV124Assign"><option value="">Sin asignar</option>${agents.map(a=>`<option value="${escHtml(a.id)}" ${String(c.assignedAgentId)===String(a.id)?'selected':''}>${escHtml(a.name)} · ${escHtml(a.area||'Atención')}</option>`).join('')}</select></label>`:(!c.assignedAgentId?'<button type="button" class="primary" id="npV124Take">Tomar chat</button>':'');actions=`${assignment}<label><span>Prioridad</span><select id="npV124Priority"><option value="normal" ${c.priority!=='high'?'selected':''}>Normal</option><option value="high" ${c.priority==='high'?'selected':''}>Alta</option></select></label><button type="button" class="danger" id="npV124Resolve">Finalizar</button>`}
+    else if(!locked)actions='<button type="button" class="secondary" id="npV124Resolve">Reabrir conversación</button>';
+    return `<header class="np-v124-chat-head"><div><div class="np-v124-title-line"><h3>${escHtml(c.customerName)}</h3><span class="np-v124-status ${statusClass(c)}">${escHtml(statusText(c))}</span>${c.priority==='high'?'<span class="np-v124-priority-high">Prioridad alta</span>':''}</div><p>${escHtml(ctx)}${assigned?` · Responsable: ${escHtml(assigned.name)}`:' · Sin responsable'}</p></div>${actions?`<div class="np-v124-actions">${actions}</div>`:''}</header><section class="np-v124-case-grid"><article><small>Cliente</small><b>${escHtml(c.customerName)}</b></article><article><small>Contacto</small><b title="${escHtml(contact)}">${escHtml(contact)}</b></article><article><small>Contexto</small><b title="${escHtml(ctx)}">${escHtml(ctx)}</b></article><article><small>Responsable</small><b>${escHtml(assigned?.name||'Sin asignar')}</b></article><article><small>Creado</small><b>${escHtml(dateText(c.createdAt))}</b></article><article><small>Última actividad</small><b>${escHtml(last)}</b></article></section><div class="np-v124-thread" id="npV124Thread">${threadMarkup(c)}</div>${closed?`<footer class="np-v124-closed-note ${locked?'locked':''}"><b>${locked?'🔒 Solo lectura':'✓ Conversación finalizada'}</b><span>${escHtml(closeReason(c))} El historial se elimina automáticamente al cumplir 24 horas desde su creación.</span></footer>`:`<footer class="np-v124-compose"><div class="np-v124-quick">${QUICK.map((x,i)=>`<button type="button" data-v124-quick="${i}">${escHtml(x)}</button>`).join('')}</div><div class="np-v124-compose-row"><textarea id="npV124Reply" maxlength="2000" placeholder="Responder al cliente…"></textarea><button type="button" id="npV124Send">Enviar</button></div></footer>`}`;
+  }
+
+  function validateSelection(){if(!selectedId)return null;const c=getChat(selectedId);if(!c||!canSee(c)){selectedId='';return null}const list=filtered();if(!list.some(x=>x.id===selectedId)){selectedId='';return null}return c}
+  function renderList(){const root=$('npV124List');if(!root)return;validateSelection();root.innerHTML=listMarkup();root.querySelectorAll('[data-v124-chat]').forEach(b=>b.onclick=()=>selectChat(b.dataset.v124Chat));const history=root.querySelector('[data-v124-show-closed]');if(history)history.onclick=()=>{filterState.status='closed';syncFilterControls();renderList();renderPanel();updateResultCount()}}
+  function renderPanel({stick=false,focus=false}={}){const root=$('npV124Panel');if(!root)return;const c=validateSelection();if(!c){root.innerHTML=emptyPanel();return}root.innerHTML=panelMarkup(c);bindPanel(c.id);if(stick)requestAnimationFrame(()=>{const t=$('npV124Thread');if(t)t.scrollTop=t.scrollHeight});if(focus&&matchMedia('(max-width:760px)').matches)requestAnimationFrame(()=>root.scrollIntoView({behavior:'smooth',block:'start'}))}
+  function renderCounts(){const k=counts();for(const [key,val] of Object.entries(k)){const el=$(`npV124Kpi-${key}`);if(el)el.textContent=String(val)}try{window.NP_V122_MESSAGES_PRIMARY?.refresh?.()}catch(e){}try{window.NP_V117_SUPPORT?.updateBadges?.()}catch(e){}}
+  function syncFilterControls(){const s=$('npV124Status'),p=$('npV124Priority');if(s)s.value=filterState.status;if(p)p.value=filterState.priority;document.querySelectorAll('[data-v124-kpi-filter]').forEach(b=>b.classList.toggle('active',b.dataset.v124KpiFilter===filterState.status))}
+  function updateResultCount(){const el=$('npV124ResultCount');if(el)el.textContent=`${filtered().length} visibles`}
+  function refresh({stick=false}={}){if(state?.adminSection!=='bots'||!$('adminOverlay')?.classList.contains('open'))return;normalizeChats();renderCounts();renderList();renderPanel({stick});syncFilterControls();updateResultCount()}
+  function selectChat(id){const c=getChat(id);if(!c||!canSee(c)){selectedId='';refresh();return}selectedId=c.id;markRead(c.id);renderList();renderPanel({stick:true,focus:true});renderCounts();updateResultCount()}
+
+  function bindPanel(chatId){
+    const assign=$('npV124Assign');if(assign)assign.onchange=()=>{const current=getChat(chatId);if(!current||current.status==='closed'){refresh();return}const id=assign.value;const changed=mutate(chatId,c=>{c.assignedAgentId=id;c.status=id?'active':'waiting';addSystem(c,id?`Conversación asignada a ${agentById(id)?.name||'agente'}.`:'Conversación devuelta a la bandeja de espera.','')},{requireHandle:false});if(!changed){refresh();return}refresh({stick:true})};
+    const take=$('npV124Take');if(take)take.onclick=()=>{const me=currentStaff(),current=getChat(chatId);if(!me||!current||current.status==='closed'){refresh();return}const changed=mutate(chatId,c=>{if(c.assignedAgentId&&String(c.assignedAgentId)!==String(me.id))return;c.assignedAgentId=String(me.id);c.status='active';addSystem(c,`${me.name||'Un agente'} tomó la conversación.`,'')},{requireHandle:true});if(!changed){selectedId='';refresh();return}refresh({stick:true})};
+    const priority=$('npV124Priority');if(priority)priority.onchange=()=>{const current=getChat(chatId);if(!current||current.status==='closed'){refresh();return}const changed=mutate(chatId,c=>{c.priority=priority.value==='high'?'high':'normal'},{requireHandle:false});if(!changed){refresh();return}refresh()};
+    const resolve=$('npV124Resolve');if(resolve)resolve.onclick=()=>{const current=getChat(chatId);if(!current||!canSee(current)){selectedId='';refresh();return}if(current.lifecycleLocked){refresh();return}const changed=mutate(chatId,c=>{if(c.status==='closed'){c.status=c.assignedAgentId?'active':'waiting';c.closedAt='';c.closedReason='';addSystem(c,'La conversación fue reabierta.','')}else{c.status='closed';c.closedAt=isoNow();c.closedReason='manual';addSystem(c,'El equipo marcó esta conversación como finalizada.','')}},{allowClosed:true});if(!changed){refresh();return}filterState.status=changed.status==='closed'?'closed':(isAgent()?'mine':'open');syncFilterControls();refresh({stick:true})};
+    const text=$('npV124Reply'),send=$('npV124Send');document.querySelectorAll('[data-v124-quick]').forEach(b=>b.onclick=()=>{if(text){text.value=QUICK[Number(b.dataset.v124Quick)]||'';text.focus()}});
+    const submit=()=>{const value=String(text?.value||'').trim(),me=currentStaff();if(!value||!me)return;const current=getChat(chatId);if(!current||!canHandle(current)){selectedId='';refresh();if(typeof window.toast==='function')window.toast('Este chat ya no te corresponde o ya está cerrado.','warn');return}const changed=mutate(chatId,c=>{if(!c.assignedAgentId){c.assignedAgentId=String(me.id);c.status='active'}c.messages.push({id:uid('msg'),role:'staff',senderId:String(me.id),senderName:me.name||'Equipo CRULOX',text:value.slice(0,2000),at:isoNow(),readByClient:false,readByStaff:true})},{requireHandle:true});if(!changed){selectedId='';refresh();return}refresh({stick:true});if(typeof window.toast==='function')window.toast('Respuesta enviada.','success')};
+    if(send)send.onclick=submit;if(text)text.onkeydown=e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();submit()}};
+  }
+
+  function renderInbox(){
+    if(!isAdmin()&&!isAgent()){if(typeof window.toast==='function')window.toast('Necesitas acceso de equipo para abrir Mensajes.','warn');return false}
+    const entering=state?.adminSection!=='bots';normalizeChats();state.adminSection='bots';if(entering){selectedId='';filterState={q:'',status:'open',priority:'all'}}
+    if($('adminTitle'))$('adminTitle').textContent='Mensajes y atención';
+    try{if(typeof renderAdminNav==='function')renderAdminNav();else window.renderAdminNav?.()}catch(e){}
+    const breadcrumb=$('adminBreadcrumb');if(breadcrumb)breadcrumb.innerHTML='<span>Administración</span><span>›</span><b>Mensajes y atención</b>';
+    const sub=$('adminSubnavWrap');if(sub){sub.innerHTML=`<nav class="np-admin-subnav"><button class="active">💬 Conversaciones</button><button type="button" data-v124-sub="agents">👥 Agentes</button>${isAdmin()?'<button type="button" data-v124-sub="permissions">🔐 Roles y permisos</button>':''}<button type="button" data-v124-sub="orders">📦 Seguimiento pedidos</button></nav>`;sub.onclick=e=>{const b=e.target.closest('[data-v124-sub]');if(!b)return;if(b.dataset.v124Sub==='agents')return team?.renderAgents?.();if(b.dataset.v124Sub==='permissions')return window.renderAdminSection?.('np-permissions');if(b.dataset.v124Sub==='orders')return team?.renderOrderChat?.()}}
+    const k=counts();
+    $('adminContent').innerHTML=`<section class="np-v124-attention"><header class="np-v124-hero"><div><small>Herramienta #1 · Operación esencial</small><h2>Mensajes y atención al cliente</h2><p>Recibe consultas, identifica el contexto, asigna un responsable, responde y cierra cada caso. Los chats inactivos se bloquean a los 10 minutos y el historial se depura a las 24 horas.</p></div><span class="np-v124-live"><i></i> Operativo</span></header><div class="np-v124-kpis"><button type="button" class="np-v124-kpi wait" data-v124-kpi-filter="waiting"><small>En espera</small><b id="npV124Kpi-waiting">${k.waiting}</b><span>Sin responsable</span></button><button type="button" class="np-v124-kpi active" data-v124-kpi-filter="assigned"><small>En atención</small><b id="npV124Kpi-active">${k.active}</b><span>Con responsable</span></button><button type="button" class="np-v124-kpi unread" data-v124-kpi-filter="unread"><small>Sin leer</small><b id="npV124Kpi-unread">${k.unread}</b><span>Requieren revisión</span></button><button type="button" class="np-v124-kpi" data-v124-kpi-filter="closed"><small>Historial</small><b id="npV124Kpi-closed">${k.closed}</b><span>Solo lectura</span></button></div><div class="np-v124-workspace"><aside class="np-v124-list-pane"><div class="np-v124-toolbar"><div class="np-v124-search"><span>⌕</span><input id="npV124Search" type="search" placeholder="Buscar cliente, producto, agente o mensaje…" value="${escHtml(filterState.q)}"></div><div class="np-v124-filter-row"><select id="npV124Status"><option value="open">Abiertos</option><option value="waiting">En espera</option><option value="assigned">En atención</option><option value="unread">Sin leer</option>${isAgent()?'<option value="mine">Mis chats</option>':''}<option value="closed">Historial</option><option value="all">Todos</option></select><select id="npV124Priority"><option value="all">Toda prioridad</option><option value="high">Alta</option><option value="normal">Normal</option></select></div></div><div class="np-v124-list-head"><b>Conversaciones</b><span id="npV124ResultCount"></span></div><div class="np-v124-list" id="npV124List"></div></aside><main class="np-v124-chat-pane" id="npV124Panel">${emptyPanel()}</main></div></section>`;
+    syncFilterControls();
+    let timer=0;$('npV124Search').oninput=e=>{filterState.q=e.target.value;clearTimeout(timer);timer=setTimeout(()=>{renderList();renderPanel();updateResultCount()},100)};
+    $('npV124Status').onchange=e=>{filterState.status=e.target.value;renderList();renderPanel();syncFilterControls();updateResultCount()};
+    $('npV124Priority').onchange=e=>{filterState.priority=e.target.value;renderList();renderPanel();updateResultCount()};
+    document.querySelectorAll('[data-v124-kpi-filter]').forEach(b=>b.onclick=()=>{filterState.status=b.dataset.v124KpiFilter;syncFilterControls();renderList();renderPanel();updateResultCount()});
+    renderList();renderPanel();renderCounts();updateResultCount();clearInterval(poll);poll=setInterval(()=>refresh(),POLL_MS);try{$('adminOverlay')?.scrollTo?.({top:0,behavior:'auto'})}catch(e){}return true;
+  }
+
+  const baseRender=window.renderAdminSection;
+  window.renderAdminSection=function(section){if(section==='bots')return renderInbox();return baseRender(section)};
+  if(window.NP_V117_SUPPORT)window.NP_V117_SUPPORT.renderInbox=renderInbox;
+  window.addEventListener('storage',e=>{if(e.key===CHAT_KEY)refresh({stick:false})});
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)clearInterval(poll);else if(state?.adminSection==='bots'&&$('adminOverlay')?.classList.contains('open')){refresh();clearInterval(poll);poll=setInterval(()=>refresh(),POLL_MS)}});
+  window.NP_V123_ATTENTION_SAFE={VERSION,renderInbox,refresh,normalizeChats,visibleChats,getChat,canSee,canHandle,counts,accessCheck:()=>({role:state?.session?.role||'',admin:isAdmin(),agent:isAgent()})};
+  window.NP_V124_ATTENTION_PRO=window.NP_V123_ATTENTION_SAFE;
+})();
+</script>
+
+
+<style id="np-v124-attention-pro-style">
+#adminOverlay .np-v124-attention{display:grid;gap:11px;max-width:1480px;margin:0 auto}
+#adminOverlay .np-v124-hero{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:13px 14px;border:1px solid rgba(33,218,255,.12);border-radius:18px;background:linear-gradient(145deg,#082033,#061522);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}
+#adminOverlay .np-v124-hero small{display:block;color:#2fddff;font-size:.46rem;font-weight:950;letter-spacing:.1em;text-transform:uppercase}
+#adminOverlay .np-v124-hero h2{margin:4px 0 4px;font-size:.9rem;letter-spacing:-.02em}
+#adminOverlay .np-v124-hero p{max-width:820px;color:#8ea7be;font-size:.53rem;line-height:1.5;margin:0}
+#adminOverlay .np-v124-live{display:inline-flex;align-items:center;gap:6px;white-space:nowrap;padding:7px 9px;border-radius:999px;background:rgba(45,225,143,.055);border:1px solid rgba(45,225,143,.13);color:#53e99b;font-size:.47rem;font-weight:900}
+#adminOverlay .np-v124-live i{width:7px;height:7px;border-radius:50%;background:#45e695;box-shadow:0 0 0 4px rgba(69,230,149,.08)}
+#adminOverlay .np-v124-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#adminOverlay .np-v124-kpi{appearance:none;text-align:left;padding:10px 11px;border-radius:15px;border:1px solid rgba(126,203,255,.08);background:#071827;color:#e8f5ff;min-height:72px;transition:.15s ease}
+#adminOverlay .np-v124-kpi:hover,#adminOverlay .np-v124-kpi.active{transform:translateY(-1px);border-color:rgba(34,215,255,.28);background:#082033}
+#adminOverlay .np-v124-kpi small{display:block;color:#7893ad;font-size:.46rem}
+#adminOverlay .np-v124-kpi b{display:block;margin:3px 0 2px;font-size:1rem;color:#e9f8ff}
+#adminOverlay .np-v124-kpi span{display:block;color:#69839b;font-size:.42rem}
+#adminOverlay .np-v124-kpi.wait b{color:#ffc55e}#adminOverlay .np-v124-kpi.active b{color:#27dcff}#adminOverlay .np-v124-kpi.unread b{color:#ff6d8a}
+#adminOverlay .np-v124-workspace{display:grid;grid-template-columns:minmax(270px,33%) minmax(0,1fr);min-height:600px;border-radius:18px;overflow:hidden;border:1px solid rgba(126,203,255,.08);background:#06131f}
+#adminOverlay .np-v124-list-pane{min-width:0;border-right:1px solid rgba(126,203,255,.07);background:#071522;display:flex;flex-direction:column}
+#adminOverlay .np-v124-toolbar{padding:9px;border-bottom:1px solid rgba(126,203,255,.06);display:grid;gap:7px}
+#adminOverlay .np-v124-search{display:grid;grid-template-columns:28px minmax(0,1fr);align-items:center;border:1px solid rgba(126,203,255,.09);border-radius:11px;background:#081a29;overflow:hidden}
+#adminOverlay .np-v124-search span{display:grid;place-items:center;color:#3adfff;font-size:.7rem}
+#adminOverlay .np-v124-search input{min-height:36px!important;border:0!important;background:transparent!important;color:#eaf6ff!important;padding:7px 8px 7px 0!important;font-size:.51rem!important;outline:0!important}
+#adminOverlay .np-v124-filter-row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#adminOverlay .np-v124-filter-row select{min-height:34px!important;border-radius:10px!important;font-size:.49rem!important;padding:6px 8px!important}
+#adminOverlay .np-v124-list-head{display:flex;justify-content:space-between;align-items:center;padding:7px 10px;border-bottom:1px solid rgba(126,203,255,.05)}
+#adminOverlay .np-v124-list-head b{font-size:.48rem}#adminOverlay .np-v124-list-head span{font-size:.42rem;color:#6f89a2}
+#adminOverlay .np-v124-list{display:grid;align-content:start;gap:5px;padding:7px;overflow:auto;max-height:690px}
+#adminOverlay .np-v124-chat-row{width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:8px;align-items:center;padding:8px;border:1px solid transparent;border-radius:12px;background:#081827;color:#dcebf7;text-align:left;transition:.14s ease}
+#adminOverlay .np-v124-chat-row:hover{background:#091c2c;border-color:rgba(126,203,255,.09)}
+#adminOverlay .np-v124-chat-row.active{background:#092136;border-color:rgba(29,218,255,.25);box-shadow:inset 3px 0 0 #22d9ff}
+#adminOverlay .np-v124-row-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#0b2032;font-size:.72rem}
+#adminOverlay .np-v124-row-icon.wait{color:#ffd06c}#adminOverlay .np-v124-row-icon.active{color:#2bdfff}#adminOverlay .np-v124-row-icon.closed{color:#91a4b7}
+#adminOverlay .np-v124-row-main{min-width:0}#adminOverlay .np-v124-row-title{display:flex;align-items:center;gap:5px;min-width:0}
+#adminOverlay .np-v124-row-title b{font-size:.55rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v124-row-title em{font-style:normal;padding:2px 5px;border-radius:999px;background:rgba(255,82,112,.08);color:#ff7b92;font-size:.34rem;font-weight:950}
+#adminOverlay .np-v124-row-main small{display:block;margin-top:2px;color:#4adfff;font-size:.4rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v124-row-main p{margin:2px 0 0!important;color:#728ca5!important;font-size:.43rem!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v124-chat-row aside{display:grid;justify-items:end;gap:3px;min-width:67px}
+#adminOverlay .np-v124-chat-row time{font-size:.38rem;color:#6d879f}
+#adminOverlay .np-v124-row-state{max-width:96px;font-size:.37rem;color:#8099b0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v124-row-state.wait{color:#d7ad56}#adminOverlay .np-v124-row-state.active{color:#45dfff}#adminOverlay .np-v124-row-state.closed{color:#8d9cab}
+#adminOverlay .np-v124-chat-row aside i{min-width:17px;height:17px;padding:0 4px;border-radius:999px;display:grid;place-items:center;background:#ff5877;color:white;font-size:.34rem;font-style:normal;font-weight:950}
+#adminOverlay .np-v124-list-empty{min-height:220px;display:grid;place-items:center;align-content:center;text-align:center;padding:18px;color:#7891a8}
+#adminOverlay .np-v124-list-empty>span{font-size:1.25rem}#adminOverlay .np-v124-list-empty b{margin-top:6px;color:#d7e9f7;font-size:.57rem}
+#adminOverlay .np-v124-list-empty p{margin:3px 0 0!important;font-size:.44rem!important}
+#adminOverlay .np-v124-list-empty button{margin-top:9px;min-height:30px;padding:6px 10px;border-radius:9px;border:1px solid rgba(35,215,255,.14);background:#082033;color:#38ddff;font-size:.43rem;font-weight:900}
+#adminOverlay .np-v124-chat-pane{min-width:0;display:flex;flex-direction:column;background:#05111c;scroll-margin-top:70px}
+#adminOverlay .np-v124-empty-panel{min-height:500px;display:grid;place-items:center;align-content:center;text-align:center;padding:24px;color:#7f98af}
+#adminOverlay .np-v124-empty-icon{font-size:1.8rem}#adminOverlay .np-v124-empty-panel h3{margin-top:8px;font-size:.72rem;color:#e4f2fc}
+#adminOverlay .np-v124-empty-panel p{max-width:390px;margin:5px 0 0!important;font-size:.49rem!important;line-height:1.5!important}
+#adminOverlay .np-v124-empty-steps{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin-top:12px}
+#adminOverlay .np-v124-empty-steps span{display:inline-flex;align-items:center;gap:5px;padding:5px 7px;border-radius:999px;background:#071c2c;border:1px solid rgba(126,203,255,.06);font-size:.4rem}
+#adminOverlay .np-v124-empty-steps b{width:17px;height:17px;border-radius:50%;display:grid;place-items:center;background:#0a2a40;color:#32dcff;font-size:.36rem}
+#adminOverlay .np-v124-chat-head{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:10px 11px;border-bottom:1px solid rgba(126,203,255,.07);background:#071725}
+#adminOverlay .np-v124-title-line{display:flex;align-items:center;gap:6px;flex-wrap:wrap}#adminOverlay .np-v124-title-line h3{font-size:.72rem;margin:0}
+#adminOverlay .np-v124-chat-head p{margin:3px 0 0!important;color:#7892aa!important;font-size:.46rem!important}
+#adminOverlay .np-v124-status,#adminOverlay .np-v124-priority-high{display:inline-flex;padding:3px 6px;border-radius:999px;font-size:.36rem;font-weight:950}
+#adminOverlay .np-v124-status{background:#0a2032;color:#79dbff}#adminOverlay .np-v124-status.wait{color:#ffd06c}#adminOverlay .np-v124-status.closed{color:#9aaab9}#adminOverlay .np-v124-status.active{color:#52e3a0}
+#adminOverlay .np-v124-priority-high{background:rgba(255,79,112,.075);color:#ff7c92}
+#adminOverlay .np-v124-actions{display:flex;align-items:end;flex-wrap:wrap;justify-content:flex-end;gap:5px}
+#adminOverlay .np-v124-actions label{display:grid;gap:2px}#adminOverlay .np-v124-actions label>span{font-size:.34rem;color:#6b849c;text-transform:uppercase}
+#adminOverlay .np-v124-actions select,#adminOverlay .np-v124-actions button{min-height:31px;border-radius:9px;padding:5px 8px;border:1px solid rgba(126,203,255,.1);background:#091b2b;color:#dcecf8;font-size:.46rem;font-weight:850}
+#adminOverlay .np-v124-actions button.danger{color:#ff9caf;border-color:rgba(255,83,116,.15);background:rgba(255,83,116,.05)}
+#adminOverlay .np-v124-actions button.primary{color:#05131e;background:linear-gradient(135deg,#16d9f3,#198ff8);border:0}#adminOverlay .np-v124-actions button.secondary{color:#3edfff}
+#adminOverlay .np-v124-case-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px;padding:7px 10px;border-bottom:1px solid rgba(126,203,255,.06);background:#061522}
+#adminOverlay .np-v124-case-grid article{min-width:0;padding:7px 8px;border-radius:9px;background:#081a29;border:1px solid rgba(126,203,255,.05)}
+#adminOverlay .np-v124-case-grid small{display:block;font-size:.36rem;color:#658099;text-transform:uppercase}
+#adminOverlay .np-v124-case-grid b{display:block;margin-top:2px;font-size:.45rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .np-v124-thread{display:flex;flex:1 1 auto;flex-direction:column;gap:7px;padding:11px;overflow:auto;min-height:280px;max-height:520px}
+#adminOverlay .np-v124-message{max-width:82%;padding:8px 10px;border-radius:13px}
+#adminOverlay .np-v124-message.client{align-self:flex-start;background:#0a2032;border:1px solid rgba(126,203,255,.08)}
+#adminOverlay .np-v124-message.staff{align-self:flex-end;background:linear-gradient(135deg,#12cfea,#168ff4);color:#03111c}
+#adminOverlay .np-v124-message.system{align-self:center;max-width:92%;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.045);color:#839bb1;text-align:center}
+#adminOverlay .np-v124-message b{display:block;font-size:.41rem;margin-bottom:3px}#adminOverlay .np-v124-message p{margin:0!important;font-size:.52rem!important;line-height:1.42!important;white-space:pre-wrap;overflow-wrap:anywhere}
+#adminOverlay .np-v124-message time{display:block;margin-top:4px;text-align:right;font-size:.36rem;opacity:.62}#adminOverlay .np-v124-thread-empty{margin:auto;color:#71899f;font-size:.48rem}
+#adminOverlay .np-v124-compose{padding:8px;border-top:1px solid rgba(126,203,255,.07);background:#071725}
+#adminOverlay .np-v124-quick{display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;scrollbar-width:none}#adminOverlay .np-v124-quick::-webkit-scrollbar{display:none}
+#adminOverlay .np-v124-quick button{flex:0 0 auto;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-height:27px;padding:5px 8px;border-radius:999px;border:1px solid rgba(126,203,255,.08);background:#081b2a;color:#91abc2;font-size:.4rem}
+#adminOverlay .np-v124-compose-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+#adminOverlay .np-v124-compose textarea{min-height:43px;max-height:120px;resize:none;border:1px solid rgba(126,203,255,.1);border-radius:11px;background:#081a29;color:#e9f6ff;padding:8px 9px;font-size:.51rem;outline:none}
+#adminOverlay .np-v124-compose-row>button{min-width:66px;border:0;border-radius:11px;background:linear-gradient(135deg,#16daf4,#198ff8);color:#04111d;font-size:.48rem;font-weight:950}
+#adminOverlay .np-v124-closed-note{display:grid;gap:3px;padding:10px 11px;border-top:1px solid rgba(126,203,255,.06);background:#071725}
+#adminOverlay .np-v124-closed-note b{font-size:.48rem;color:#9fb2c3}#adminOverlay .np-v124-closed-note span{font-size:.42rem;line-height:1.45;color:#71889e}
+#adminOverlay .np-v124-closed-note.locked{background:rgba(255,174,65,.025)}#adminOverlay .np-v124-closed-note.locked b{color:#d9b56e}
+@media(max-width:900px){#adminOverlay .np-v124-workspace{grid-template-columns:minmax(230px,38%) minmax(0,1fr)}#adminOverlay .np-v124-case-grid{grid-template-columns:1fr 1fr}}
+@media(max-width:760px){#adminOverlay .np-v124-hero{padding:11px}#adminOverlay .np-v124-hero p{font-size:.49rem}#adminOverlay .np-v124-kpis{grid-template-columns:1fr 1fr}#adminOverlay .np-v124-workspace{grid-template-columns:1fr;overflow:visible;min-height:0}#adminOverlay .np-v124-list-pane{border-right:0;border-bottom:1px solid rgba(126,203,255,.07)}#adminOverlay .np-v124-list{max-height:330px}#adminOverlay .np-v124-chat-pane{min-height:500px}#adminOverlay .np-v124-chat-head{flex-direction:column}#adminOverlay .np-v124-actions{justify-content:flex-start;width:100%}#adminOverlay .np-v124-actions label{flex:1;min-width:125px}#adminOverlay .np-v124-actions select{width:100%}#adminOverlay .np-v124-thread{max-height:520px}#adminOverlay .np-v124-empty-panel{min-height:420px}}
+@media(max-width:480px){#adminOverlay .np-v124-live{font-size:.4rem;padding:6px 8px}#adminOverlay .np-v124-chat-row{grid-template-columns:31px minmax(0,1fr) auto;padding:7px}#adminOverlay .np-v124-row-icon{width:31px;height:31px}#adminOverlay .np-v124-case-grid{grid-template-columns:1fr 1fr!important}#adminOverlay .np-v124-compose-row{grid-template-columns:minmax(0,1fr) 58px}#adminOverlay .np-v124-actions button{flex:1}#adminOverlay .np-v124-kpi{min-height:66px!important;padding:9px!important}}
+</style>
+
+<style id="np-v126-admin-redesign-style">
+/* CRULOX v11.16 · panel administrativo rediseñado + modo herramienta */
+:root{--np126-bg:#030a12;--np126-panel:#07131f;--np126-card:#091927;--np126-card2:#0b1d2d;--np126-line:rgba(128,202,255,.09);--np126-line2:rgba(44,220,255,.2);--np126-text:#edf8ff;--np126-muted:#7892a9;--np126-cyan:#25dcff;--np126-blue:#178ef5;--np126-green:#36e199;--np126-red:#ff6c86}
+#adminOverlay{background:var(--np126-bg)!important;color:var(--np126-text)!important}
+#adminOverlay .admin-shell{display:grid!important;grid-template-columns:208px minmax(0,1fr)!important;min-height:100dvh!important;height:auto!important;background:var(--np126-bg)!important}
+#adminOverlay .admin-sidebar{position:sticky!important;top:0!important;align-self:start!important;height:100dvh!important;display:flex!important;flex-direction:column!important;gap:8px!important;padding:12px 10px!important;background:#050f19!important;border:0!important;border-right:1px solid var(--np126-line)!important;overflow:hidden auto!important;box-shadow:none!important}
+#adminOverlay .admin-brand-row{display:flex!important;justify-content:flex-start!important;align-items:center!important;min-height:48px!important;margin:0!important;padding:2px 5px 8px!important;border-bottom:1px solid rgba(128,202,255,.055)!important}
+#adminOverlay .admin-brand{width:166px!important;height:38px!important;margin:0!important;object-fit:contain!important}
+#adminOverlay .admin-brand-meta{display:none!important}
+#adminOverlay .np-v126-side-primary{display:grid;gap:6px;padding:2px 0 5px}
+#adminOverlay .np-v126-side-primary button{position:relative;width:100%;min-height:39px;padding:8px 10px;border-radius:11px;border:1px solid var(--np126-line);background:#081724;color:#cfe1f0;display:flex;align-items:center;gap:8px;text-align:left;font-size:.53rem;font-weight:900}
+#adminOverlay .np-v126-side-primary button:first-child{background:linear-gradient(135deg,rgba(0,210,255,.16),rgba(20,129,242,.09));border-color:rgba(39,220,255,.2);color:#eaffff}
+#adminOverlay .np-v126-side-primary i{font-style:normal;width:25px;height:25px;display:grid;place-items:center;border-radius:8px;background:rgba(39,220,255,.07);font-size:.61rem}
+#adminOverlay .np-v126-side-count{margin-left:auto;min-width:20px;height:20px;padding:0 5px;border-radius:999px;display:none;place-items:center;background:#ff5d79;color:#fff;font-size:.39rem;font-weight:950}
+#adminOverlay .np-v126-side-count.show{display:grid}
+#adminOverlay .admin-nav{display:flex!important;flex:1 0 auto!important;flex-direction:column!important;gap:3px!important;width:100%!important;padding:3px 0!important;margin:0!important;overflow:visible!important}
+#adminOverlay .admin-nav button{display:flex!important;align-items:center!important;justify-content:flex-start!important;gap:8px!important;width:100%!important;min-height:36px!important;padding:7px 9px!important;border-radius:10px!important;border:1px solid transparent!important;background:transparent!important;color:#849eb5!important;font-size:.50rem!important;line-height:1.1!important;text-align:left!important;white-space:normal!important;box-shadow:none!important;overflow:visible!important}
+#adminOverlay .admin-nav button:hover{background:#081725!important;color:#dcecf9!important}
+#adminOverlay .admin-nav button.active{background:#0a1e2e!important;color:#f0fbff!important;border-color:rgba(37,220,255,.14)!important;box-shadow:inset 3px 0 0 var(--np126-cyan)!important}
+#adminOverlay .admin-nav .np-admin-menu-icon{width:26px;height:26px;display:grid;place-items:center;border-radius:8px;background:#091a29;font-size:.62rem!important;flex:0 0 auto}
+#adminOverlay .admin-main{min-width:0!important;overflow:visible!important;background:var(--np126-bg)!important}
+#adminOverlay .admin-top{position:sticky!important;top:0!important;z-index:80!important;min-height:56px!important;padding:7px 14px!important;background:rgba(3,10,18,.97)!important;border:0!important;border-bottom:1px solid var(--np126-line)!important;backdrop-filter:none!important;display:flex!important;align-items:center!important;gap:10px!important}
+#adminOverlay .admin-top>div:first-child{min-width:0}
+#adminOverlay .admin-top .section-kicker{display:none!important}
+#adminOverlay .admin-top h1{font-size:.86rem!important;line-height:1.12!important;letter-spacing:-.02em!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#adminOverlay .admin-top .toolbar{margin-left:auto!important;display:flex!important;align-items:center!important;flex-wrap:nowrap!important;gap:5px!important}
+#adminOverlay .admin-top .toolbar .btn,#adminOverlay .admin-top .toolbar>button{min-height:34px!important;padding:6px 10px!important;border-radius:10px!important;font-size:.48rem!important;box-shadow:none!important}
+#adminOverlay .np-admin-breadcrumb{max-width:1540px!important;margin:0 auto!important;padding:8px 14px 0!important;font-size:.45rem!important;color:#617b94!important}
+#adminOverlay .np-admin-subnav-wrap{max-width:1540px!important;margin:0 auto!important;padding:5px 14px 0!important}
+#adminOverlay .np-admin-subnav{gap:4px!important;margin:0!important;padding:3px 0 5px!important;overflow-x:auto!important;scrollbar-width:none!important}
+#adminOverlay .np-admin-subnav button{min-height:29px!important;padding:5px 9px!important;border-radius:9px!important;background:#071522!important;border:1px solid rgba(128,202,255,.065)!important;color:#849db4!important;font-size:.43rem!important;box-shadow:none!important}
+#adminOverlay .np-admin-subnav button.active{background:#0a2032!important;color:#30ddff!important;border-color:rgba(39,220,255,.16)!important}
+#adminOverlay .admin-content{width:100%!important;max-width:1540px!important;margin:0 auto!important;padding:12px 14px 76px!important}
+#adminOverlay .admin-content>*+*{margin-top:12px!important}
+/* Inicio / navegación */
+#adminOverlay .np-v126-home-launcher{display:grid;grid-template-columns:minmax(0,1.55fr) repeat(3,minmax(120px,.55fr));gap:8px;margin-bottom:11px}
+#adminOverlay .np-v126-home-main,#adminOverlay .np-v126-stat{min-height:88px;border-radius:16px;border:1px solid var(--np126-line);background:linear-gradient(145deg,#0a1d2d,#071420);padding:12px;box-shadow:none}
+#adminOverlay .np-v126-home-main{position:relative;overflow:hi

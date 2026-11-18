@@ -1,0 +1,2411 @@
+="field full"><label>Imagen principal por URL o data URI</label><input id="pfImage" value="${esc(p.image)}" placeholder="Opcional si cargarás imágenes desde el dispositivo"/></div><div class="field full"><label>Cargar imágenes desde el dispositivo — máximo 2</label><input id="pfFiles" type="file" accept="image/*" multiple/><p class="product-upload-note">Selecciona una o dos imágenes. Si eliges archivos nuevos, reemplazarán las imágenes actuales del producto.</p><div class="product-media-preview" id="pfMediaPreview"></div></div><div class="field full"><label>Enlace del video emergente</label><input id="pfVideoUrl" value="${esc(p.videoUrl)}" placeholder="https://tu-reproductor.com/video"/><p class="product-upload-note">Acepta enlaces directos de video y enlaces de páginas o reproductores que permitan mostrarse dentro de la aplicación.</p></div><div class="field"><label>Etiqueta</label><input id="pfBadgeText" value="${esc(p.badgeText||'')}" placeholder="Nuevo, Oferta..."/></div><div class="field"><label>Destacado</label><select id="pfFeatured"><option value="false" ${!p.featured?'selected':''}>No</option><option value="true" ${p.featured?'selected':''}>Sí</option></select></div><div class="field full"><label>Descripción</label><textarea id="pfDescription" required>${esc(p.description)}</textarea></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Guardar producto</button></div></form>`;
+}
+
+function renderProductEditorPreview(images){
+  const preview=$('pfMediaPreview');
+  if(!preview)return;
+  preview.innerHTML=(images||[]).slice(0,2).map((src,index)=>`<figure><img src="${esc(src)}" alt="Vista previa ${index+1}"/><figcaption>Imagen ${index+1}</figcaption></figure>`).join('');
+}
+
+function openProductEditor(id=null){
+  const product=id?state.products.find(p=>p.id===id):null;
+  const normalized=normalizeProductMediaRecord(product||{});
+  $('crudTitle').textContent=product?'Editar producto':'Agregar producto';
+  $('crudBody').innerHTML=productForm(product);
+  openModal('crudModal');
+  let selectedImages=[];
+  renderProductEditorPreview(normalized.images);
+  $('pfFiles').onchange=async e=>{
+    const files=[...e.target.files];
+    if(files.length>2){
+      e.target.value='';
+      selectedImages=[];
+      renderProductEditorPreview(normalized.images);
+      toast('Solo puedes subir un máximo de 2 imágenes por producto.','warn');
+      return;
+    }
+    if(!files.length){selectedImages=[];renderProductEditorPreview(normalized.images);return}
+    try{
+      selectedImages=[];
+      for(const file of files)selectedImages.push(await optimizeImageFile(file,{maxWidth:1200,maxHeight:900,quality:.86}));
+      renderProductEditorPreview(selectedImages);
+      if(selectedImages[0])$('pfImage').value=selectedImages[0];
+    }catch(error){
+      selectedImages=[];
+      renderProductEditorPreview(normalized.images);
+      toast('No fue posible procesar una de las imágenes.','error');
+    }
+  };
+  $('productForm').onsubmit=e=>{
+    e.preventDefault();
+    const existingImages=normalized.images.slice(0,2);
+    let images=selectedImages.length?selectedImages.slice(0,2):existingImages;
+    const typedPrimary=$('pfImage').value.trim();
+    if(!selectedImages.length&&typedPrimary){
+      images=[typedPrimary,...existingImages.filter(src=>src!==typedPrimary)].slice(0,2);
+    }
+    images=[...new Set(images.filter(Boolean))].slice(0,2);
+    if(!images.length){toast('Debes agregar al menos una imagen al producto.','warn');return}
+    const videoUrl=normalizeProductVideoLink($('pfVideoUrl').value);
+    if($('pfVideoUrl').value.trim()&&!videoUrl){toast('El enlace del video no es válido.','warn');return}
+    const data={
+      name:$('pfName').value.trim(),
+      category:$('pfCategory').value.trim(),
+      stock:Number($('pfStock').value),
+      price:Number($('pfPrice').value),
+      oldPrice:$('pfOldPrice').value?Number($('pfOldPrice').value):null,
+      rating:Number($('pfRating').value||0),
+      reviews:Number($('pfReviews').value||0),
+      image:images[0],
+      image2:images[1]||'',
+      images,
+      videoUrl,
+      description:$('pfDescription').value.trim(),
+      badgeText:$('pfBadgeText').value.trim()||null,
+      badge:$('pfBadgeText').value.trim()?'custom':null,
+      featured:$('pfFeatured').value==='true'
+    };
+    if(product)Object.assign(product,data);else state.products.unshift({id:uid('p'),...data});
+    write(KEYS.products,state.products);
+    logActivity(product?'Producto editado':'Producto agregado',data.name);
+    closeModal('crudModal');
+    renderStore();
+    renderAdminSection('products');
+    toast('Producto guardado.','success');
+  };
+}
+
+function normalizeProductVideoLink(raw){
+  let value=String(raw||'').trim();
+  if(!value)return '';
+  if(/^(?:javascript|vbscript):/i.test(value))return '';
+  if(/^www\./i.test(value))value=`https://${value}`;
+  if(/^data:/i.test(value)&&!/^data:video\//i.test(value))return '';
+  return value;
+}
+function isDirectProductVideo(url){
+  const value=String(url||'').toLowerCase();
+  return /^data:video\//.test(value)||/^blob:/.test(value)||/\.(?:mp4|webm|ogg|ogv|mov|m4v|m3u8)(?:[?#].*)?$/.test(value);
+}
+function productVideoEmbedUrl(raw){
+  const value=normalizeProductVideoLink(raw);
+  if(!value)return '';
+  try{
+    const url=new URL(value,location.href);
+    const host=url.hostname.replace(/^www\./,'').toLowerCase();
+    if(host==='youtu.be'){
+      const id=url.pathname.split('/').filter(Boolean)[0];
+      if(id)return `https://www.youtube.com/embed/${encodeURIComponent(id)}`;
+    }
+    if(host.endsWith('youtube.com')){
+      let id=url.searchParams.get('v');
+      if(!id){const parts=url.pathname.split('/').filter(Boolean);const marker=parts.findIndex(part=>['shorts','embed','live'].includes(part));if(marker>=0)id=parts[marker+1]}
+      if(id)return `https://www.youtube.com/embed/${encodeURIComponent(id)}`;
+    }
+    if(host==='vimeo.com'||host.endsWith('.vimeo.com')){
+      const id=url.pathname.split('/').filter(Boolean).find(part=>/^\d+$/.test(part));
+      if(id)return `https://player.vimeo.com/video/${id}`;
+    }
+  }catch(error){}
+  return value;
+}
+function productVideoMediaMarkup(url,{full=false}={}){
+  const clean=normalizeProductVideoLink(url);
+  if(!clean)return '';
+  if(isDirectProductVideo(clean))return `<video ${full?'autoplay':'autoplay muted loop'} playsinline preload="metadata" controlslist="nodownload noplaybackrate noremoteplayback" src="${esc(clean)}"></video>`;
+  return `<iframe src="${esc(productVideoEmbedUrl(clean))}" title="Video del producto" loading="eager" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+}
+function stopMediaInside(root){
+  if(!root)return;
+  root.querySelectorAll('video').forEach(video=>{try{video.pause();video.removeAttribute('src');video.load()}catch(error){}});
+  root.querySelectorAll('iframe').forEach(frame=>{try{frame.src='about:blank'}catch(error){}});
+}
+let activeProductVideo=null;
+function removeProductVideoMini(){const mini=$('productVideoMini');if(mini){stopMediaInside(mini);mini.remove()}}
+function removeProductVideoFull(){const full=$('productVideoFull');if(full){stopMediaInside(full);full.remove()}}
+function closeProductVideoExperience(){removeProductVideoMini();removeProductVideoFull();activeProductVideo=null}
+function createProductVideoMini(){
+  removeProductVideoMini();
+  if(!activeProductVideo||activeProductVideo.dismissed||!$('detailModal')?.classList.contains('open'))return;
+  const mini=document.createElement('aside');
+  mini.id='productVideoMini';
+  mini.className='product-video-mini';
+  mini.setAttribute('aria-label','Video del producto');
+  mini.innerHTML=`<div class="product-video-surface">${productVideoMediaMarkup(activeProductVideo.url)}</div><button type="button" class="product-video-expand-hit" aria-label="Ver video en pantalla completa">Toca para ampliar</button><button type="button" class="product-video-mini-close" aria-label="Cerrar video">✕</button>`;
+  document.body.appendChild(mini);
+  mini.querySelector('.product-video-expand-hit').onclick=()=>openProductVideoFull();
+  mini.querySelector('.product-video-mini-close').onclick=e=>{e.stopPropagation();activeProductVideo.dismissed=true;removeProductVideoMini()};
+}
+function openProductVideoFull(){
+  if(!activeProductVideo)return;
+  removeProductVideoMini();
+  removeProductVideoFull();
+  const full=document.createElement('section');
+  full.id='productVideoFull';
+  full.className='product-video-full';
+  full.setAttribute('role','dialog');
+  full.setAttribute('aria-modal','true');
+  full.setAttribute('aria-label','Video del producto en pantalla completa');
+  full.innerHTML=`<div class="product-video-full-stage">${productVideoMediaMarkup(activeProductVideo.url,{full:true})}</div><button type="button" class="product-video-full-close" aria-label="Salir del video">✕</button><a class="product-video-fallback" href="${esc(activeProductVideo.url)}" target="_blank" rel="noopener">Abrir reproductor</a>`;
+  document.body.appendChild(full);
+  full.querySelector('.product-video-full-close').onclick=()=>closeProductVideoFull();
+  full.onclick=e=>{if(e.target===full)closeProductVideoFull()};
+}
+function closeProductVideoFull(){
+  removeProductVideoFull();
+  if(activeProductVideo&&!activeProductVideo.dismissed&&$('detailModal')?.classList.contains('open'))createProductVideoMini();
+}
+function startProductVideoExperience(product){
+  closeProductVideoExperience();
+  const url=normalizeProductVideoLink(product?.videoUrl);
+  if(!url)return;
+  activeProductVideo={productId:product.id,url,dismissed:false};
+  requestAnimationFrame(()=>createProductVideoMini());
+}
+
+function openDetail(id){
+  closeProductVideoExperience();
+  const p=normalizeProductMediaRecord(state.products.find(x=>x.id===id));
+  if(!p||!p.id)return;
+  const images=(p.images||[]).filter(Boolean).slice(0,2);
+  const [stock,stockClass]=stockInfo(p);
+  $('detailBody').innerHTML=`<div class="product-detail"><div class="product-detail-gallery"><div class="product-detail-media"><img id="detailMainImage" src="${esc(images[0]||p.image)}" alt="${esc(p.name)}" loading="eager" decoding="async"/></div>${images.length>1?`<div class="product-detail-thumbs">${images.map((src,index)=>`<button type="button" class="product-detail-thumb ${index===0?'active':''}" data-detail-image="${index}" aria-label="Ver imagen ${index+1}"><img src="${esc(src)}" alt=""/></button>`).join('')}</div>`:''}</div><div class="product-detail-info"><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock stock-detail ${stockClass}">${stock}</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>Añadir al carrito</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailBody').querySelectorAll('[data-detail-image]').forEach(button=>button.onclick=()=>{
+    const index=Number(button.dataset.detailImage||0);
+    $('detailMainImage').src=images[index]||images[0];
+    $('detailBody').querySelectorAll('[data-detail-image]').forEach(item=>item.classList.toggle('active',item===button));
+  });
+  $('detailAdd').onclick=()=>{addToCart(p.id);closeModal('detailModal')};
+  $('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});
+  $('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)};
+  startProductVideoExperience(p);
+}
+
+const closeModalV818Base=closeModal;
+closeModal=function(id){
+  if(id==='detailModal')closeProductVideoExperience();
+  return closeModalV818Base(id);
+};
+const releaseTransientWebViewResourcesV818Base=releaseTransientWebViewResources;
+releaseTransientWebViewResources=function(){
+  closeProductVideoExperience();
+  return releaseTransientWebViewResourcesV818Base();
+};
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&$('productVideoFull')){
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    closeProductVideoFull();
+  }
+},true);
+
+
+/* v8.20: visual estable, validación visible, mantenimiento y stock automático */
+const NP_V820_STYLE=`
+.toastbox{
+  z-index:7200!important;
+  top:max(12px,env(safe-area-inset-top))!important;
+  left:50%!important;
+  right:auto!important;
+  transform:translateX(-50%)!important;
+  width:min(390px,calc(100% - 24px))!important;
+}
+.modal-inline-notice{
+  position:sticky;
+  top:0;
+  z-index:16;
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  margin:0 0 12px;
+  padding:10px 12px;
+  border-radius:13px;
+  border:1px solid rgba(255,94,120,.30);
+  border-left:4px solid var(--red);
+  background:rgba(44,13,25,.97);
+  color:#ffe7ed;
+  box-shadow:0 14px 34px rgba(0,0,0,.30);
+  font-size:.7rem;
+  line-height:1.45;
+}
+.modal-inline-notice.success{
+  border-color:rgba(33,215,122,.30);
+  border-left-color:var(--green);
+  background:rgba(8,42,29,.97);
+  color:#ddffed;
+}
+.modal-inline-notice.warn{
+  border-color:rgba(255,196,77,.32);
+  border-left-color:var(--amber);
+  background:rgba(48,36,10,.97);
+  color:#fff1c7;
+}
+.field input.input-error,.field select.input-error,.field textarea.input-error{
+  border-color:rgba(255,94,120,.72)!important;
+  box-shadow:0 0 0 3px rgba(255,94,120,.10)!important;
+}
+.password-input-wrap{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.password-input-wrap input{padding-right:48px!important}
+.password-toggle{
+  position:absolute;
+  right:6px;
+  top:50%;
+  transform:translateY(-50%);
+  width:36px;
+  height:34px;
+  border:0;
+  border-radius:10px;
+  background:rgba(255,255,255,.055);
+  color:var(--sub);
+  display:grid;
+  place-items:center;
+  font-size:.86rem;
+}
+.password-toggle.active{color:var(--cyan);background:rgba(0,217,255,.10)}
+button.social-pill{font:inherit;background:rgba(255,255,255,.028);cursor:pointer}
+.product-detail-gallery{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  min-width:0!important;
+}
+.product-detail-media{
+  width:min(100%,var(--np-detail-max-width,440px))!important;
+  aspect-ratio:var(--np-detail-aspect,4 / 3)!important;
+  height:auto!important;
+  max-height:none!important;
+  overflow:hidden!important;
+  border-radius:18px!important;
+  background:#08101d!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+}
+.product-detail-media img{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  padding:0!important;
+  margin:0!important;
+  border-radius:0!important;
+  object-fit:var(--np-detail-object-fit,cover)!important;
+  object-position:var(--np-detail-object-position,center 38%)!important;
+  transform:var(--np-detail-transform,scale(1.12))!important;
+  transform-origin:center!important;
+}
+.product .add:disabled,
+.product-detail .btn:disabled{
+  opacity:.48!important;
+  cursor:not-allowed!important;
+  filter:grayscale(.28)!important;
+}
+@media(max-width:560px){
+  .toastbox{top:max(8px,env(safe-area-inset-top))!important}
+  .modal-inline-notice{font-size:.67rem}
+}
+`;
+if(!document.getElementById('np-v820-style')){
+  const style=document.createElement('style');
+  style.id='np-v820-style';
+  style.textContent=NP_V820_STYLE;
+  document.head.appendChild(style);
+}
+
+function toast(message,type='info'){
+  const box=$('toastbox');
+  if(!box)return null;
+  const text=String(message||'').trim();
+  const existing=[...box.querySelectorAll('.toast')].find(el=>el.dataset.message===text);
+  if(existing){
+    clearTimeout(existing._removeTimer);
+    existing._removeTimer=setTimeout(()=>existing.remove(),3600);
+    return existing;
+  }
+  const el=document.createElement('div');
+  el.className=`toast ${type}`;
+  el.dataset.message=text;
+  el.textContent=text;
+  box.appendChild(el);
+  el._removeTimer=setTimeout(()=>el.remove(),3600);
+  return el;
+}
+function showModalNotice(message,type='error',modalId='accountModal'){
+  const modal=$(modalId)?.querySelector('.modal');
+  if(!modal)return toast(message,type);
+  modal.querySelector('.modal-inline-notice')?.remove();
+  const notice=document.createElement('div');
+  notice.className=`modal-inline-notice ${type}`;
+  notice.innerHTML=`<span>${type==='success'?'✓':type==='warn'?'⚠':'!'}</span><span>${esc(message)}</span>`;
+  const head=modal.querySelector('.modal-head');
+  head?.insertAdjacentElement('afterend',notice);
+  clearTimeout(modal._noticeTimer);
+  modal._noticeTimer=setTimeout(()=>notice.remove(),5200);
+  return notice;
+}
+function clearModalNotice(modalId='accountModal'){$(modalId)?.querySelector('.modal-inline-notice')?.remove()}
+function focusInvalid(input,message,modalId='accountModal'){
+  if(input){
+    input.classList.add('input-error');
+    input.addEventListener('input',()=>input.classList.remove('input-error'),{once:true});
+    input.focus({preventScroll:true});
+    input.scrollIntoView({behavior:'smooth',block:'center'});
+  }
+  showModalNotice(message,'error',modalId);
+  return false;
+}
+function passwordFieldMarkup(id,label,autocomplete='new-password',required=true){
+  return `<div class="field"><label>${esc(label)}</label><div class="password-input-wrap"><input id="${esc(id)}" type="password" minlength="8" ${required?'required':''} autocomplete="${esc(autocomplete)}"/><button class="password-toggle" type="button" data-password-toggle="${esc(id)}" aria-label="Mostrar contraseña">👁</button></div></div>`;
+}
+function bindPasswordToggles(root=document){
+  root.querySelectorAll('[data-password-toggle]').forEach(button=>{
+    button.onclick=()=>{
+      const input=$(button.dataset.passwordToggle);
+      if(!input)return;
+      const visible=input.type==='text';
+      input.type=visible?'password':'text';
+      button.classList.toggle('active',!visible);
+      button.textContent=visible?'👁':'🙈';
+      button.setAttribute('aria-label',visible?'Mostrar contraseña':'Ocultar contraseña');
+    };
+  });
+}
+function accountValidation(prefix){
+  const data=collectAccount(prefix);
+  const labels={fullName:'nombre completo',username:'usuario',email:'correo electrónico',phone:'teléfono',department:'departamento',municipality:'municipio',address:'dirección completa',reference:'referencia de entrega'};
+  for(const field of accountFields()){
+    const input=$(`${prefix}${field.key.charAt(0).toUpperCase()+field.key.slice(1)}`);
+    if(!data[field.key])return {ok:false,input,message:`Completa el campo ${labels[field.key]}.`};
+  }
+  if(data.fullName.length<3)return {ok:false,input:$(`${prefix}FullName`),message:'Escribe un nombre completo válido.'};
+  if(data.username.length<3)return {ok:false,input:$(`${prefix}Username`),message:'El usuario debe tener al menos 3 caracteres.'};
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(data.email))return {ok:false,input:$(`${prefix}Email`),message:'Escribe un correo electrónico válido.'};
+  const digits=data.phone.replace(/\D/g,'');
+  if(digits.length<8||digits.length>15)return {ok:false,input:$(`${prefix}Phone`),message:'Escribe un número de teléfono válido.'};
+  return {ok:true,data};
+}
+function renderLogin(){
+  $('authContent').innerHTML=`<form id="loginForm" novalidate><div class="form-grid"><div class="field full"><label>Usuario o correo</label><input id="loginIdentity" required autocomplete="username"/></div><div class="field full"><label>Contraseña</label><div class="password-input-wrap"><input id="loginPassword" type="password" required autocomplete="current-password"/><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Mostrar contraseña">👁</button></div></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Acceder</button></div></form>`;
+  bindPasswordToggles($('authContent'));
+  $('loginForm').onsubmit=handleLogin;
+}
+function renderRegister(){
+  $('authContent').innerHTML=`<form id="registerForm" novalidate><div class="form-grid">${accountFields().map(f=>fieldHtml(f,'reg')).join('')}${passwordFieldMarkup('regPassword','Contraseña','new-password',true)}${passwordFieldMarkup('regConfirm','Confirmar contraseña','new-password',true)}<div class="field full"><label><input id="regConsent" type="checkbox" style="width:auto;min-height:0"/> Acepto que mis datos se utilicen para gestionar pedidos y entregas.</label></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Crear cuenta</button></div></form>`;
+  bindPasswordToggles($('authContent'));
+  $('registerForm').onsubmit=handleRegister;
+}
+async function handleRegister(e){
+  e.preventDefault();clearModalNotice();
+  const check=accountValidation('reg');
+  if(!check.ok)return focusInvalid(check.input,check.message);
+  const password=$('regPassword').value;
+  const confirmPassword=$('regConfirm').value;
+  if(password.length<8)return focusInvalid($('regPassword'),'La contraseña debe tener al menos 8 caracteres.');
+  if(password!==confirmPassword)return focusInvalid($('regConfirm'),'Las contraseñas no coinciden.');
+  if(!$('regConsent').checked)return focusInvalid($('regConsent'),'Debes aceptar el uso de tus datos para gestionar pedidos y entregas.');
+  if(state.users.some(u=>norm(u.username)===norm(check.data.username)||norm(u.email)===norm(check.data.email)))return focusInvalid($('regUsername'),'El usuario o correo ya está registrado.');
+  const user={id:uid('usr'),...check.data,passwordHash:await sha256(password),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  state.users.push(user);state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};
+  write(KEYS.users,state.users);write(KEYS.session,state.session);logActivity('Cliente registrado',user.email);renderHeader();renderAccount();toast('Cuenta creada correctamente.','success');
+}
+async function handleLogin(e){
+  e.preventDefault();clearModalNotice();
+  const identity=$('loginIdentity').value.trim();
+  const pass=$('loginPassword').value;
+  if(!identity)return focusInvalid($('loginIdentity'),'Escribe tu usuario o correo electrónico.');
+  if(!pass)return focusInvalid($('loginPassword'),'Escribe tu contraseña.');
+  const hash=await sha256(pass);
+  if(norm(identity)===norm(ADMIN_EMAIL)&&hash===ADMIN_PASSWORD_HASH){state.session={role:'admin',email:ADMIN_EMAIL,createdAt:new Date().toISOString()};write(KEYS.session,state.session);closeModal('accountModal');openAdmin('dashboard');logActivity('Inicio administrativo',ADMIN_EMAIL);return}
+  const user=state.users.find(u=>norm(u.username)===norm(identity)||norm(u.email)===norm(identity));
+  if(!user||user.passwordHash!==hash)return focusInvalid($('loginPassword'),'El usuario, correo o contraseña no es correcto.');
+  state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};write(KEYS.session,state.session);renderHeader();renderAccount();toast('Sesión iniciada.','success');
+}
+function renderProfileEditor(user){
+  $('accountBody').innerHTML=`<form id="profileForm" novalidate><div class="form-grid">${accountFields().map(f=>fieldHtml(f,'edit',user[f.key])).join('')}${passwordFieldMarkup('editPassword','Nueva contraseña (opcional)','new-password',false)}${passwordFieldMarkup('editConfirm','Confirmar contraseña','new-password',false)}</div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar cambios</button><button class="btn btn-secondary" type="button" id="cancelEditProfile">Cancelar</button></div></form>`;
+  bindPasswordToggles($('accountBody'));
+  $('cancelEditProfile').onclick=renderAccount;
+  $('profileForm').onsubmit=async e=>{
+    e.preventDefault();clearModalNotice();
+    const check=accountValidation('edit');
+    if(!check.ok)return focusInvalid(check.input,check.message);
+    if(state.users.some(u=>u.id!==user.id&&(norm(u.username)===norm(check.data.username)||norm(u.email)===norm(check.data.email))))return focusInvalid($('editUsername'),'El usuario o correo ya está utilizado.');
+    const pass=$('editPassword').value;
+    const confirmPass=$('editConfirm').value;
+    if(pass&&pass.length<8)return focusInvalid($('editPassword'),'La nueva contraseña debe tener al menos 8 caracteres.');
+    if((pass||confirmPass)&&pass!==confirmPass)return focusInvalid($('editConfirm'),'Las contraseñas no coinciden.');
+    Object.assign(user,check.data,{updatedAt:new Date().toISOString()});
+    if(pass)user.passwordHash=await sha256(pass);
+    write(KEYS.users,state.users);renderAccount();renderHeader();toast('Perfil actualizado.','success');
+  };
+}
+function maintenanceNotice(){return toast('Esta función está en mantenimiento.','warn')}
+function renderSocials(){
+  const markup=socialItems().map(item=>{
+    const url=String(state.settings[item.key]||'#').trim();
+    if(item.key==='supportBotUrl')return `<button type="button" class="social-pill" data-social-support>${esc(item.label)}</button>`;
+    if(!url||url==='#')return `<button type="button" class="social-pill" data-social-maintenance>${esc(item.label)}</button>`;
+    return `<a class="social-pill" href="${esc(url)}" target="_blank" rel="noopener">${esc(item.label)}</a>`;
+  }).join('');
+  ['footerSocial','drawerSocial'].forEach(id=>{const root=$(id);if(!root)return;root.innerHTML=markup;root.querySelectorAll('[data-social-support]').forEach(button=>button.onclick=()=>openBot('support','Hola. Necesito ayuda con CRULOX.',{Tipo:'Consulta general'}));root.querySelectorAll('[data-social-maintenance]').forEach(button=>button.onclick=maintenanceNotice)});
+}
+function openBot(kind,message,extra={}){
+  const url=buildBotUrl(kind,message,extra);
+  if(!url){maintenanceNotice();return false}
+  try{
+    const w=window.open(url,'_blank');
+    if(w){try{w.opener=null}catch(error){};return true}
+    location.assign(url);return true;
+  }catch(error){console.warn('External function',error);maintenanceNotice();return false}
+}
+function stockInfo(p){
+  const n=Number(p?.stock||0);
+  return n<=0?['No disponible','out']:n<=Number(state.settings.lowStock||5)?['Pocas unidades','low']:['Disponible',''];
+}
+function purgeUnavailableCart(notify=false){
+  let changed=false;
+  let removed=0;
+  const cleaned=[];
+  for(const item of state.cart||[]){
+    const type=item.type||'product';
+    if(type==='combo'){cleaned.push(item);continue}
+    const product=state.products.find(p=>p.id===item.id);
+    const stock=Number(product?.stock||0);
+    if(!product||stock<=0){changed=true;removed++;continue}
+    const qty=Math.max(1,Math.min(Number(item.qty||1),stock));
+    if(qty!==Number(item.qty||1))changed=true;
+    cleaned.push({...item,type:'product',qty});
+  }
+  if(changed){state.cart=cleaned;write(KEYS.cart,state.cart)}
+  if(notify&&removed>0)toast(removed===1?'Se eliminó del carrito un producto que ya no está disponible.':`Se eliminaron ${removed} productos que ya no están disponibles.`,'warn');
+  return removed;
+}
+function addToCart(id,qty=1){
+  const p=state.products.find(x=>x.id===id);
+  if(!p||Number(p.stock)<=0){purgeUnavailableCart(true);renderHeader();renderCart();return toast('Este producto no está disponible.','warn')}
+  const item=state.cart.find(x=>(x.type||'product')==='product'&&x.id===id);
+  const current=item?Number(item.qty||0):0;
+  const next=Math.min(current+Number(qty||1),Number(p.stock));
+  if(item)item.qty=next;else state.cart.push({type:'product',id:p.id,qty:Math.min(Number(qty||1),Number(p.stock))});
+  write(KEYS.cart,state.cart);renderHeader();renderCart();toast(`${p.name} añadido al carrito.`,'success');
+}
+function changeQty(key,delta){
+  const {type,id}=parseCartKey(key);
+  const item=state.cart.find(x=>(x.type||'product')===type&&x.id===id);
+  if(!item)return;
+  if(type==='combo')item.qty=Math.max(0,Math.min(Number(item.qty||0)+delta,99));
+  else{
+    const p=state.products.find(x=>x.id===id);
+    if(!p||Number(p.stock)<=0){purgeUnavailableCart(true);renderHeader();renderCart();return}
+    item.qty=Math.max(0,Math.min(Number(item.qty||0)+delta,Number(p.stock)));
+  }
+  if(item.qty===0)state.cart=state.cart.filter(x=>!((x.type||'product')===type&&x.id===id));
+  write(KEYS.cart,state.cart);renderHeader();renderCart();
+}
+function cartDetails(){
+  return (state.cart||[]).map(item=>{
+    const type=item.type||'product';
+    const data=cartEntity(type,item.id);
+    if(!data)return null;
+    if(type==='product'&&Number(data.stock||0)<=0)return null;
+    return {...data,qty:Number(item.qty||1)};
+  }).filter(Boolean);
+}
+function renderCart(){
+  purgeUnavailableCart(true);
+  const items=cartDetails();
+  $('cartItems').innerHTML=items.length?items.map(i=>{const key=cartKey(i);const sub=i.type==='combo'?'Combo personalizado':stockInfo(i)[0];return `<article class="list-card"><img src="${esc(i.image)}" alt="${esc(i.name)}"/><div><h3>${esc(i.name)}</h3><p>${money(i.price)} · ${esc(sub)}</p><div class="list-actions"><div class="qty"><button data-dec="${esc(key)}">−</button><span>${i.qty}</span><button data-inc="${esc(key)}">＋</button></div><button class="btn btn-red btn-sm" data-remove-cart="${esc(key)}">Eliminar</button></div></div><strong>${money(i.price*i.qty)}</strong></article>`}).join(''):'<div class="empty">Tu carrito está vacío.</div>';
+  const subtotal=items.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0);
+  const promoResult=currentPromoResult(subtotal);
+  const discount=promoResult?.discount||0;
+  const total=Math.max(0,subtotal-discount);
+  if($('cartSubtotal'))$('cartSubtotal').textContent=money(subtotal);
+  if($('cartDiscount'))$('cartDiscount').textContent=`-${money(discount)}`;
+  if($('cartDiscountRow'))$('cartDiscountRow').hidden=!promoResult;
+  $('cartTotal').textContent=money(total);
+  const input=$('promoCodeInput');if(input)input.value=state.appliedPromoCode||'';
+  const message=$('promoMessage');if(message){if(promoResult){message.textContent=promoResult.message;message.className='promo-feedback success'}else{message.textContent='Los códigos activos se aplican antes de enviar el pedido.';message.className='promo-feedback'}}
+  const applyBtn=$('promoApplyBtn');if(applyBtn)applyBtn.onclick=applyPromoFromCart;
+  if(input)input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();applyPromoFromCart()}};
+  $('cartItems').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));
+  $('cartItems').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));
+  $('cartItems').querySelectorAll('[data-remove-cart]').forEach(b=>b.onclick=()=>removeCart(b.dataset.removeCart));
+}
+function productDetailVisualMetrics(id){
+  const card=[...document.querySelectorAll('[data-product]')].find(el=>el.dataset.product===String(id));
+  const media=card?.querySelector('.product-image');
+  const image=media?.querySelector('img');
+  const rect=media?.getBoundingClientRect();
+  const style=image?getComputedStyle(image):null;
+  const ratio=rect?.width&&rect?.height?Math.max(.65,Math.min(1.8,rect.width/rect.height)):4/3;
+  const width=rect?.width||300;
+  return {ratio,maxWidth:Math.min(520,Math.max(320,width*1.28)),fit:style?.objectFit||'cover',position:style?.objectPosition||'center 38%',transform:style?.transform&&style.transform!=='none'?style.transform:'scale(1.12)'};
+}
+function openDetail(id){
+  closeProductVideoExperience();
+  const p=normalizeProductMediaRecord(state.products.find(x=>x.id===id));
+  if(!p||!p.id)return;
+  const images=(p.images||[]).filter(Boolean).slice(0,2);
+  const [stock,stockClass]=stockInfo(p);
+  const visual=productDetailVisualMetrics(p.id);
+  const visualStyle=`--np-detail-aspect:${visual.ratio};--np-detail-max-width:${visual.maxWidth}px;--np-detail-object-fit:${visual.fit};--np-detail-object-position:${visual.position};--np-detail-transform:${visual.transform};`;
+  $('detailBody').innerHTML=`<div class="product-detail"><div class="product-detail-gallery"><div class="product-detail-media" style="${esc(visualStyle)}"><img id="detailMainImage" src="${esc(images[0]||p.image)}" alt="${esc(p.name)}" loading="eager" decoding="async"/></div>${images.length>1?`<div class="product-detail-thumbs">${images.map((src,index)=>`<button type="button" class="product-detail-thumb ${index===0?'active':''}" data-detail-image="${index}" aria-label="Ver imagen ${index+1}"><img src="${esc(src)}" alt=""/></button>`).join('')}</div>`:''}</div><div class="product-detail-info"><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock stock-detail ${stockClass}">${stock}</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>${Number(p.stock)<=0?'No disponible':'Añadir al carrito'}</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailBody').querySelectorAll('[data-detail-image]').forEach(button=>button.onclick=()=>{
+    const index=Number(button.dataset.detailImage||0);
+    $('detailMainImage').src=images[index]||images[0];
+    $('detailBody').querySelectorAll('[data-detail-image]').forEach(item=>item.classList.toggle('active',item===button));
+  });
+  if($('detailAdd'))$('detailAdd').onclick=()=>{if(Number(p.stock)<=0)return toast('Este producto no está disponible.','warn');addToCart(p.id);closeModal('detailModal')};
+  $('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});
+  $('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)};
+  startProductVideoExperience(p);
+}
+function adminInventory(){
+  $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Control de inventario</h2><div class="toolbar"><input id="inventorySearch" placeholder="Buscar"/><select id="inventoryFilter"><option value="all">Todos</option><option value="low">Pocas unidades</option><option value="out">No disponibles</option></select></div></div><div class="admin-list" id="inventoryList"></div></section>`;
+  const render=()=>{
+    const q=norm($('inventorySearch').value),filter=$('inventoryFilter').value;
+    const list=state.products.filter(p=>(!q||norm(p.name).includes(q))&&(filter==='all'||filter==='low'&&(p.stock>0&&p.stock<=state.settings.lowStock)||filter==='out'&&p.stock<=0));
+    $('inventoryList').innerHTML=list.map(p=>{const [label,statusClass]=stockInfo(p);return `<article class="admin-list-item"><div><h3>${esc(p.name)}</h3><p>${esc(p.category)} · ${money(p.price)}</p></div><div class="toolbar"><button class="btn btn-secondary btn-sm" data-stock="${p.id}" data-delta="-1">−1</button><span class="status ${statusClass==='out'?'bad':statusClass==='low'?'warn':''}">${p.stock} · ${esc(label)}</span><button class="btn btn-primary btn-sm" data-stock="${p.id}" data-delta="1">+1</button><button class="btn btn-secondary btn-sm" data-set-stock="${p.id}">Definir</button></div></article>`}).join('')||'<div class="empty">No hay productos en este filtro.</div>';
+    $('inventoryList').querySelectorAll('[data-stock]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.stock);p.stock=Math.max(0,Number(p.stock||0)+Number(b.dataset.delta));write(KEYS.products,state.products);purgeUnavailableCart(true);render();renderStore()});
+    $('inventoryList').querySelectorAll('[data-set-stock]').forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>x.id===b.dataset.setStock);const n=await npPrompt(`Existencias para ${p.name}`,p.stock);if(n===null||isNaN(Number(n)))return;p.stock=Math.max(0,Number(n));write(KEYS.products,state.products);purgeUnavailableCart(true);render();renderStore()});
+  };
+  render();$('inventorySearch').oninput=render;$('inventoryFilter').onchange=render;
+}
+const openCheckoutV820Base=openCheckout;
+openCheckout=function(){purgeUnavailableCart(true);renderHeader();renderCart();return openCheckoutV820Base()};
+if($('checkoutBtn'))$('checkoutBtn').onclick=openCheckout;
+const renderStoreV820Base=renderStore;
+renderStore=function(){purgeUnavailableCart(false);return renderStoreV820Base()};
+purgeUnavailableCart(false);
+
+/* v8.21: moneda oficial de Guatemala */
+state.settings.currency='Q';
+write(KEYS.settings,state.settings);
+
+
+/* ========================================================================
+   NOVAPRIME GT · TIENDA PÚBLICA FINAL v9.1
+   La edición comercial se reserva para el panel administrativo autorizado.
+   Este archivo público no contiene credenciales administrativas ni secretos.
+   ======================================================================== */
+const NP_PUBLIC_BUILD='9.1.0';
+const NP_PBKDF2_ITERATIONS=210000;
+const NP_ADMIN_PENDING_MESSAGE='El acceso administrativo seguro se habilitará en la siguiente fase.';
+window.NovaPrimeArchitecture=Object.freeze({
+  phase:'storefront-complete',
+  build:NP_PUBLIC_BUILD,
+  publicStorefront:'catalog-and-orders',
+  administratorWrites:'panel-only',
+  publicDatabaseEdits:false
+});
+
+const NP_V90_STYLE=`
+:root{--focus:0 0 0 3px rgba(0,217,255,.22),0 0 0 1px rgba(0,217,255,.72)}
+html{scroll-padding-top:92px}
+body{background:radial-gradient(circle at 8% -5%,rgba(0,217,255,.10),transparent 27%),radial-gradient(circle at 92% 36%,rgba(72,89,255,.07),transparent 28%),linear-gradient(180deg,#050a12 0%,#06101b 52%,#04080f 100%)}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.01) 1px,transparent 1px);background-size:44px 44px;mask-image:linear-gradient(to bottom,rgba(0,0,0,.45),transparent 72%)}
+::selection{background:rgba(0,217,255,.28);color:#fff}
+button,a,input,select,textarea{-webkit-tap-highlight-color:transparent}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;box-shadow:var(--focus)!important}
+button:disabled{cursor:not-allowed;opacity:.52;transform:none!important;filter:saturate(.55)}
+.header{border-bottom-color:rgba(0,217,255,.12);box-shadow:0 14px 42px rgba(0,0,0,.42)}
+.header-row{max-width:1240px;margin-inline:auto}
+.search{transition:border-color .2s,box-shadow .2s,background .2s}.search:focus{background:rgba(255,255,255,.055)}
+.hero-box{border-color:rgba(0,217,255,.18);box-shadow:0 28px 72px rgba(0,0,0,.44),inset 0 1px 0 rgba(255,255,255,.035)}
+.hero-mini div,.benefit,.product,.combo,.step,.faq,.profile-card,.list-card{box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 14px 34px rgba(0,0,0,.18)}
+.section{content-visibility:auto;contain-intrinsic-size:640px;padding-block:22px}
+.section-head{margin-bottom:15px}.section-title{letter-spacing:-.025em}.section-kicker{letter-spacing:1.05px}
+.category-scroll{overscroll-behavior-inline:contain;scroll-snap-type:x proximity}.cat{scroll-snap-align:start;transition:.18s}.cat:hover{border-color:rgba(0,217,255,.25);color:#eef8ff}.cat.active{box-shadow:0 8px 24px rgba(0,217,255,.18)}
+.products{gap:16px}.product{border-color:rgba(255,255,255,.085);transform:translateZ(0)}.product:hover{transform:translateY(-5px);border-color:rgba(0,217,255,.28);box-shadow:0 22px 52px rgba(0,0,0,.38)}
+.product-image{aspect-ratio:4/3;height:auto}.product-image img{object-position:center}.product-body{padding:14px}.product-actions button{transition:transform .18s,filter .18s,border-color .18s}.product-actions button:hover{transform:translateY(-1px);filter:brightness(1.06)}
+.price{letter-spacing:-.02em}.stock{font-weight:800}.stock.out{font-weight:900}
+.btn{position:relative;overflow:hidden;isolation:isolate}.btn::after{content:'';position:absolute;inset:0;background:linear-gradient(110deg,transparent 25%,rgba(255,255,255,.17),transparent 75%);transform:translateX(-130%);transition:transform .45s;z-index:-1}.btn:hover::after{transform:translateX(130%)}
+.modal-overlay{overscroll-behavior:contain}.modal{border-color:rgba(255,255,255,.11);box-shadow:0 36px 100px rgba(0,0,0,.72),inset 0 1px 0 rgba(255,255,255,.04)}
+.field input,.field select,.field textarea{transition:border-color .18s,box-shadow .18s,background .18s}.field input:focus,.field select:focus,.field textarea:focus{background:rgba(255,255,255,.06)}
+.toast{border-color:rgba(255,255,255,.1);box-shadow:0 18px 44px rgba(0,0,0,.46)}
+.footer{border-top-color:rgba(0,217,255,.10);background:linear-gradient(180deg,rgba(8,18,31,.84),#04080f)}
+.footer-social{padding-bottom:3px}
+
+@media(max-width:560px){.section{padding-block:18px}.products{gap:10px}.product-body{padding:10px}.hero-box{box-shadow:0 20px 50px rgba(0,0,0,.38)}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}.product:hover,.btn:hover,.icon-btn:hover{transform:none!important}}
+`;
+if(!document.getElementById('np-v90-style')){
+  const style=document.createElement('style');style.id='np-v90-style';style.textContent=NP_V90_STYLE;document.head.appendChild(style);
+}
+
+function npBytesToHex(bytes){return [...bytes].map(value=>value.toString(16).padStart(2,'0')).join('')}
+function npSecureRandomHex(size=18){
+  const bytes=new Uint8Array(size);
+  if(window.crypto?.getRandomValues)crypto.getRandomValues(bytes);else for(let i=0;i<size;i++)bytes[i]=Math.floor(Math.random()*256);
+  return npBytesToHex(bytes);
+}
+async function npDerivePassword(password,salt,iterations=NP_PBKDF2_ITERATIONS){
+  const clean=String(password||'');
+  if(window.crypto?.subtle){
+    const encoder=new TextEncoder();
+    const key=await crypto.subtle.importKey('raw',encoder.encode(clean),'PBKDF2',false,['deriveBits']);
+    const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:encoder.encode(String(salt)),iterations:Number(iterations),hash:'SHA-256'},key,256);
+    return npBytesToHex(new Uint8Array(bits));
+  }
+  return sha256(`${salt}:${clean}:${iterations}`);
+}
+async function npCreatePasswordRecord(password){
+  const salt=npSecureRandomHex(18);
+  return {passwordHash:await npDerivePassword(password,salt),passwordSalt:salt,passwordIterations:NP_PBKDF2_ITERATIONS,passwordAlgorithm:'PBKDF2-SHA256'};
+}
+async function npVerifyUserPassword(user,password){
+  if(user?.passwordAlgorithm==='PBKDF2-SHA256'&&user.passwordSalt){
+    const candidate=await npDerivePassword(password,user.passwordSalt,user.passwordIterations||NP_PBKDF2_ITERATIONS);
+    return candidate===user.passwordHash;
+  }
+  const legacy=await sha256(password);
+  if(legacy!==user?.passwordHash)return false;
+  Object.assign(user,await npCreatePasswordRecord(password),{passwordMigratedAt:new Date().toISOString()});
+  write(KEYS.users,state.users);
+  return true;
+}
+function npIsSafeExternalUrl(raw,{media=false,image=false}={}){
+  const value=String(raw||'').trim();
+  if(!value||value==='#')return '';
+  if(image&&/^data:image\/(?:png|jpe?g|webp|gif|svg\+xml);/i.test(value))return value;
+  if(media&&/^data:video\//i.test(value))return value;
+  if(/^blob:/i.test(value))return value;
+  try{
+    const url=new URL(/^www\./i.test(value)?`https://${value}`:value,location.href);
+    if(url.protocol==='https:')return url.toString();
+    if((url.protocol==='file:'||url.protocol==='content:')&&url.origin===location.origin)return url.toString();
+  }catch(error){}
+  return '';
+}
+function npSecureOrderId(){return `NP-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${npSecureRandomHex(5).toUpperCase()}`}
+
+function buildOrder(user,items,notes=''){
+  const subtotal=items.reduce((sum,item)=>sum+Number(item.price||0)*Number(item.qty||0),0);
+  const promoResult=currentPromoResult(subtotal);
+  const discount=promoResult?.discount||0;
+  return {id:npSecureOrderId(),schemaVersion:2,clientBuild:NP_PUBLIC_BUILD,userId:user.id,customer:{fullName:user.fullName,email:user.email,phone:user.phone,department:user.department,municipality:user.municipality,address:user.address,reference:user.reference},items:items.map(item=>({type:item.type||'product',id:item.id,name:item.name,price:Number(item.price),qty:Number(item.qty)})),subtotal,discount,promotion:promoResult?{code:promoResult.promo.code,type:promoResult.promo.type,value:promoResult.promo.value}:null,total:Math.max(0,subtotal-discount),notes:String(notes||'').trim().slice(0,600),status:'Nuevo',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+}
+let npOrderSubmissionLocked=false;
+async function submitOrder(event){
+  event?.preventDefault?.();
+  if(npOrderSubmissionLocked)return toast('El pedido ya se está procesando.','warn');
+  const user=currentUser();if(!user)return openCheckout();
+  purgeUnavailableCart(true);
+  const items=cartDetails();if(!items.length)return toast('Tu carrito está vacío.','warn');
+  npOrderSubmissionLocked=true;
+  const button=$('checkoutForm')?.querySelector('[type="submit"]');if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent='Enviando pedido…'}
+  try{
+    const order=buildOrder(user,items,$('coNotes')?.value||'');registerOrder(order);
+    if(order.promotion){const promo=findPromo(order.promotion.code);if(promo){promo.uses=Number(promo.uses||0)+1;write(NP_PROMOS_KEY,state.promos)}}
+    state.cart=[];state.appliedPromoCode='';write(KEYS.cart,state.cart);write(NP_APPLIED_PROMO_KEY,'');renderHeader();renderCart();closeModal('checkoutModal');if($('coNotes'))$('coNotes').value='';toast(`Pedido ${order.id} enviado correctamente.`,'success');
+  }catch(error){console.error('Order submission',error);showModalNotice('No fue posible enviar el pedido. Intenta nuevamente.','error','checkoutModal')}
+  finally{setTimeout(()=>{npOrderSubmissionLocked=false;if(button){button.disabled=false;button.textContent=button.dataset.originalText||'Enviar pedido'}},900)}
+}
+
+async function handleRegister(event){
+  event.preventDefault();clearModalNotice();
+  const check=accountValidation('reg');if(!check.ok)return focusInvalid(check.input,check.message);
+  const password=$('regPassword').value,confirmPassword=$('regConfirm').value;
+  if(password.length<10)return focusInvalid($('regPassword'),'La contraseña debe tener al menos 10 caracteres.');
+  if(!/[A-Za-z]/.test(password)||!/\d/.test(password))return focusInvalid($('regPassword'),'Incluye al menos una letra y un número en la contraseña.');
+  if(password!==confirmPassword)return focusInvalid($('regConfirm'),'Las contraseñas no coinciden.');
+  if(!$('regConsent').checked)return focusInvalid($('regConsent'),'Debes aceptar el uso de tus datos para gestionar pedidos y entregas.');
+  if(state.users.some(user=>norm(user.username)===norm(check.data.username)||norm(user.email)===norm(check.data.email)))return focusInvalid($('regUsername'),'El usuario o correo ya está registrado.');
+  const credentials=await npCreatePasswordRecord(password);
+  const user={id:uid('usr'),...check.data,...credentials,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+  state.users.push(user);state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};write(KEYS.users,state.users);write(KEYS.session,state.session);logActivity('Cliente registrado',user.email);renderHeader();renderAccount();toast('Cuenta creada correctamente.','success');
+}
+async function handleLogin(event){
+  event.preventDefault();clearModalNotice();
+  const identity=$('loginIdentity').value.trim(),password=$('loginPassword').value;
+  if(!identity)return focusInvalid($('loginIdentity'),'Escribe tu usuario o correo electrónico.');
+  if(!password)return focusInvalid($('loginPassword'),'Escribe tu contraseña.');
+  if(norm(identity)===norm(''))return focusInvalid($('loginIdentity'),NP_ADMIN_PENDING_MESSAGE);
+  const user=state.users.find(item=>norm(item.username)===norm(identity)||norm(item.email)===norm(identity));
+  if(!user||!await npVerifyUserPassword(user,password))return focusInvalid($('loginPassword'),'El usuario, correo o contraseña no es correcto.');
+  state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};write(KEYS.session,state.session);renderHeader();renderAccount();toast('Sesión iniciada.','success');
+}
+function renderProfileEditor(user){
+  $('accountBody').innerHTML=`<form id="profileForm" novalidate><div class="form-grid">${accountFields().map(field=>fieldHtml(field,'edit',user[field.key])).join('')}${passwordFieldMarkup('editPassword','Nueva contraseña (opcional)','new-password',false)}${passwordFieldMarkup('editConfirm','Confirmar contraseña','new-password',false)}</div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar cambios</button><button class="btn btn-secondary" type="button" id="cancelEditProfile">Cancelar</button></div></form>`;
+  bindPasswordToggles($('accountBody'));$('cancelEditProfile').onclick=renderAccount;
+  $('profileForm').onsubmit=async event=>{
+    event.preventDefault();clearModalNotice();const check=accountValidation('edit');if(!check.ok)return focusInvalid(check.input,check.message);
+    if(state.users.some(item=>item.id!==user.id&&(norm(item.username)===norm(check.data.username)||norm(item.email)===norm(check.data.email))))return focusInvalid($('editUsername'),'El usuario o correo ya está utilizado.');
+    const password=$('editPassword').value,confirmation=$('editConfirm').value;
+    if(password&&password.length<10)return focusInvalid($('editPassword'),'La nueva contraseña debe tener al menos 10 caracteres.');
+    if(password&&(!/[A-Za-z]/.test(password)||!/\d/.test(password)))return focusInvalid($('editPassword'),'Incluye al menos una letra y un número.');
+    if((password||confirmation)&&password!==confirmation)return focusInvalid($('editConfirm'),'Las contraseñas no coinciden.');
+    Object.assign(user,check.data,{updatedAt:new Date().toISOString()});if(password)Object.assign(user,await npCreatePasswordRecord(password));
+    write(KEYS.users,state.users);renderAccount();renderHeader();toast('Perfil actualizado.','success');
+  };
+}
+function renderSocials(){
+  const markup=socialItems().map(item=>{
+    const safe=npIsSafeExternalUrl(state.settings[item.key]||'');
+    if(item.key==='supportBotUrl')return `<button type="button" class="social-pill" data-social-support>${esc(item.label)}</button>`;
+    if(!safe)return `<button type="button" class="social-pill" data-social-maintenance>${esc(item.label)}</button>`;
+    return `<a class="social-pill" href="${esc(safe)}" target="_blank" rel="noopener noreferrer">${esc(item.label)}</a>`;
+  }).join('');
+  ['footerSocial','drawerSocial'].forEach(id=>{const root=$(id);if(!root)return;root.innerHTML=markup;root.querySelectorAll('[data-social-support]').forEach(button=>button.onclick=()=>openBot('support','Hola. Necesito ayuda con CRULOX.',{Tipo:'Consulta general'}));root.querySelectorAll('[data-social-maintenance]').forEach(button=>button.onclick=maintenanceNotice)});
+}
+function normalizeProductVideoLink(raw){
+  let value=String(raw||'').trim();if(!value)return '';if(/^www\./i.test(value))value=`https://${value}`;
+  return npIsSafeExternalUrl(value,{media:true});
+}
+function productVideoMediaMarkup(url,{full=false}={}){
+  const clean=normalizeProductVideoLink(url);if(!clean)return '';
+  if(isDirectProductVideo(clean))return `<video ${full?'controls autoplay':'autoplay muted loop'} playsinline preload="metadata" controlslist="nodownload noplaybackrate" disablepictureinpicture src="${esc(clean)}"></video>`;
+  const embed=npIsSafeExternalUrl(productVideoEmbedUrl(clean),{media:true});if(!embed)return '';
+  return `<iframe src="${esc(embed)}" title="Video del producto" loading="lazy" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+}
+function openBot(kind,message,extra={}){
+  const built=buildBotUrl(kind,String(message||'').slice(0,1200),extra);const safe=npIsSafeExternalUrl(built);
+  if(!safe){maintenanceNotice();return false}
+  try{const opened=window.open(safe,'_blank','noopener,noreferrer');if(opened){try{opened.opener=null}catch(error){};return true}location.assign(safe);return true}catch(error){console.warn('External function',error);maintenanceNotice();return false}
+}
+const npLegacyOpenAdmin=openAdmin;
+openAdmin=function(){toast(NP_ADMIN_PENDING_MESSAGE,'warn');return false};
+if(state.session?.role==='admin'){state.session=null;write(KEYS.session,null)}
+
+function npHardenDynamicContent(root=document){
+  root.querySelectorAll('a[target="_blank"]').forEach(link=>link.setAttribute('rel','noopener noreferrer'));
+  root.querySelectorAll('iframe').forEach(frame=>{frame.setAttribute('referrerpolicy','no-referrer');if(!frame.hasAttribute('sandbox'))frame.setAttribute('sandbox','allow-scripts allow-same-origin allow-presentation')});
+  root.querySelectorAll('input:not([maxlength])').forEach(input=>{if(!['number','date','checkbox','file'].includes(input.type))input.maxLength=180});
+  root.querySelectorAll('textarea:not([maxlength])').forEach(area=>area.maxLength=1200);
+}
+let npSecurityFrame=0;
+const npSecurityRoots=new Set();
+const npSecurityObserver=new MutationObserver(records=>{
+  for(const record of records)for(const node of record.addedNodes)if(node.nodeType===1)npSecurityRoots.add(node);
+  if(npSecurityFrame||!npSecurityRoots.size)return;
+  npSecurityFrame=requestAnimationFrame(()=>{
+    npSecurityFrame=0;
+    const roots=[...npSecurityRoots];npSecurityRoots.clear();
+    const topRoots=roots.filter((root,index)=>!roots.some((other,i)=>i!==index&&other.contains?.(root)));
+    topRoots.forEach(root=>npHardenDynamicContent(root));
+  });
+});
+npSecurityObserver.observe(document.documentElement,{childList:true,subtree:true});
+npHardenDynamicContent();
+
+
+
+/* ========================================================================
+   v9.1 · Atención pública y reproductor multimedia refinado
+   ======================================================================== */
+const NP_VIDEO_WATERMARK=BRAND_LOGO;
+const NP_V91_STYLE=`
+/* FAQ: respuesta compacta, sin espacio vacío artificial */
+.faq-a{display:block;max-height:0;overflow:hidden;padding:0 17px!important;line-height:1.62;transition:max-height .24s ease,padding .24s ease}
+.faq.open .faq-a{padding:0 17px 15px!important}
+
+/* Reproductor flotante compacto */
+.product-video-mini{
+  left:max(12px,env(safe-area-inset-left))!important;
+  bottom:max(14px,env(safe-area-inset-bottom))!important;
+  width:min(250px,calc(100vw - 24px))!important;
+  aspect-ratio:16/9!important;
+  border-radius:20px!important;
+  border:1px solid rgba(0,217,255,.34)!important;
+  background:linear-gradient(145deg,#07111e,#02060c)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.68),0 0 0 1px rgba(255,255,255,.035) inset!important;
+}
+.np-video-preview{position:relative;width:100%;height:100%;overflow:hidden;border-radius:inherit;background:#02050a}
+.np-video-preview video,.np-video-preview iframe{width:100%;height:100%;display:block;border:0;object-fit:cover;background:#000}
+.np-video-preview::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05),rgba(0,0,0,.62));pointer-events:none}
+.np-video-preview-copy{position:absolute;left:13px;right:46px;bottom:11px;z-index:4;display:grid;gap:2px;text-align:left;pointer-events:none}
+.np-video-preview-copy span{font-size:.54rem;letter-spacing:.12em;text-transform:uppercase;color:#8adfff;font-weight:900}
+.np-video-preview-copy strong{font-size:.68rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.np-video-preview-play{position:absolute;inset:0;z-index:3;border:0;background:transparent;color:#fff;display:grid;place-items:center}
+.np-video-preview-play i{display:grid;place-items:center;width:48px;height:48px;border-radius:50%;font-style:normal;font-size:1rem;background:rgba(3,12,23,.72);border:1px solid rgba(255,255,255,.22);box-shadow:0 12px 28px rgba(0,0,0,.38);backdrop-filter:blur(8px)}
+.product-video-mini-close{top:8px!important;right:8px!important;width:32px!important;height:32px!important;background:rgba(2,8,16,.88)!important;border-color:rgba(255,255,255,.18)!important;z-index:7!important}
+.np-video-watermark{position:absolute;right:12px;bottom:10px;z-index:5;width:74px;height:auto;opacity:.34;pointer-events:none;filter:drop-shadow(0 3px 8px rgba(0,0,0,.6))}
+.product-video-mini .np-video-watermark{right:8px;bottom:8px;width:44px;opacity:.32}
+
+/* Vista completa: proporción estable, sin franjas gigantes */
+.product-video-full{padding:max(14px,env(safe-area-inset-top)) max(12px,env(safe-area-inset-right)) max(14px,env(safe-area-inset-bottom)) max(12px,env(safe-area-inset-left))!important;background:rgba(0,3,8,.975)!important;backdrop-filter:blur(14px);align-items:center!important}
+.np-video-dialog{width:min(1080px,100%);display:grid;gap:12px}
+.np-video-dialog-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 4px}
+.np-video-dialog-title{display:flex;align-items:center;gap:11px;min-width:0}
+.np-video-dialog-title img{width:42px;height:42px;object-fit:contain;opacity:.95}
+.np-video-dialog-title div{min-width:0}
+.np-video-dialog-title span{display:block;color:#6fdcff;font-size:.58rem;text-transform:uppercase;letter-spacing:.12em;font-weight:900}
+.np-video-dialog-title strong{display:block;color:#fff;font-size:.84rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.product-video-full-close{position:relative!important;top:auto!important;right:auto!important;flex:0 0 auto;width:44px!important;height:44px!important;border-radius:15px!important;background:rgba(255,255,255,.06)!important}
+.product-video-full-stage{position:relative!important;width:100%!important;height:auto!important;aspect-ratio:16/9!important;max-height:calc(100vh - 150px)!important;border-radius:24px!important;border:1px solid rgba(0,217,255,.22)!important;background:radial-gradient(circle at 50% 40%,rgba(0,217,255,.07),transparent 48%),#000!important;box-shadow:0 30px 80px rgba(0,0,0,.65),inset 0 1px 0 rgba(255,255,255,.04)!important}
+.product-video-full-stage video,.product-video-full-stage iframe{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;border:0;background:#000}
+.np-video-center-play{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);z-index:6;width:76px;height:76px;border-radius:50%;border:1px solid rgba(255,255,255,.26);background:rgba(3,10,20,.74);color:#fff;font-size:1.45rem;display:grid;place-items:center;box-shadow:0 18px 44px rgba(0,0,0,.48);backdrop-filter:blur(10px);transition:.18s}
+.np-video-center-play:hover{transform:translate(-50%,-50%) scale(1.04)}
+.np-video-center-play.is-playing{opacity:0;pointer-events:none}
+.product-video-full.np-video-ui-hidden .np-video-controls,
+.product-video-full.np-video-ui-hidden .np-video-center-play{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.96)}
+.product-video-full.np-video-ui-hidden .np-video-controls{transform:translateY(8px);}
+.np-video-controls{position:absolute;left:12px;right:12px;bottom:12px;z-index:7;display:grid;grid-template-columns:auto auto minmax(80px,1fr) auto auto auto;align-items:center;gap:10px;padding:10px 12px;border-radius:17px;background:linear-gradient(180deg,rgba(4,12,22,.78),rgba(2,7,14,.94));border:1px solid rgba(255,255,255,.10);box-shadow:0 12px 34px rgba(0,0,0,.42);backdrop-filter:blur(13px)}
+.np-video-control{width:36px;height:36px;border:0;border-radius:11px;background:rgba(255,255,255,.07);color:#fff;display:grid;place-items:center;font-size:.8rem}
+.np-video-time{font-size:.62rem;color:#d8e5f5;font-variant-numeric:tabular-nums;white-space:nowrap}
+.np-video-progress{width:100%;height:5px;accent-color:#00d9ff;cursor:pointer}
+.np-video-external{color:#dbe9f8;text-decoration:none;font-size:.64rem;padding:9px 12px;border-radius:11px;background:rgba(255,255,255,.07);white-space:nowrap}
+.np-video-external-note{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);z-index:6;display:flex;align-items:center;gap:8px;padding:9px 13px;border-radius:999px;background:rgba(3,10,20,.82);border:1px solid rgba(255,255,255,.12);color:#dce9f7;font-size:.64rem;backdrop-filter:blur(10px)}
+.product-video-fallback{display:none!important}
+@media(max-width:620px){
+  .product-video-mini{width:210px!important;border-radius:17px!important}
+  .product-video-full{padding:8px!important}
+  .np-video-dialog{gap:8px}
+  .np-video-dialog-title img{width:34px;height:34px}
+  .product-video-full-stage{border-radius:18px!important;max-height:calc(100vh - 92px)!important}
+  .np-video-controls{left:7px;right:7px;bottom:7px;grid-template-columns:auto auto minmax(52px,1fr) auto auto;gap:6px;padding:7px;border-radius:13px}
+  .np-video-controls .np-video-external{display:none}
+  .np-video-control{width:32px;height:32px;border-radius:9px}
+  .np-video-time{font-size:.56rem}
+  .np-video-center-play{width:62px;height:62px}
+  .np-video-watermark{width:58px;right:9px;bottom:54px}
+}
+`;
+if(!document.getElementById('np-v91-style')){const style=document.createElement('style');style.id='np-v91-style';style.textContent=NP_V91_STYLE;document.head.appendChild(style)}
+
+function npWarmAttentionNotice(){
+  return toast('Estamos mejorando este canal para brindarte una atención más rápida y personalizada.','info');
+}
+maintenanceNotice=npWarmAttentionNotice;
+function openBot(kind,message,extra={}){
+  const built=buildBotUrl(kind,String(message||'').slice(0,1200),extra);
+  const safe=npIsSafeExternalUrl(built);
+  if(!safe){npWarmAttentionNotice();return false}
+  try{const opened=window.open(safe,'_blank','noopener,noreferrer');if(opened){try{opened.opener=null}catch(error){};return true}location.assign(safe);return true}catch(error){console.warn('Support channel',error);npWarmAttentionNotice();return false}
+}
+
+function npVideoTime(seconds){
+  const value=Number.isFinite(seconds)?Math.max(0,seconds):0;
+  const minutes=Math.floor(value/60),secs=Math.floor(value%60);
+  return `${minutes}:${String(secs).padStart(2,'0')}`;
+}
+function productVideoMediaMarkup(url,{full=false}={}){
+  const clean=normalizeProductVideoLink(url);if(!clean)return '';
+  if(isDirectProductVideo(clean))return `<video class="np-video-element" ${full?'':'autoplay muted loop'} playsinline preload="metadata" src="${esc(clean)}"></video>`;
+  const embed=npIsSafeExternalUrl(productVideoEmbedUrl(clean),{media:true});if(!embed)return '';
+  return `<iframe src="${esc(embed)}" title="Presentación del producto" loading="eager" referrerpolicy="no-referrer" sandbox="allow-scripts allow-same-origin allow-presentation" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe>`;
+}
+function npWatermarkMarkup(){return `<img class="np-video-watermark" src="${NP_VIDEO_WATERMARK}" alt="" aria-hidden="true"/>`}
+
+function createProductVideoMini(){
+  removeProductVideoMini();
+  if(!activeProductVideo||activeProductVideo.dismissed||!$('detailModal')?.classList.contains('open'))return;
+  const product=state.products.find(item=>item.id===activeProductVideo.productId);
+  const mini=document.createElement('aside');mini.id='productVideoMini';mini.className='product-video-mini';mini.setAttribute('aria-label','Vista rápida del producto');
+  mini.innerHTML=`<div class="np-video-preview">${productVideoMediaMarkup(activeProductVideo.url)}${npWatermarkMarkup()}<button type="button" class="np-video-preview-play" aria-label="Ampliar presentación"><i>▶</i></button><div class="np-video-preview-copy"><span>Vista rápida</span><strong>${esc(product?.name||'Producto CRULOX')}</strong></div></div><button type="button" class="product-video-mini-close" aria-label="Cerrar presentación">✕</button>`;
+  document.body.appendChild(mini);
+  mini.querySelector('.np-video-preview-play').onclick=()=>openProductVideoFull();
+  mini.querySelector('.product-video-mini-close').onclick=e=>{e.stopPropagation();activeProductVideo.dismissed=true;removeProductVideoMini()};
+}
+function npBindDirectVideoControls(root){
+  const video=root.querySelector('video');if(!video)return false;
+  const play=root.querySelector('[data-video-play]'),center=root.querySelector('.np-video-center-play'),progress=root.querySelector('[data-video-progress]'),current=root.querySelector('[data-video-current]'),duration=root.querySelector('[data-video-duration]'),mute=root.querySelector('[data-video-mute]'),fullscreen=root.querySelector('[data-video-fullscreen]');
+  let hideTimer=null;
+  const showControls=()=>{root.classList.remove('np-video-ui-hidden');if(hideTimer){clearTimeout(hideTimer);hideTimer=null}};
+  const hideControlsLater=()=>{if(hideTimer)clearTimeout(hideTimer);hideTimer=setTimeout(()=>{if(!video.paused&&!video.ended)root.classList.add('np-video-ui-hidden')},2000)};
+  const sync=()=>{const playing=!video.paused&&!video.ended;play.textContent=playing?'❚❚':'▶';center.textContent=playing?'❚❚':'▶';center.classList.toggle('is-playing',playing);current.textContent=npVideoTime(video.currentTime);duration.textContent=npVideoTime(video.duration);progress.value=video.duration?String((video.currentTime/video.duration)*100):'0';mute.textContent=video.muted?'🔇':'🔊';if(playing)hideControlsLater();else showControls()};
+  const toggle=()=>{showControls();if(video.paused)video.play().catch(()=>{});else video.pause()};
+  play.onclick=toggle;center.onclick=toggle;
+  progress.oninput=()=>{showControls();if(video.duration)video.currentTime=(Number(progress.value)/100)*video.duration};
+  mute.onclick=()=>{showControls();video.muted=!video.muted;sync()};
+  fullscreen.onclick=async()=>{const stage=root.querySelector('.product-video-full-stage');try{if(document.fullscreenElement)await document.exitFullscreen();else if(stage?.requestFullscreen)await stage.requestFullscreen()}catch(error){}};
+  root.addEventListener('pointermove',()=>{if(!video.paused&&!video.ended)hideControlsLater();}, {passive:true});
+  root.addEventListener('touchstart',()=>{if(!video.paused&&!video.ended)hideControlsLater();}, {passive:true});
+  video.addEventListener('loadedmetadata',sync);video.addEventListener('timeupdate',sync);video.addEventListener('play',sync);video.addEventListener('pause',sync);video.addEventListener('ended',()=>{showControls();sync()});sync();
+  setTimeout(()=>video.play().catch(()=>{}),60);
+  return true;
+}
+function openProductVideoFull(){
+  if(!activeProductVideo)return;
+  removeProductVideoMini();removeProductVideoFull();
+  const product=state.products.find(item=>item.id===activeProductVideo.productId);
+  const direct=isDirectProductVideo(activeProductVideo.url);
+  const full=document.createElement('section');full.id='productVideoFull';full.className='product-video-full';full.setAttribute('role','dialog');full.setAttribute('aria-modal','true');full.setAttribute('aria-label','Presentación del producto');
+  const controls=direct?`<button class="np-video-control" data-video-play aria-label="Reproducir o pausar">▶</button><span class="np-video-time" data-video-current>0:00</span><input class="np-video-progress" data-video-progress type="range" min="0" max="100" value="0" aria-label="Avance del video"/><span class="np-video-time" data-video-duration>0:00</span><button class="np-video-control" data-video-mute aria-label="Activar o silenciar sonido">🔊</button><button class="np-video-control" data-video-fullscreen aria-label="Pantalla completa">⛶</button>`:`<span class="np-video-time">Reproductor integrado</span><span></span><span></span><a class="np-video-external" href="${esc(activeProductVideo.url)}" target="_blank" rel="noopener noreferrer">Abrir original</a><button class="np-video-control" data-video-fullscreen aria-label="Pantalla completa">⛶</button>`;
+  full.innerHTML=`<div class="np-video-dialog"><div class="np-video-dialog-head"><div class="np-video-dialog-title"><img src="${NP_VIDEO_WATERMARK}" alt="CRULOX"/><div><span>CRULOX</span><strong>Plataformas Digitales</strong></div></div><button type="button" class="product-video-full-close" aria-label="Cerrar presentación">✕</button></div><div class="product-video-full-stage">${productVideoMediaMarkup(activeProductVideo.url,{full:true})}${npWatermarkMarkup()}${direct?'<button type="button" class="np-video-center-play" aria-label="Reproducir">▶</button>':''}<div class="np-video-controls">${controls}</div></div></div>`;
+  document.body.appendChild(full);
+  full.querySelector('.product-video-full-close').onclick=()=>closeProductVideoFull();
+  full.onclick=e=>{if(e.target===full)closeProductVideoFull()};
+  const fsButton=full.querySelector('[data-video-fullscreen]');
+  if(direct)npBindDirectVideoControls(full);else if(fsButton)fsButton.onclick=async()=>{const stage=full.querySelector('.product-video-full-stage');try{if(document.fullscreenElement)await document.exitFullscreen();else if(stage?.requestFullscreen)await stage.requestFullscreen()}catch(error){}};
+}
+
+
+/* ========================================================================
+   CRULOX v9.3 · interacción multimedia refinada
+   - controles en una sola línea
+   - auto-ocultado a 1 segundo
+   - toque en video para mostrar controles
+   - ventana flotante arrastrable
+   - galería de detalle deslizable
+   ======================================================================== */
+const NP_V93_STYLE=`
+/* Controles: una sola línea real incluso en móvil */
+.np-video-controls{
+  display:flex!important;
+  flex-wrap:nowrap!important;
+  align-items:center!important;
+  gap:7px!important;
+  min-width:0!important;
+  padding:8px 9px!important;
+  overflow:hidden!important;
+  transition:opacity .18s ease,transform .18s ease!important;
+}
+.np-video-controls .np-video-control{flex:0 0 34px!important;width:34px!important;height:34px!important}
+.np-video-controls .np-video-time{flex:0 0 auto!important;font-size:.58rem!important}
+.np-video-controls .np-video-progress{flex:1 1 auto!important;min-width:42px!important;width:auto!important}
+.np-video-controls .np-video-external{flex:0 0 auto!important}
+.product-video-full.np-video-ui-hidden .np-video-controls{
+  opacity:0!important;
+  pointer-events:none!important;
+  transform:translateY(9px)!important;
+}
+.product-video-full.np-video-ui-hidden .np-video-center-play{
+  opacity:0!important;
+  pointer-events:none!important;
+}
+.product-video-full-stage{cursor:pointer!important;touch-action:manipulation!important}
+
+/* Mini reproductor arrastrable */
+.product-video-mini{
+  touch-action:none!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+  will-change:left,top!important;
+  transition:box-shadow .16s ease,transform .16s ease!important;
+}
+.product-video-mini.np-dragging{
+  box-shadow:0 30px 86px rgba(0,0,0,.78),0 0 0 1px rgba(0,217,255,.16) inset!important;
+  transform:scale(1.015)!important;
+}
+.product-video-mini .np-video-preview{touch-action:none!important}
+.product-video-mini .np-video-preview-play{touch-action:none!important}
+
+/* Galería deslizable */
+.product-detail-media{
+  position:relative!important;
+  overflow:hidden!important;
+  touch-action:pan-y!important;
+  user-select:none!important;
+  -webkit-user-select:none!important;
+}
+.product-detail-media img{
+  transition:opacity .16s ease,transform .20s ease!important;
+  -webkit-user-drag:none!important;
+  user-drag:none!important;
+}
+.product-detail-media.np-gallery-switching img{opacity:.72!important}
+.np-gallery-hint{
+  position:absolute;
+  left:50%;
+  bottom:9px;
+  transform:translateX(-50%);
+  z-index:3;
+  display:flex;
+  align-items:center;
+  gap:5px;
+  padding:5px 9px;
+  border-radius:999px;
+  color:rgba(235,247,255,.82);
+  background:rgba(2,9,17,.58);
+  border:1px solid rgba(255,255,255,.08);
+  font-size:.52rem;
+  letter-spacing:.02em;
+  pointer-events:none;
+  backdrop-filter:blur(8px);
+}
+@media(max-width:620px){
+  .np-video-controls{left:6px!important;right:6px!important;bottom:6px!important;gap:5px!important;padding:6px!important;border-radius:12px!important}
+  .np-video-controls .np-video-control{flex-basis:30px!important;width:30px!important;height:30px!important;font-size:.7rem!important}
+  .np-video-controls .np-video-time{font-size:.52rem!important}
+  .np-video-controls .np-video-progress{min-width:34px!important;height:4px!important}
+}
+@media(max-width:390px){
+  .np-video-controls{gap:4px!important;padding:5px!important}
+  .np-video-controls .np-video-control{flex-basis:28px!important;width:28px!important;height:28px!important}
+  .np-video-controls .np-video-time{font-size:.48rem!important}
+}
+`;
+if(!document.getElementById('np-v93-style')){
+  const style=document.createElement('style');
+  style.id='np-v93-style';
+  style.textContent=NP_V93_STYLE;
+  document.head.appendChild(style);
+}
+
+function npBindDirectVideoControls(root){
+  const video=root.querySelector('video');
+  if(!video)return false;
+  const stage=root.querySelector('.product-video-full-stage');
+  const controls=root.querySelector('.np-video-controls');
+  const play=root.querySelector('[data-video-play]');
+  const center=root.querySelector('.np-video-center-play');
+  const progress=root.querySelector('[data-video-progress]');
+  const current=root.querySelector('[data-video-current]');
+  const duration=root.querySelector('[data-video-duration]');
+  const mute=root.querySelector('[data-video-mute]');
+  const fullscreen=root.querySelector('[data-video-fullscreen]');
+  let hideTimer=null;
+
+  const clearHideTimer=()=>{if(hideTimer){clearTimeout(hideTimer);hideTimer=null}};
+  const showControls=(schedule=true)=>{
+    clearHideTimer();
+    root.classList.remove('np-video-ui-hidden');
+    if(schedule&&!video.paused&&!video.ended){
+      hideTimer=setTimeout(()=>{
+        if(!video.paused&&!video.ended)root.classList.add('np-video-ui-hidden');
+      },1000);
+    }
+  };
+  const hideControls=()=>{
+    clearHideTimer();
+    if(!video.paused&&!video.ended)root.classList.add('np-video-ui-hidden');
+  };
+  const syncVisuals=()=>{
+    const playing=!video.paused&&!video.ended;
+    if(play)play.textContent=playing?'❚❚':'▶';
+    if(center){center.textContent=playing?'❚❚':'▶';center.classList.toggle('is-playing',playing)}
+    if(current)current.textContent=npVideoTime(video.currentTime);
+    if(duration)duration.textContent=npVideoTime(video.duration);
+    if(progress)progress.value=video.duration?String((video.currentTime/video.duration)*100):'0';
+    if(mute)mute.textContent=video.muted?'🔇':'🔊';
+  };
+  const togglePlayback=()=>{
+    showControls(false);
+    if(video.paused||video.ended)video.play().catch(()=>{});else video.pause();
+  };
+
+  if(play)play.onclick=e=>{e.stopPropagation();togglePlayback()};
+  if(center)center.onclick=e=>{e.stopPropagation();togglePlayback()};
+  if(progress){
+    progress.onpointerdown=e=>{e.stopPropagation();showControls(false)};
+    progress.onclick=e=>e.stopPropagation();
+    progress.oninput=e=>{e.stopPropagation();showControls(false);if(video.duration)video.currentTime=(Number(progress.value)/100)*video.duration};
+    progress.onchange=e=>{e.stopPropagation();showControls(true)};
+  }
+  if(mute)mute.onclick=e=>{e.stopPropagation();showControls(false);video.muted=!video.muted;syncVisuals();showControls(true)};
+  if(fullscreen)fullscreen.onclick=async e=>{e.stopPropagation();showControls(false);try{if(document.fullscreenElement)await document.exitFullscreen();else if(stage?.requestFullscreen)await stage.requestFullscreen()}catch(error){};showControls(true)};
+  if(controls)controls.addEventListener('click',e=>e.stopPropagation());
+
+  /* Un toque en la superficie del video siempre recupera los controles. */
+  if(stage)stage.addEventListener('click',e=>{
+    if(e.target.closest('.np-video-controls,.np-video-center-play'))return;
+    showControls(true);
+  });
+
+  video.addEventListener('loadedmetadata',()=>{syncVisuals();showControls(video.paused)});
+  video.addEventListener('timeupdate',syncVisuals);
+  video.addEventListener('play',()=>{syncVisuals();showControls(true)});
+  video.addEventListener('pause',()=>{syncVisuals();showControls(false)});
+  video.addEventListener('ended',()=>{syncVisuals();showControls(false)});
+  video.addEventListener('seeking',()=>showControls(false));
+  video.addEventListener('seeked',()=>showControls(true));
+  syncVisuals();
+  setTimeout(()=>video.play().catch(()=>{}),60);
+  return true;
+}
+
+function npMakeMiniVideoDraggable(mini){
+  if(!mini)return;
+  let dragging=false,moved=false,pointerId=null,startX=0,startY=0,startLeft=0,startTop=0;
+  const margin=8;
+  const clampPosition=(left,top)=>{
+    const rect=mini.getBoundingClientRect();
+    const maxLeft=Math.max(margin,window.innerWidth-rect.width-margin);
+    const maxTop=Math.max(margin,window.innerHeight-rect.height-margin);
+    return {left:Math.min(Math.max(margin,left),maxLeft),top:Math.min(Math.max(margin,top),maxTop)};
+  };
+  const begin=e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    if(e.target.closest('.product-video-mini-close'))return;
+    const rect=mini.getBoundingClientRect();
+    pointerId=e.pointerId;
+    startX=e.clientX;startY=e.clientY;startLeft=rect.left;startTop=rect.top;
+    dragging=true;moved=false;
+    mini.classList.add('np-dragging');
+    mini.style.left=`${rect.left}px`;mini.style.top=`${rect.top}px`;mini.style.right='auto';mini.style.bottom='auto';
+    try{mini.setPointerCapture(pointerId)}catch(error){}
+  };
+  const move=e=>{
+    if(!dragging||e.pointerId!==pointerId)return;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    if(Math.abs(dx)>4||Math.abs(dy)>4)moved=true;
+    const pos=clampPosition(startLeft+dx,startTop+dy);
+    mini.style.left=`${pos.left}px`;mini.style.top=`${pos.top}px`;
+    if(e.cancelable)e.preventDefault();
+  };
+  const end=e=>{
+    if(!dragging||e.pointerId!==pointerId)return;
+    dragging=false;mini.classList.remove('np-dragging');
+    try{mini.releasePointerCapture(pointerId)}catch(error){}
+    setTimeout(()=>{moved=false},80);
+  };
+  mini.addEventListener('pointerdown',begin);
+  mini.addEventListener('pointermove',move);
+  mini.addEventListener('pointerup',end);
+  mini.addEventListener('pointercancel',end);
+  mini.addEventListener('click',e=>{if(moved){e.preventDefault();e.stopImmediatePropagation()}},true);
+  const keepInside=()=>{
+    const rect=mini.getBoundingClientRect();
+    const pos=clampPosition(rect.left,rect.top);
+    mini.style.left=`${pos.left}px`;mini.style.top=`${pos.top}px`;
+  };
+  window.addEventListener('resize',keepInside,{passive:true});
+}
+
+function createProductVideoMini(){
+  removeProductVideoMini();
+  if(!activeProductVideo||activeProductVideo.dismissed||!$('detailModal')?.classList.contains('open'))return;
+  const product=state.products.find(item=>item.id===activeProductVideo.productId);
+  const mini=document.createElement('aside');
+  mini.id='productVideoMini';
+  mini.className='product-video-mini';
+  mini.setAttribute('aria-label','Vista rápida del producto');
+  mini.innerHTML=`<div class="np-video-preview">${productVideoMediaMarkup(activeProductVideo.url)}${npWatermarkMarkup()}<button type="button" class="np-video-preview-play" aria-label="Ampliar presentación"><i>▶</i></button><div class="np-video-preview-copy"><span>Vista rápida</span><strong>${esc(product?.name||'Producto CRULOX')}</strong></div></div><button type="button" class="product-video-mini-close" aria-label="Cerrar presentación">✕</button>`;
+  document.body.appendChild(mini);
+  npMakeMiniVideoDraggable(mini);
+  mini.querySelector('.np-video-preview-play').onclick=e=>{e.stopPropagation();openProductVideoFull()};
+  mini.querySelector('.product-video-mini-close').onclick=e=>{e.stopPropagation();activeProductVideo.dismissed=true;removeProductVideoMini()};
+}
+
+function npBindDetailGallerySwipe(images){
+  const media=$('detailBody')?.querySelector('.product-detail-media');
+  const main=$('detailMainImage');
+  if(!media||!main||!Array.isArray(images)||images.length<2)return;
+  let index=0,startX=0,startY=0,tracking=false,pointerId=null;
+  if(!media.querySelector('.np-gallery-hint')){
+    const hint=document.createElement('span');hint.className='np-gallery-hint';hint.textContent='‹ Desliza ›';media.appendChild(hint);
+  }
+  const applyIndex=next=>{
+    index=(next+images.length)%images.length;
+    media.classList.add('np-gallery-switching');
+    main.src=images[index];
+    $('detailBody').querySelectorAll('[data-detail-image]').forEach((item,i)=>item.classList.toggle('active',i===index));
+    setTimeout(()=>media.classList.remove('np-gallery-switching'),170);
+  };
+  $('detailBody').querySelectorAll('[data-detail-image]').forEach((button,i)=>button.onclick=()=>applyIndex(i));
+  media.addEventListener('pointerdown',e=>{
+    if(e.button!==undefined&&e.button!==0)return;
+    pointerId=e.pointerId;startX=e.clientX;startY=e.clientY;tracking=true;
+    try{media.setPointerCapture(pointerId)}catch(error){}
+  });
+  media.addEventListener('pointerup',e=>{
+    if(!tracking||e.pointerId!==pointerId)return;
+    tracking=false;
+    const dx=e.clientX-startX,dy=e.clientY-startY;
+    try{media.releasePointerCapture(pointerId)}catch(error){}
+    if(Math.abs(dx)>=42&&Math.abs(dx)>Math.abs(dy)*1.15)applyIndex(index+(dx<0?1:-1));
+  });
+  media.addEventListener('pointercancel',()=>{tracking=false});
+}
+
+function openDetail(id){
+  closeProductVideoExperience();
+  const p=normalizeProductMediaRecord(state.products.find(x=>x.id===id));
+  if(!p||!p.id)return;
+  const images=(p.images||[]).filter(Boolean).slice(0,2);
+  const [stock,stockClass]=stockInfo(p);
+  const visual=productDetailVisualMetrics(p.id);
+  const visualStyle=`--np-detail-aspect:${visual.ratio};--np-detail-max-width:${visual.maxWidth}px;--np-detail-object-fit:${visual.fit};--np-detail-object-position:${visual.position};--np-detail-transform:${visual.transform};`;
+  $('detailBody').innerHTML=`<div class="product-detail"><div class="product-detail-gallery"><div class="product-detail-media" style="${esc(visualStyle)}"><img id="detailMainImage" src="${esc(images[0]||p.image)}" alt="${esc(p.name)}" loading="eager" decoding="async"/></div>${images.length>1?`<div class="product-detail-thumbs">${images.map((src,index)=>`<button type="button" class="product-detail-thumb ${index===0?'active':''}" data-detail-image="${index}" aria-label="Ver imagen ${index+1}"><img src="${esc(src)}" alt=""/></button>`).join('')}</div>`:''}</div><div class="product-detail-info"><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock stock-detail ${stockClass}">${stock}</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>${Number(p.stock)<=0?'No disponible':'Añadir al carrito'}</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+  openModal('detailModal');
+  npBindDetailGallerySwipe(images);
+  if($('detailAdd'))$('detailAdd').onclick=()=>{if(Number(p.stock)<=0)return toast('Este producto no está disponible.','warn');addToCart(p.id);closeModal('detailModal')};
+  $('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});
+  $('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)};
+  startProductVideoExperience(p);
+}
+
+
+/* ========================================================================
+   v9.4 · Ajustes finales: marca de agua, FAQ y acceso admin local temporal
+   ======================================================================== */
+const NP_TEMP_ADMIN_KEY='jm_digital_v1_admin_auth';
+const NP_TEMP_ADMIN_EMAIL='admin-separado@crulox.invalid';
+const NP_TEMP_ADMIN_HASH='9c3b83eb1b39297606a1d599f17c6900f2e9f3df65fee429b5537edbaa91a52b';
+
+/* Acceso administrativo temporal local para la fase de desarrollo. */
+try{
+  if(!localStorage.getItem(NP_TEMP_ADMIN_KEY)){
+    localStorage.setItem(NP_TEMP_ADMIN_KEY,JSON.stringify({
+      email:NP_TEMP_ADMIN_EMAIL,
+      passwordHash:NP_TEMP_ADMIN_HASH,
+      mode:'temporary-local',
+      createdAt:new Date().toISOString()
+    }));
+  }
+}catch(error){console.warn('Temporary admin storage unavailable',error)}
+
+/* Restaurar el panel local únicamente para esta fase temporal. */
+if(typeof npLegacyOpenAdmin==='function')openAdmin=npLegacyOpenAdmin;
+
+const npPreviousHandleLogin=handleLogin;
+handleLogin=async function(e){
+  e.preventDefault();
+  clearModalNotice?.('accountModal');
+  const identity=$('loginIdentity')?.value.trim()||'';
+  const pass=$('loginPassword')?.value||'';
+  try{
+    const temp=JSON.parse(localStorage.getItem(NP_TEMP_ADMIN_KEY)||'null');
+    const hash=await sha256(pass);
+    if(temp&&norm(identity)===norm(temp.email)&&hash===temp.passwordHash){
+      state.session={role:'admin',email:temp.email,temporary:true,createdAt:new Date().toISOString()};
+      write(KEYS.session,state.session);
+      closeModal('accountModal');
+      renderHeader();
+      openAdmin('dashboard');
+      logActivity('Inicio administrativo temporal',temp.email);
+      return;
+    }
+  }catch(error){console.warn('Temporary admin login',error)}
+  return npPreviousHandleLogin.call(this,e);
+};
+
+const NP_V94_STYLE=`
+/* Marca de agua: discreta, limpia y fuera de los controles */
+.np-video-watermark{
+  right:16px!important;
+  top:14px!important;
+  bottom:auto!important;
+  width:52px!important;
+  max-width:12%!important;
+  opacity:.18!important;
+  filter:drop-shadow(0 2px 7px rgba(0,0,0,.55))!important;
+  pointer-events:none!important;
+}
+.product-video-mini .np-video-watermark{
+  right:10px!important;
+  top:10px!important;
+  bottom:auto!important;
+  width:34px!important;
+  max-width:16%!important;
+  opacity:.20!important;
+}
+/* Espacio de respiración real al final de cada respuesta FAQ */
+.faq.open .faq-a{padding-bottom:32px!important}
+.faq-a::after{content:'';display:block;height:8px}
+@media(max-width:620px){
+  .np-video-watermark{right:11px!important;top:10px!important;width:44px!important;opacity:.17!important}
+  .product-video-mini .np-video-watermark{right:8px!important;top:8px!important;width:30px!important;opacity:.19!important}
+  .faq.open .faq-a{padding-bottom:30px!important}
+}
+`;
+if(!document.getElementById('np-v94-style')){
+  const style=document.createElement('style');style.id='np-v94-style';style.textContent=NP_V94_STYLE;document.head.appendChild(style);
+}
+
+/* Eliminar cualquier distintivo técnico antiguo si quedó guardado por caché. */
+document.querySelectorAll('.np-security-status').forEach(node=>node.remove());
+
+(()=>{
+  /* V3.7.22 · Arranque fluido: la tienda visible tiene prioridad sobre tareas pesadas. */
+  purgeUnavailableCart(false);
+  renderStore();
+  npHardenDynamicContent();
+
+  const releaseLoader=()=>{
+    const loader=$('loader');
+    if(!loader)return;
+    loader.classList.add('hide');
+    loader.style.pointerEvents='none';
+    setTimeout(()=>{try{loader.style.display='none'}catch(error){}},220);
+  };
+  requestAnimationFrame(()=>requestAnimationFrame(releaseLoader));
+
+  const migrateLater=async()=>{
+    try{
+      const changed=await migrateHeavyStoredMedia();
+      if(changed)requestAnimationFrame(()=>renderStore());
+    }catch(error){console.warn('Media migration',error)}
+  };
+  if('requestIdleCallback' in window)requestIdleCallback(()=>migrateLater(),{timeout:1800});
+  else setTimeout(migrateLater,900);
+})();
+
+window.addEventListener('pagehide',releaseTransientWebViewResources,{capture:true});
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden)return;
+  try{closeProductVideoExperience()}catch(error){}
+  try{closeSuggestions()}catch(error){}
+},{passive:true});
+
+
+
+</script>
+
+<style id="np-dialog-system-v101">
+  .np-dialog-layer{
+    position:fixed;inset:0;z-index:2147483600;display:grid;place-items:center;
+    padding:max(18px,env(safe-area-inset-top)) 16px max(18px,env(safe-area-inset-bottom));
+    background:rgba(0,5,12,.72);backdrop-filter:blur(16px) saturate(125%);
+    -webkit-backdrop-filter:blur(16px) saturate(125%);
+    opacity:0;visibility:hidden;transition:opacity .18s ease,visibility .18s ease;
+  }
+  .np-dialog-layer.show{opacity:1;visibility:visible}
+  .np-dialog-card{
+    width:min(100%,520px);max-height:min(82dvh,720px);overflow:hidden;position:relative;
+    border-radius:28px;border:1px solid rgba(87,197,255,.18);
+    background:
+      radial-gradient(circle at 92% 2%,rgba(0,214,255,.12),transparent 31%),
+      radial-gradient(circle at 8% 100%,rgba(78,84,255,.13),transparent 36%),
+      linear-gradient(155deg,#0b1c31 0%,#071423 54%,#081522 100%);
+    box-shadow:0 32px 90px rgba(0,0,0,.62),inset 0 1px 0 rgba(255,255,255,.035);
+    transform:translateY(12px) scale(.985);transition:transform .2s ease;
+  }
+  .np-dialog-layer.show .np-dialog-card{transform:translateY(0) scale(1)}
+  .np-dialog-card::before{
+    content:"";position:absolute;inset:0 0 auto 0;height:2px;
+    background:linear-gradient(90deg,transparent,#12dbff 30%,#2f92ff 67%,transparent);
+    opacity:.8;pointer-events:none;
+  }
+  .np-dialog-head{display:flex;align-items:flex-start;gap:13px;padding:20px 20px 13px}
+  .np-dialog-mark{
+    flex:0 0 44px;width:44px;height:44px;border-radius:14px;display:grid;place-items:center;
+    background:linear-gradient(145deg,rgba(0,215,255,.18),rgba(39,102,255,.16));
+    border:1px solid rgba(81,195,255,.15);box-shadow:0 10px 26px rgba(0,157,255,.12);
+    font-size:1.05rem
+  }
+  .np-dialog-headcopy{min-width:0;flex:1}
+  .np-dialog-eyebrow{font-size:.59rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#41dfff;margin-bottom:5px}
+  .np-dialog-title{margin:0;color:#f5f9ff;font-size:1.06rem;line-height:1.22;letter-spacing:-.015em}
+  .np-dialog-close{
+    flex:0 0 40px;width:40px;height:40px;border:1px solid rgba(144,191,236,.14);border-radius:13px;
+    background:rgba(255,255,255,.035);color:#bad0e8;font-size:1.15rem;display:grid;place-items:center;
+  }
+  .np-dialog-close:active{transform:scale(.96)}
+  .np-dialog-body{padding:3px 20px 18px;overflow:auto;max-height:calc(82dvh - 150px)}
+  .np-dialog-message{
+    margin:0 0 14px;color:#a9bfd8;font-size:.76rem;line-height:1.65;white-space:pre-line;
+    overflow-wrap:anywhere
+  }
+  .np-dialog-field-wrap{display:grid;gap:8px}
+  .np-dialog-label{font-size:.64rem;color:#d9e9f8;font-weight:850;letter-spacing:.01em}
+  .np-dialog-input,.np-dialog-textarea{
+    width:100%;box-sizing:border-box;appearance:none;-webkit-appearance:none;outline:none;
+    border:1px solid rgba(111,188,255,.15);border-radius:17px;background:#091a2b;color:#f4f8ff;
+    padding:14px 15px;font:inherit;font-size:.78rem;line-height:1.45;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);transition:border-color .16s ease,box-shadow .16s ease,background .16s ease
+  }
+  .np-dialog-textarea{min-height:124px;max-height:270px;resize:vertical}
+  .np-dialog-input:focus,.np-dialog-textarea:focus{
+    border-color:rgba(22,215,255,.62);background:#0a1d31;box-shadow:0 0 0 4px rgba(0,210,255,.09)
+  }
+  .np-dialog-hint{font-size:.58rem;color:#708ba8;line-height:1.5}
+  .np-dialog-error{
+    display:none;margin-top:8px;padding:9px 11px;border-radius:12px;border:1px solid rgba(255,96,127,.15);
+    background:rgba(255,64,102,.07);color:#ff91aa;font-size:.62rem;font-weight:760;line-height:1.5
+  }
+  .np-dialog-error.show{display:block}
+  .np-dialog-actions{
+    display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px 20px;
+    border-top:1px solid rgba(128,190,245,.075);background:rgba(0,0,0,.08)
+  }
+  .np-dialog-btn{
+    min-height:48px;border-radius:16px;border:1px solid rgba(124,190,244,.13);font-weight:900;font-size:.72rem;
+    letter-spacing:.01em;transition:transform .14s ease,filter .14s ease,box-shadow .14s ease
+  }
+  .np-dialog-btn:active{transform:scale(.985)}
+  .np-dialog-cancel{background:rgba(255,255,255,.035);color:#d5e3f2}
+  .np-dialog-confirm{background:linear-gradient(135deg,#13d9f5,#148cff);color:#04101a;box-shadow:0 12px 30px rgba(0,171,255,.18)}
+  .np-dialog-confirm.danger{background:linear-gradient(135deg,#ff4f78,#e62f5a);color:white;box-shadow:0 12px 30px rgba(255,54,99,.16)}
+  .np-dialog-confirm:hover{filter:brightness(1.05)}
+  .np-dialog-summary{
+    display:flex;align-items:flex-start;gap:10px;margin-bottom:13px;padding:11px 12px;border-radius:15px;
+    background:rgba(255,255,255,.025);border:1px solid rgba(120,191,245,.08);color:#b7cae0;font-size:.66rem;line-height:1.55
+  }
+  .np-dialog-summary i{font-style:normal;color:#25ddff}
+  body.np-dialog-open{overflow:hidden!important;touch-action:none}
+  @media(max-width:560px){
+    .np-dialog-layer{place-items:end center;padding:12px 10px max(10px,env(safe-area-inset-bottom))}
+    .np-dialog-card{width:100%;border-radius:25px;max-height:88dvh}
+    .np-dialog-head{padding:18px 16px 12px;gap:11px}
+    .np-dialog-body{padding:2px 16px 16px;max-height:calc(88dvh - 145px)}
+    .np-dialog-actions{padding:12px 16px 16px}
+    .np-dialog-mark{width:40px;height:40px;flex-basis:40px}
+    .np-dialog-title{font-size:1rem}
+    .np-dialog-message{font-size:.72rem}
+  }
+  @media(prefers-reduced-motion:reduce){.np-dialog-layer,.np-dialog-card,.np-dialog-btn{transition:none!important}}
+</style>
+<script>
+/* CRULOX branded dialog system — replaces every native prompt/confirm in admin flows. */
+(function(){
+  function dialogProfile(message,mode){
+    const text=String(message||'').trim();
+    const low=text.toLowerCase();
+    const destructive=/(eliminar|borrar|vaciar|restaurar|quitar|desactivar|reducir|restar)/i.test(text);
+    let icon=destructive?'⚠':'◆';
+    let eyebrow=mode==='prompt'?'Edición administrativa':'Confirmación administrativa';
+    let title=mode==='prompt'?'Completar información':'Confirmar acción';
+    if(/nota interna/i.test(text)){icon='✎';title='Nota interna del cliente';eyebrow='Gestión de cliente'}
+    else if(/etiqueta/i.test(text)){icon='🏷';title='Editar etiqueta';eyebrow='Organización'}
+    else if(/existencias|stock/i.test(text)){icon='📦';title='Actualizar existencias';eyebrow='Inventario'}
+    else if(/porcentaje|precios/i.test(text)){icon='Q';title='Ajuste de precios';eyebrow='Catálogo'}
+    else if(/categoría/i.test(text)){icon='🏷';title='Gestión de categoría';eyebrow='Catálogo'}
+    else if(/pedido/i.test(text) && destructive){icon='🧾';title='Eliminar pedido';eyebrow='Operación'}
+    else if(/cuenta/i.test(text) && destructive){icon='👤';title='Eliminar cliente';eyebrow='Clientes'}
+    else if(/código|promoc/i.test(text)){icon='🎟';title=destructive?'Desactivar promoción':'Gestionar promoción';eyebrow='Crecimiento'}
+    else if(/notificaci/i.test(text) && destructive){icon='🗑';title=/todas|visibles/i.test(text)?'Eliminar notificaciones':'Eliminar notificación';eyebrow='Confirmación'}
+    else if(/respaldo|restaurar/i.test(text)){icon='↺';title='Restauración de datos';eyebrow='Sistema'}
+    const notificationDelete=/notificaci/i.test(text)&&destructive;
+    return {text,low,destructive,icon,eyebrow,title,notificationDelete};
+  }
+  function makeDialog(opts){
+    return new Promise(resolve=>{
+      const previous=document.querySelector('.np-dialog-layer');
+      if(previous) previous.remove();
+      const profile=dialogProfile(opts.message,opts.mode);
+      const layer=document.createElement('div');
+      layer.className='np-dialog-layer';
+      layer.setAttribute('role','presentation');
+      const isTextarea=opts.mode==='prompt' && /(nota|descripción|detalle|observación)/i.test(profile.text);
+      const isNumber=opts.mode==='prompt' && /(existencias|stock|porcentaje|unidades|límite)/i.test(profile.text);
+      const fieldLabel=isNumber?'Valor':isTextarea?'Información':'Dato';
+      const safeText=profile.text.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+      const inputHtml=opts.mode==='prompt' ? `<div class="np-dialog-field-wrap"><label class="np-dialog-label" for="npDialogValue">${fieldLabel}</label>${isTextarea?`<textarea class="np-dialog-textarea" id="npDialogValue" maxlength="1000"></textarea>`:`<input class="np-dialog-input" id="npDialogValue" ${isNumber?'inputmode="decimal" type="number"':'type="text"'} autocomplete="off" maxlength="160">`}<div class="np-dialog-hint">Revisa la información antes de guardar el cambio.</div><div class="np-dialog-error" id="npDialogError"></div></div>` : '';
+      layer.innerHTML=`<section class="np-dialog-card" role="dialog" aria-modal="true" aria-labelledby="npDialogTitle">
+        <header class="np-dialog-head"><div class="np-dialog-mark">${profile.icon}</div><div class="np-dialog-headcopy"><div class="np-dialog-eyebrow">${profile.eyebrow}</div><h2 class="np-dialog-title" id="npDialogTitle">${profile.title}</h2></div><button class="np-dialog-close" type="button" aria-label="Cerrar">×</button></header>
+        <div class="np-dialog-body">${opts.mode==='confirm'?`<div class="np-dialog-summary"><i>●</i><span>${profile.notificationDelete?'Esta acción no se puede deshacer.':'Revisa la acción antes de continuar.'}</span></div>`:''}<p class="np-dialog-message">${safeText}</p>${inputHtml}</div>
+        <footer class="np-dialog-actions"><button class="np-dialog-btn np-dialog-cancel" type="button">Cancelar</button><button class="np-dialog-btn np-dialog-confirm ${profile.destructive?'danger':''}" type="button">${profile.notificationDelete?'Eliminar':profile.destructive?'Confirmar':'Guardar / continuar'}</button></footer>
+      </section>`;
+      document.body.appendChild(layer);document.body.classList.add('np-dialog-open');
+      const closeBtn=layer.querySelector('.np-dialog-close');
+      const cancelBtn=layer.querySelector('.np-dialog-cancel');
+      const confirmBtn=layer.querySelector('.np-dialog-confirm');
+      const input=layer.querySelector('#npDialogValue');
+      const error=layer.querySelector('#npDialogError');
+      if(input){input.value=opts.defaultValue==null?'':String(opts.defaultValue)}
+      let settled=false;
+      function finish(value){if(settled)return;settled=true;layer.classList.remove('show');document.body.classList.remove('np-dialog-open');setTimeout(()=>layer.remove(),160);resolve(value)}
+      function submit(){
+        if(opts.mode==='confirm') return finish(true);
+        const value=input?input.value:'';
+        if(isNumber && value!=='' && !Number.isFinite(Number(value))){error.textContent='Ingresa un valor numérico válido.';error.classList.add('show');input.focus();return}
+        finish(value);
+      }
+      closeBtn.onclick=()=>finish(opts.mode==='confirm'?false:null);
+      cancelBtn.onclick=()=>finish(opts.mode==='confirm'?false:null);
+      confirmBtn.onclick=submit;
+      layer.addEventListener('mousedown',e=>{if(e.target===layer)finish(opts.mode==='confirm'?false:null)});
+      layer.addEventListener('keydown',e=>{
+        if(e.key==='Escape'){e.preventDefault();finish(opts.mode==='confirm'?false:null)}
+        if(e.key==='Enter' && opts.mode==='confirm'){e.preventDefault();submit()}
+        if(e.key==='Enter' && opts.mode==='prompt' && !isTextarea){e.preventDefault();submit()}
+        if(e.key==='Enter' && opts.mode==='prompt' && isTextarea && (e.ctrlKey||e.metaKey)){e.preventDefault();submit()}
+      });
+      requestAnimationFrame(()=>{layer.classList.add('show');setTimeout(()=>input?.focus(),40)});
+    });
+  }
+  window.npPrompt=function(message,defaultValue=''){return makeDialog({mode:'prompt',message,defaultValue})};
+  window.npConfirm=function(message){return makeDialog({mode:'confirm',message})};
+})();
+</script>
+
+
+<style id="np-v105-admin-style">
+/* CRULOX v10.5 — panel compacto, equipo y seguimiento */
+.admin-sidebar{height:auto!important;min-height:0!important;padding:8px 12px 10px!important;background:#05111d!important}
+.admin-brand-row{padding:4px 4px 5px!important;min-height:0!important}.admin-brand{height:42px!important;width:190px!important}
+.admin-nav{grid-template-columns:repeat(4,minmax(116px,1fr))!important;gap:7px!important;padding:5px 0 3px!important;margin:0!important;max-width:none!important;overflow-x:auto!important}
+.admin-nav button{min-height:42px!important;border-radius:14px!important;padding:7px 9px!important;font-size:.57rem!important}
+.admin-main{background:#020812!important}.admin-top{min-height:58px!important;margin:0!important}.admin-content{padding-top:14px!important;padding-bottom:46px!important}
+.np-admin-breadcrumb{padding-top:8px!important}.np-admin-subnav-wrap{padding-top:6px!important;padding-bottom:8px!important}
+@media(max-width:700px){.admin-sidebar{padding:7px 10px 9px!important}.admin-nav{grid-template-columns:repeat(4,minmax(112px,1fr))!important}.admin-brand{width:170px!important;height:39px!important}}
+.np-v105-page{display:grid;gap:15px}.np-v105-pagehead{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:4px 2px 8px;border-bottom:1px solid rgba(126,194,255,.08)}.np-v105-pagehead h2{font-size:1rem;margin:0;color:#eff8ff}.np-v105-pagehead p{font-size:.61rem;color:#7892ac;line-height:1.55;margin-top:4px}.np-v105-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.np-v105-kpis>div{padding:12px 13px;border-radius:15px;background:#071522;border:1px solid rgba(126,194,255,.08)}.np-v105-kpis small{display:block;color:#7893ac;font-size:.52rem}.np-v105-kpis b{display:block;color:#1ad8ff;font-size:1.15rem;margin-top:4px}.np-v105-agent-list{display:grid;gap:9px}.np-v105-agent-card{display:grid;grid-template-columns:44px minmax(0,1fr);gap:11px;padding:13px;border-radius:17px;background:#071522;border:1px solid rgba(126,194,255,.08)}.np-v105-agent-avatar{width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,216,255,.18),rgba(65,104,255,.17));border:1px solid rgba(0,216,255,.18);font-weight:900;color:#23dcff}.np-v105-agent-main{min-width:0}.np-v105-agent-head{display:flex;justify-content:space-between;gap:10px}.np-v105-agent-head h3{font-size:.72rem}.np-v105-agent-head p,.np-v105-agent-meta{font-size:.52rem;color:#7892ac}.np-v105-agent-meta{display:flex;flex-wrap:wrap;gap:6px 12px;margin-top:7px}.np-v105-agent-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}.np-v105-agent-actions button,.np-v105-assignment button,.np-v105-quick button{border:1px solid rgba(126,194,255,.1);background:#0a1a2a;color:#c5d8e9;border-radius:10px;padding:7px 9px;font-size:.52rem;font-weight:800}.np-v105-agent-actions .danger{color:#ff6c86;background:rgba(255,94,120,.07)}.np-v105-agent-actions .warn{color:#ffc95c}.np-v105-agent-actions .success{color:#3ee98f}.np-v105-pill{font-size:.48rem;padding:5px 8px;border-radius:999px;font-weight:850}.np-v105-pill.on{background:rgba(32,224,132,.09);color:#42e99a}.np-v105-pill.off{background:rgba(255,94,120,.09);color:#ff7590}.np-v105-note{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,192,64,.055);border:1px solid rgba(255,192,64,.12);color:#bcae84;font-size:.53rem;line-height:1.55}.np-v105-pass{display:grid;grid-template-columns:1fr auto;gap:6px}.np-v105-pass button{border:1px solid rgba(126,194,255,.09);background:#0a1a2a;color:#a9c2d9;border-radius:10px;padding:0 12px}.np-v105-perm-groups{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.np-v105-perm-groups label{display:flex;align-items:center;gap:8px;padding:10px;border-radius:12px;background:#071522;border:1px solid rgba(126,194,255,.07);font-size:.57rem}.np-v105-perm-search{display:flex;align-items:center;justify-content:space-between;gap:10px}.np-v105-perm-search input{flex:1;min-height:40px;border-radius:12px;border:1px solid rgba(126,194,255,.09);background:#06131f;color:#e8f4ff;padding:0 12px}.np-v105-perm-search span{font-size:.51rem;color:#7892ac}.np-v105-perm-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:52vh;overflow:auto;padding-right:4px}.np-v105-perm-tool{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:start;padding:10px;border-radius:12px;background:#071522;border:1px solid rgba(126,194,255,.07)}.np-v105-perm-tool b{display:block;font-size:.57rem}.np-v105-perm-tool small{display:block;font-size:.47rem;color:#6e88a2;margin-top:3px}.np-v105-perm-tool em{font-style:normal;font-size:.45rem;color:#20d8ff}.np-v105-sticky-actions{position:sticky;bottom:8px;display:flex;gap:8px;padding:10px;border-radius:15px;background:rgba(4,12,22,.94);border:1px solid rgba(126,194,255,.08);backdrop-filter:blur(12px)}.np-v105-order-layout{display:grid;grid-template-columns:minmax(220px,.72fr) minmax(0,1.6fr);gap:12px}.np-v105-order-summary,.np-v105-chatbox{border-radius:17px;background:#071522;border:1px solid rgba(126,194,255,.08);padding:13px}.np-v105-order-summary h3,.np-v105-chat-head h3{font-size:.72rem}.np-v105-order-summary dl{display:grid;gap:8px;margin:12px 0}.np-v105-order-summary dl div{display:grid;gap:2px;padding-bottom:7px;border-bottom:1px solid rgba(126,194,255,.06)}.np-v105-order-summary dt{font-size:.48rem;color:#6f89a4}.np-v105-order-summary dd{font-size:.58rem;color:#d7e7f6}.np-v105-items{display:grid;gap:5px;margin:10px 0}.np-v105-items span{font-size:.51rem;padding:7px 8px;border-radius:9px;background:#091a2a;color:#a9c1d7}.np-v105-chat-head p{font-size:.49rem;color:#6f89a4;margin-top:3px}.np-v105-thread{display:grid;gap:7px;max-height:42vh;overflow:auto;padding:10px 2px}.np-v105-msg{max-width:84%;padding:9px 10px;border-radius:13px}.np-v105-msg.staff{justify-self:end;background:linear-gradient(135deg,rgba(0,212,255,.13),rgba(41,121,255,.1));border:1px solid rgba(0,212,255,.13)}.np-v105-msg.client{justify-self:start;background:#0b1c2c;border:1px solid rgba(126,194,255,.08)}.np-v105-msg>div{display:flex;gap:9px;align-items:center}.np-v105-msg b{font-size:.5rem;color:#dff6ff}.np-v105-msg time{font-size:.43rem;color:#6f88a0}.np-v105-msg p{font-size:.58rem;line-height:1.5;margin-top:4px;white-space:pre-wrap}.np-v105-chat-form{display:grid;gap:8px;padding-top:9px;border-top:1px solid rgba(126,194,255,.07)}.np-v105-quick{display:flex;flex-wrap:wrap;gap:5px}.np-v105-track-row{display:grid;grid-template-columns:1fr 1fr;gap:7px}.np-v105-chat-form input,.np-v105-chat-form textarea,.np-v105-search input{width:100%;border:1px solid rgba(126,194,255,.09);background:#06131f;color:#eaf4ff;border-radius:11px;padding:10px 11px;outline:none}.np-v105-chat-form textarea{min-height:88px;resize:vertical}.np-v105-order-inbox{display:grid;gap:7px}.np-v105-inbox-row{width:100%;display:grid;grid-template-columns:38px minmax(0,1fr) auto;gap:10px;align-items:center;padding:11px;border-radius:14px;background:#071522;border:1px solid rgba(126,194,255,.07);color:#eaf4ff;text-align:left}.np-v105-inbox-icon{width:38px;height:38px;display:grid;place-items:center;border-radius:11px;background:#0a1d2f}.np-v105-inbox-row b{display:block;font-size:.61rem}.np-v105-inbox-row small,.np-v105-inbox-row p{display:block;font-size:.48rem;color:#718ba5;margin-top:3px}.np-v105-inbox-row aside{text-align:right}.np-v105-inbox-row aside span{display:block;font-size:.49rem;color:#20d8ff}.np-v105-assignment{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:11px;border-radius:13px;background:#071522;border:1px solid rgba(126,194,255,.07)}.np-v105-assignment b{font-size:.59rem}.np-v105-assignment small{display:block;font-size:.48rem;color:#718ba5;margin-top:3px}.np-v105-assignment>span{font-size:.52rem;color:#20d8ff}.np-v105-timeline{display:grid;gap:3px}.np-v105-timeline article{display:grid;grid-template-columns:34px minmax(0,1fr);gap:9px;padding:9px 0;border-bottom:1px solid rgba(126,194,255,.055)}.np-v105-timeline article>span{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:#0a1c2d;color:#20d8ff;font-weight:900}.np-v105-timeline b{font-size:.58rem}.np-v105-timeline p,.np-v105-timeline time{display:block;font-size:.47rem;color:#708aa4;margin-top:2px}.np-v105-load-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.np-v105-load-grid article{padding:13px;border-radius:15px;background:#071522;border:1px solid rgba(126,194,255,.07);text-align:center}.np-v105-load-grid .np-v105-agent-avatar{margin:auto}.np-v105-load-grid h3{font-size:.61rem;margin-top:8px}.np-v105-load-grid p,.np-v105-load-grid small{font-size:.47rem;color:#718ba5}.np-v105-load-grid strong{display:block;font-size:1.35rem;color:#1ad8ff;margin-top:9px}.np-v105-empty{display:grid;gap:4px;padding:22px;border-radius:15px;border:1px dashed rgba(126,194,255,.1);text-align:center;color:#7892ac}.np-v105-empty b{color:#cfe4f6;font-size:.63rem}.np-v105-empty span{font-size:.51rem}.np-v105-denied{min-height:260px;display:grid;place-items:center;align-content:center;gap:9px;text-align:center;padding:30px}.np-v105-denied>span{font-size:2rem}.np-v105-denied h2{font-size:1rem}.np-v105-denied p{max-width:520px;color:#7892ac;font-size:.59rem;line-height:1.6}.np-v105-client-orders{display:grid;gap:9px}.np-v105-client-order{padding:12px;border-radius:14px;background:#071522;border:1px solid rgba(126,194,255,.08)}.np-v105-client-order-head{display:flex;justify-content:space-between;gap:10px}.np-v105-client-order h3{font-size:.66rem}.np-v105-client-order p{font-size:.52rem;color:#7892ac;margin-top:3px}.np-v105-client-chat{display:grid;gap:6px;margin-top:10px;padding-top:10px;border-top:1px solid rgba(126,194,255,.07)}.np-v105-client-msg{padding:8px 9px;border-radius:11px;background:#0a1b2a}.np-v105-client-msg b{font-size:.48rem;color:#1edcff}.np-v105-client-msg p{font-size:.55rem;line-height:1.45;margin-top:3px;white-space:pre-wrap}.np-v105-client-reply{display:grid;grid-template-columns:1fr auto;gap:6px}.np-v105-client-reply input{min-width:0;border:1px solid rgba(126,194,255,.09);background:#06131f;color:#eaf4ff;border-radius:10px;padding:9px}.np-v105-client-reply button{border:0;border-radius:10px;background:linear-gradient(135deg,#19dcff,#168cff);color:#03101c;font-weight:900;padding:8px 12px}
+.np-v105-order-controls{display:flex;gap:8px;align-items:center;justify-content:flex-end}.np-v105-order-controls select{min-height:38px;border-radius:11px;border:1px solid rgba(126,194,255,.09);background:#06131f;color:#dceeff;padding:0 10px}.np-v105-admin-order{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px;border-radius:15px;background:#071522;border:1px solid rgba(126,194,255,.075)}.np-v105-admin-order-main{min-width:0}.np-v105-admin-order-main b{font-size:.62rem}.np-v105-admin-order-main small,.np-v105-admin-order-main p{display:block;font-size:.49rem;color:#718ba5;margin-top:4px}.np-v105-admin-order-main p{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.np-v105-admin-order-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:7px}.np-v105-admin-order-meta span{padding:5px 7px;border-radius:8px;background:#091a2a;color:#91adc7;font-size:.46rem}.np-v105-admin-order-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px}.np-v105-admin-order-actions select{min-height:34px;border-radius:9px;border:1px solid rgba(126,194,255,.09);background:#06131f;color:#dceeff;padding:0 7px;font-size:.5rem}.np-v105-admin-order-actions button{border:1px solid rgba(126,194,255,.1);background:#0a1a2a;color:#c5d8e9;border-radius:9px;padding:7px 8px;font-size:.49rem;font-weight:850}.np-v105-admin-order-actions button.primary{background:rgba(0,216,255,.11);color:#22dcff;border-color:rgba(0,216,255,.16)}.np-v105-admin-order-actions button.danger{background:rgba(255,94,120,.07);color:#ff748d;border-color:rgba(255,94,120,.12)}
+@media(max-width:850px){.np-v105-kpis,.np-v105-load-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v105-order-layout{grid-template-columns:1fr}.np-v105-perm-groups{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v105-perm-list{grid-template-columns:1fr}}
+@media(max-width:700px){.np-v105-admin-order{grid-template-columns:1fr}.np-v105-admin-order-actions{justify-content:flex-start}}
+@media(max-width:520px){.np-v105-pagehead{align-items:flex-start;flex-direction:column}.np-v105-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v105-track-row{grid-template-columns:1fr}.np-v105-inbox-row{grid-template-columns:34px minmax(0,1fr)}.np-v105-inbox-row aside{grid-column:2;text-align:left}.np-v105-assignment{grid-template-columns:1fr auto}.np-v105-assignment>span{grid-column:1}.np-v105-client-reply{grid-template-columns:1fr}}
+</style>
+<script>
+/* v10.5 final integration: agent login + customer tracking + compact admin */
+(function(){
+  const api=window.NP_TEAM_API_V105;if(!api)return;
+  const isStaff=()=>['admin','agent'].includes(state.session?.role);
+  const latestLogin=handleLogin;
+  handleLogin=async function(e){
+    e.preventDefault();const identity=$('loginIdentity')?.value.trim()||'',pass=$('loginPassword')?.value||'';
+    if(identity&&pass){try{const hash=await sha256(pass);const agent=api.agents().find(a=>a.active!==false&&(norm(a.email)===norm(identity)||norm(a.username)===norm(identity))&&a.passwordHash===hash);if(agent){agent.lastLoginAt=new Date().toISOString();api.saveAgents();state.session={role:'agent',agentId:agent.id,email:agent.email,createdAt:new Date().toISOString()};write(KEYS.session,state.session);closeModal('accountModal');renderHeader();openAdmin('home');toast(`Bienvenido, ${agent.name}.`,'success');return}}catch(error){console.warn('Agent login',error)}}
+    return latestLogin.call(this,e);
+  };
+  openAdmin=function(section='home'){
+    if(!isStaff())return;$('adminOverlay').classList.add('open');document.body.classList.add('lock');renderAdminSection(section==='dashboard'?'home':(section||'home'));setTimeout(api.applyNav,0);
+  };
+  const baseHeader=renderHeader;
+  renderHeader=function(){baseHeader();if(state.session?.role==='agent'){const a=api.sessionAgent();$('profileDot').textContent=(a?.name||'A').charAt(0).toUpperCase()}};
+  if($('adminStoreBtn'))$('adminStoreBtn').onclick=()=>{$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();toast('Tienda abierta. La sesión del equipo continúa activa.','success')};
+  if($('adminLogout'))$('adminLogout').onclick=()=>{state.session=null;write(KEYS.session,null);$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();toast('Sesión cerrada.','success')};
+  if($('profileBtn'))$('profileBtn').onclick=()=>{if(isStaff())return openAdmin('home');renderAccount();openModal('accountModal')};
+  if($('drawerProfile'))$('drawerProfile').onclick=()=>{closeAllPanels();if(isStaff())return openAdmin('home');renderAccount();openModal('accountModal')};
+  adminOrders=function(){
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Pedidos</h2><p>Gestiona estado, responsable y seguimiento desde una sola vista.</p></div><div class="np-v105-search"><input id="orderSearch" placeholder="Buscar pedido o cliente"></div></header><div class="np-v105-order-controls"><select id="orderStatus"><option value="all">Todos los estados</option>${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" id="exportOrders">Exportar CSV</button></div><div class="np-v105-order-inbox" id="orderAdminList"></div></section>`;
+    const draw=()=>{const q=norm($('orderSearch').value),st=$('orderStatus').value;const list=state.orders.filter(o=>(st==='all'||o.status===st)&&(!q||norm(`${o.id} ${o.customer?.fullName} ${o.customer?.email} ${o.trackingNumber||''}`).includes(q)));$('orderAdminList').innerHTML=list.map(o=>{const assigned=api.agentById(api.assignments()[o.id]);return `<article class="np-v105-admin-order"><div class="np-v105-admin-order-main"><b>${esc(o.id)} · ${esc(o.customer?.fullName||'Cliente')}</b><small>${new Date(o.createdAt).toLocaleString('es-GT')} · ${safeArr(o.items).length} artículos · ${money(o.total)}</small><p>${esc(safeArr(o.items).map(i=>`${i.name} ×${i.qty}`).join(' • '))}</p><div class="np-v105-admin-order-meta"><span>Responsable: ${esc(assigned?.name||'Sin asignar')}</span>${o.trackingNumber?`<span>Guía: ${esc(o.trackingNumber)}</span>`:''}</div></div><div class="np-v105-admin-order-actions"><select data-order-status="${esc(o.id)}">${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select><button type="button" class="primary" data-follow-order="${esc(o.id)}">Seguimiento</button><button type="button" data-assign-order="${esc(o.id)}">Asignar</button><button type="button" class="danger" data-delete-order="${esc(o.id)}">Eliminar</button></div></article>`}).join('')||'<div class="np-v105-empty"><b>No hay pedidos en este filtro.</b></div>';
+      $('orderAdminList').querySelectorAll('[data-order-status]').forEach(s=>s.onchange=()=>{const o=state.orders.find(x=>String(x.id)===String(s.dataset.orderStatus));if(!o)return;const previous=o.status;o.status=s.value;o.updatedAt=new Date().toISOString();write(KEYS.orders,state.orders);logActivity('Estado de pedido',`${o.id} → ${o.status}`);if(previous!==o.status)api.sendOrderMessage(o.id,`Tu pedido cambió de estado a: ${o.status}.`,{kind:'status'});draw()});
+      $('orderAdminList').querySelectorAll('[data-follow-order]').forEach(b=>b.onclick=()=>api.renderOrderConversation(b.dataset.followOrder));
+      $('orderAdminList').querySelectorAll('[data-assign-order]').forEach(b=>{b.onclick=()=>{api.renderOrderConversation(b.dataset.assignOrder);setTimeout(()=>document.getElementById('npAssignHere')?.click(),30)}});
+      $('orderAdminList').querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>String(x.id)===String(b.dataset.deleteOrder));if(!o||!await npConfirm(`¿Eliminar el pedido ${o.id}?`))return;state.orders=state.orders.filter(x=>x.id!==o.id);write(KEYS.orders,state.orders);delete api.assignments()[o.id];delete api.chats()[o.id];api.saveChats();draw();logActivity('Pedido eliminado',o.id);toast('Pedido eliminado.','success')});
+    };
+    $('orderSearch').oninput=draw;$('orderStatus').onchange=draw;$('exportOrders').onclick=()=>exportCsv('pedidos',state.orders.map(o=>({id:o.id,cliente:o.customer?.fullName,correo:o.customer?.email,telefono:o.customer?.phone,estado:o.status,total:o.total,guia:o.trackingNumber||'',responsable:api.agentById(api.assignments()[o.id])?.name||''})));draw();
+  };
+  renderClientOrders=function(){
+    const user=currentUser();if(!user)return renderAccount();const list=state.orders.filter(o=>o.userId===user.id||norm(o.customer?.email)===norm(user.email));
+    $('accountBody').innerHTML=`<section class="np-v105-client-orders"><div class="admin-card-head"><div><h2>Mis pedidos</h2><p class="admin-card-sub">Consulta el estado y los mensajes de seguimiento de CRULOX.</p></div><button class="btn btn-secondary btn-sm" id="backProfile">Volver</button></div>${list.length?list.map(o=>{const msgs=api.chatOf(o.id);return `<article class="np-v105-client-order"><div class="np-v105-client-order-head"><div><h3>${esc(o.id)} · ${money(o.total)}</h3><p>${new Date(o.createdAt).toLocaleString('es-GT')} · ${esc(o.status||'Nuevo')}${o.trackingNumber?` · Guía: ${esc(o.trackingNumber)}`:''}</p></div><span class="status">${esc(o.status||'Nuevo')}</span></div><div class="np-v105-client-chat">${msgs.length?msgs.map(m=>`<div class="np-v105-client-msg"><b>${esc(m.senderRole==='client'?'Tú':(m.senderName||'CRULOX'))}</b><p>${esc(m.text)}</p></div>`).join(''):'<div class="np-v105-empty small"><span>Aún no hay mensajes de seguimiento.</span></div>'}<form class="np-v105-client-reply" data-client-reply="${esc(o.id)}"><input placeholder="Responder sobre este pedido…" maxlength="800"><button>Enviar</button></form></div></article>`}).join(''):'<div class="empty">Todavía no tienes pedidos registrados.</div>'}</section>`;
+    $('backProfile').onclick=renderAccount;$('accountBody').querySelectorAll('[data-client-reply]').forEach(f=>f.onsubmit=e=>{e.preventDefault();const input=f.querySelector('input'),text=input.value.trim();if(!text)return;const key=f.dataset.clientReply,arr=api.chatOf(key);arr.push({id:uid('msg'),orderId:key,senderRole:'client',senderId:user.id,senderName:user.fullName||user.username||'Cliente',text:text.slice(0,800),kind:'message',createdAt:new Date().toISOString(),readByClient:true});const chats=api.chats();chats[key]=arr;api.saveChats();renderClientOrders();toast('Mensaje enviado al seguimiento.','success')});
+  };
+  window.addEventListener('storage',e=>{if(e.key==='jm_digital_v1_order_chat'&&$('accountModal')?.classList.contains('open')&&currentUser())try{renderClientOrders()}catch(error){}});
+  renderHeader();
+  document.documentElement.dataset.npV105='ready';document.documentElement.dataset.npTools=String(window.NP_ADMIN_TOOL_COUNT_V105||0);document.documentElement.dataset.npSelfTest=String(!!window.NP_V105_SELF_TEST?.ok);
+  if(isStaff()&&$('adminOverlay').classList.contains('open')){renderAdminSection('home');setTimeout(api.applyNav,0)}
+})();
+</script>
+
+
+<script>
+/* v9.5: remove duplicated brand text and lock slogan directly under logo name */
+(function(){
+  const brandCopy=document.querySelector('.hero-brand-copy');
+  const heroName=document.querySelector('.hero-brand-name');
+  if(heroName) heroName.remove();
+  if(brandCopy && !document.getElementById('np-v95-style')){
+    const style=document.createElement('style');
+    style.id='np-v95-style';
+    style.textContent=`
+      .hero-brand-top{margin:0 0 14px!important;gap:0!important}
+      .hero-brand-top img{margin:0 0 -2px!important}
+      .hero-brand-copy{
+        width:min(100%,500px)!important;
+        display:flex!important;
+        flex-direction:column!important;
+        align-items:flex-start!important;
+        justify-content:flex-start!important;
+        padding-left:37.5%!important;
+        margin-top:-8px!important;
+      }
+      .hero-brand-slogan{
+        margin-top:0!important;
+        transform:none!important;
+        white-space:nowrap!important;
+      }
+      @media(max-width:860px){
+        .hero-brand-copy{padding-left:36%!important;margin-top:-7px!important}
+      }
+      @media(max-width:520px){
+        .hero-brand-top img{margin-bottom:-1px!important}
+        .hero-brand-copy{width:min(100%,340px)!important;padding-left:34.5%!important;margin-top:-6px!important}
+        .hero-brand-slogan{font-size:.49rem!important;padding:4px 9px!important}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+})();
+</script>
+
+<script>
+/* v9.6 - mejora visual y estructural del panel administrativo */
+(function(){
+  if(!document.getElementById('np-admin-v96-style')){
+    const style=document.createElement('style');
+    style.id='np-admin-v96-style';
+    style.textContent=`
+      .admin-overlay{background:radial-gradient(circle at top,rgba(0,195,255,.08),transparent 26%),#020812!important}
+      .admin-main{background:linear-gradient(180deg,rgba(4,11,20,.97),rgba(3,8,16,.985))}
+      .admin-sidebar{
+        background:linear-gradient(180deg,#061321 0%,#040c16 100%)!important;
+        border-right:1px solid rgba(128,199,255,.08)!important;
+        box-shadow:inset -1px 0 0 rgba(255,255,255,.02)
+      }
+      .admin-brand{width:220px!important;height:58px!important;filter:drop-shadow(0 6px 16px rgba(0,207,255,.18))}
+      .admin-nav{gap:7px!important}
+      .admin-nav button{
+        min-height:44px;border:1px solid transparent!important;border-radius:14px!important;
+        background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015))!important;
+        color:#d7e6fb!important;font-size:.76rem!important;letter-spacing:.01em;
+        box-shadow:0 10px 26px rgba(0,0,0,.14)
+      }
+      .admin-nav button.active,.admin-nav button:hover{
+        color:#04101d!important;background:linear-gradient(135deg,#15d8ff,#1d84ff)!important;
+        border-color:rgba(255,255,255,.15)!important;box-shadow:0 16px 38px rgba(0,180,255,.24)!important
+      }
+      .admin-top{
+        min-height:84px!important;padding:16px 20px!important;
+        background:linear-gradient(180deg,rgba(5,10,18,.96),rgba(5,10,18,.86))!important;
+        border-bottom:1px solid rgba(119,185,255,.08)!important
+      }
+      .admin-top h1{font-size:1.45rem!important;letter-spacing:-.02em}
+      .admin-top .section-kicker{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:#88a8c9}
+      .admin-content{padding:18px!important;max-width:1500px!important}
+      .admin-hero{
+        position:relative;overflow:hidden;padding:22px;border-radius:26px;
+        border:1px solid rgba(110,196,255,.12);
+        background:
+          radial-gradient(circle at 90% 20%,rgba(0,217,255,.12),transparent 28%),
+          radial-gradient(circle at 10% 90%,rgba(78,97,255,.12),transparent 30%),
+          linear-gradient(145deg,#0a1b30,#071221 60%,#08182a);
+        box-shadow:0 18px 44px rgba(0,0,0,.2)
+      }
+      .admin-hero::after{
+        content:"";position:absolute;inset:auto -60px -70px auto;width:200px;height:200px;border-radius:50%;
+        background:radial-gradient(circle,rgba(0,217,255,.18),transparent 68%);pointer-events:none
+      }
+      .admin-hero-head{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;flex-wrap:wrap}
+      .admin-hero-copy{max-width:760px}
+      .admin-hero-copy h2{font-size:1.45rem;line-height:1.1;margin:6px 0 10px}
+      .admin-hero-copy p{color:#b6c8de;font-size:.76rem;line-height:1.72;max-width:700px}
+      .admin-chip-row{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+      .admin-chip{
+        display:inline-flex;align-items:center;gap:7px;padding:9px 12px;border-radius:999px;
+        border:1px solid rgba(124,196,255,.12);background:rgba(255,255,255,.04);color:#dbe8f8;
+        font-size:.66rem;font-weight:800
+      }
+      .admin-chip .dot{width:8px;height:8px;border-radius:50%;background:#1ee67a;box-shadow:0 0 0 4px rgba(30,230,122,.15)}
+      .admin-chip.warn .dot{background:#ffbf47;box-shadow:0 0 0 4px rgba(255,191,71,.15)}
+      .admin-hero-actions{display:grid;grid-template-columns:repeat(2,minmax(140px,1fr));gap:10px;min-width:min(100%,320px)}
+      .admin-hero-actions .btn{width:100%;min-height:48px;border-radius:16px!important;font-weight:900}
+      .admin-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px!important;margin-top:14px}
+      .metric{
+        position:relative;overflow:hidden;padding:16px 16px 15px 16px!important;border-radius:22px!important;
+        background:linear-gradient(145deg,#0c1f35,#081525)!important;
+        border:1px solid rgba(130,198,255,.1)!important;box-shadow:0 12px 30px rgba(0,0,0,.16)
+      }
+      .metric::before{content:"";position:absolute;inset:0 auto auto 0;width:100%;height:2px;background:linear-gradient(90deg,rgba(0,217,255,.7),transparent)}
+      .metric-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+      .metric-icon{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;font-size:1.06rem;color:#dff8ff;background:linear-gradient(135deg,rgba(0,217,255,.2),rgba(71,105,255,.18));border:1px solid rgba(126,200,255,.11)}
+      .metric small{display:block;color:#90aac7!important;font-size:.66rem!important;letter-spacing:.02em}
+      .metric strong{display:block;color:#18d7ff!important;font-size:1.62rem!important;margin-top:0!important;line-height:1.05}
+      .metric-note{display:block;margin-top:6px;color:#6988a8;font-size:.58rem;line-height:1.45}
+      .admin-layout{display:grid;grid-template-columns:1.16fr .84fr;gap:14px;margin-top:14px}
+      .admin-stack{display:grid;gap:14px}
+      .admin-card{
+        margin-top:0!important;padding:18px!important;border-radius:24px!important;
+        background:linear-gradient(145deg,#0b1b2d,#081524)!important;border:1px solid rgba(122,193,255,.1)!important;
+        box-shadow:0 14px 32px rgba(0,0,0,.16)
+      }
+      .admin-card-head{margin-bottom:14px!important}
+      .admin-card h2{font-size:1.06rem!important;letter-spacing:-.01em}
+      .admin-card-sub{color:#8ea8c6;font-size:.68rem;line-height:1.65;margin-top:4px}
+      .admin-actions-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+      .admin-action{
+        padding:14px;border-radius:18px;border:1px solid rgba(125,196,255,.1);
+        background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,255,255,.015));
+        color:#e9f3ff;text-align:left;display:grid;gap:6px;min-height:92px
+      }
+      .admin-action strong{font-size:.84rem}
+      .admin-action span{font-size:.64rem;color:#93aac5;line-height:1.55}
+      .admin-action:hover{transform:translateY(-1px);border-color:rgba(46,203,255,.18)}
+      .admin-mini-list{display:grid;gap:9px}
+      .admin-mini-item{
+        display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:12px 13px;
+        border-radius:16px;border:1px solid rgba(122,193,255,.08);background:rgba(255,255,255,.03)
+      }
+      .admin-mini-item b{display:block;font-size:.78rem;margin-bottom:4px}
+      .admin-mini-item small{display:block;color:#8ea8c6;font-size:.63rem;line-height:1.55}
+      .admin-badge{display:inline-flex;align-items:center;justify-content:center;min-width:74px;padding:7px 10px;border-radius:999px;font-size:.58rem;font-weight:900}
+      .admin-badge.ok{background:rgba(30,230,122,.12);color:#5dffaf}
+      .admin-badge.warn{background:rgba(255,191,71,.12);color:#ffc55d}
+      .admin-badge.bad{background:rgba(255,96,131,.12);color:#ff7b9d}
+      .admin-simple-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+      .admin-note{
+        padding:13px 14px;border-radius:18px;border:1px solid rgba(253,193,91,.16);
+        background:rgba(255,196,77,.06);color:#ffe1a1;font-size:.67rem;line-height:1.65
+      }
+      .admin-note b{color:#ffd067}
+      .admin-activity-preview{display:grid;gap:8px}
+      .admin-activity-row{padding:11px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+      .admin-activity-row:last-child{border-bottom:0;padding-bottom:0}
+      .admin-activity-row b{display:block;font-size:.73rem}
+      .admin-activity-row span{display:block;margin-top:3px;color:#8ea8c6;font-size:.61rem;line-height:1.55}
+      .admin-inline-buttons{display:flex;gap:8px;flex-wrap:wrap}
+      .admin-inline-buttons .btn{border-radius:14px!important}
+      .table-wrap{border-radius:18px!important;border-color:rgba(122,193,255,.1)!important}
+      th{background:#0c1d31!important}
+      .admin-list-item{border-radius:16px!important;background:rgba(255,255,255,.03)!important;border-color:rgba(122,193,255,.08)!important}
+      .status{font-size:.6rem!important;padding:6px 9px!important}
+      @media(max-width:1100px){
+        .admin-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+        .admin-layout{grid-template-columns:1fr}
+      }
+      @media(max-width:900px){
+        .admin-sidebar{padding:10px!important;gap:10px!important}
+        .admin-brand{width:170px!important;height:46px!important}
+        .admin-nav{display:flex!important;gap:7px!important;padding-bottom:4px!important}
+        .admin-nav button{white-space:nowrap;min-height:40px;font-size:.71rem!important;padding:10px 12px!important}
+      }
+      @media(max-width:680px){
+        .admin-top{padding:12px 12px 13px!important;min-height:76px!important}
+        .admin-top h1{font-size:1.15rem!important}
+        .admin-content{padding:12px!important}
+        .admin-hero{padding:16px;border-radius:22px}
+        .admin-hero-copy h2{font-size:1.1rem}
+        .admin-hero-copy p{font-size:.69rem}
+        .admin-hero-actions{grid-template-columns:1fr 1fr;min-width:100%}
+        .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important}
+        .metric{padding:14px 12px!important;border-radius:18px!important}
+        .metric strong{font-size:1.35rem!important}
+        .metric-icon{width:36px;height:36px;border-radius:12px;font-size:.92rem}
+        .admin-card{padding:15px!important;border-radius:20px!important}
+        .admin-actions-grid,.admin-simple-grid{grid-template-columns:1fr}
+      }
+      @media(max-width:460px){
+        .admin-top .toolbar{grid-template-columns:1fr 1fr!important}
+        .admin-top .toolbar .btn{min-height:42px}
+        .admin-hero-actions{grid-template-columns:1fr}
+        .admin-grid{grid-template-columns:1fr 1fr}
+        .admin-chip{font-size:.6rem;padding:8px 10px}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  const metricIcons={
+    'Productos':'📦','Combos':'🎁','Categorías':'🏷️','Clientes':'👥','Pedidos':'🧾',
+    'Ventas registradas':'💰','Stock bajo':'⚠️','Agotados':'⛔','FAQ':'❓'
+  };
+  metric=function(label,value){
+    const icon=metricIcons[label]||'•';
+    const notes={
+      'Productos':'Catálogo principal',
+      'Combos':'Paquetes publicados',
+      'Categorías':'Organización actual',
+      'Clientes':'Usuarios registrados',
+      'Pedidos':'Solicitudes recibidas',
+      'Ventas registradas':'Total acumulado',
+      'Stock bajo':'Revisar pronto',
+      'Agotados':'Sin existencia',
+      'FAQ':'Ayuda al cliente'
+    };
+    return `<article class="metric"><div class="metric-top"><small>${label}</small><span class="metric-icon">${icon}</span></div><strong>${value}</strong><span class="metric-note">${notes[label]||'Resumen general'}</span></article>`;
+  };
+
+  function adminStatusBadge(kind,text){
+    return `<span class="admin-badge ${kind}">${text}</span>`;
+  }
+  function adminQuickAction(id,icon,title,desc,variant){
+    return `<button class="admin-action ${variant||''}" id="${id}"><strong>${icon} ${title}</strong><span>${desc}</span></button>`;
+  }
+  function activityPreview(){
+    if(!state.activity.length) return `<div class="admin-note"><b>Sin actividad reciente.</b> Aún no hay movimientos registrados en esta sesión local.</div>`;
+    return `<div class="admin-activity-preview">${state.activity.slice(0,4).map(a=>`<article class="admin-activity-row"><b>${esc(a.action)}</b><span>${esc(a.detail)} · ${new Date(a.at).toLocaleString('es-GT')}</span></article>`).join('')}</div>`;
+  }
+  function stockPreview(){
+    const lowLimit=Number(state.settings.lowStock||5);
+    const items=state.products.filter(p=>Number(p.stock||0)<=lowLimit).sort((a,b)=>Number(a.stock||0)-Number(b.stock||0)).slice(0,4);
+    if(!items.length) return `<div class="admin-note"><b>Todo estable.</b> No hay productos en estado crítico de inventario.</div>`;
+    return `<div class="admin-mini-list">${items.map(p=>{
+      const stock=Number(p.stock||0);
+      const badge=stock<=0?adminStatusBadge('bad','Agotado'):stock<=lowLimit?adminStatusBadge('warn','Bajo'):adminStatusBadge('ok','Estable');
+      return `<article class="admin-mini-item"><div><b>${esc(p.name)}</b><small>${esc(p.category||'Sin categoría')} · Stock actual: ${stock}</small></div>${badge}</article>`;
+    }).join('')}</div>`;
+  }
+  function statusCards(){
+    const supportReady=state.settings.supportBotUrl && state.settings.supportBotUrl!=='#';
+    const orderReady=state.settings.orderBotUrl && state.settings.orderBotUrl!=='#';
+    return `<div class="admin-mini-list">
+      <article class="admin-mini-item">
+        <div><b>Canal de atención</b><small>${supportReady?'Configurado para recibir consultas desde la tienda.':'Aún necesitas definir el enlace principal de atención.'}</small></div>
+        ${supportReady?adminStatusBadge('ok','Activo'):adminStatusBadge('warn','Pendiente')}
+      </article>
+      <article class="admin-mini-item">
+        <div><b>Flujo de pedidos</b><small>${orderReady?'Preparado para procesar solicitudes desde el checkout.':'El flujo de pedidos todavía necesita configuración.'}</small></div>
+        ${orderReady?adminStatusBadge('ok','Listo'):adminStatusBadge('warn','Revisar')}
+      </article>
+      <article class="admin-mini-item">
+        <div><b>Datos del panel local</b><small>La administración temporal guarda la información en este dispositivo mientras se completa la integración final.</small></div>
+        ${adminStatusBadge('ok','Local')}
+      </article>
+    </div>`;
+  }
+
+  adminDashboard=function(){
+    const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);
+    const lowLimit=Number(state.settings.lowStock||5);
+    const low=state.products.filter(p=>Number(p.stock||0)>0&&Number(p.stock||0)<=lowLimit).length;
+    const out=state.products.filter(p=>Number(p.stock||0)<=0).length;
+    const pendingAttention=(state.settings.supportBotUrl && state.settings.supportBotUrl!=='#')?0:1;
+    $('adminContent').innerHTML=`
+      <section class="admin-hero">
+        <div class="admin-hero-head">
+          <div class="admin-hero-copy">
+            <small class="section-kicker">Centro de control CRULOX</small>
+            <h2>Administra catálogo, pedidos y operación desde una vista mucho más clara.</h2>
+            <p>Este panel local te permite revisar el estado general de la tienda, intervenir rápido en productos, monitorear existencias y ordenar la operación mientras se completa la conexión final con la infraestructura definitiva.</p>
+            <div class="admin-chip-row">
+              <span class="admin-chip"><span class="dot"></span> Panel operativo local activo</span>
+              <span class="admin-chip ${pendingAttention?'warn':''}"><span class="dot"></span> Atención ${pendingAttention?'pendiente':'configurada'}</span>
+              <span class="admin-chip ${low||out?'warn':''}"><span class="dot"></span> ${low+out} alertas de inventario</span>
+            </div>
+          </div>
+          <div class="admin-hero-actions">
+            <button class="btn btn-primary" id="heroAddProduct">Agregar producto</button>
+            <button class="btn btn-secondary" id="heroViewOrders">Ver pedidos</button>
+            <button class="btn btn-secondary" id="heroOpenInventory">Inventario</button>
+            <button class="btn btn-red" id="heroBackup">Crear respaldo</button>
+          </div>
+        </div>
+      </section>
+
+      <div class="admin-grid">
+        ${metric('Productos',state.products.length)}
+        ${metric('Combos',state.combos.length)}
+        ${metric('Categorías',categories().length)}
+        ${metric('Clientes',state.users.length)}
+        ${metric('Pedidos',state.orders.length)}
+        ${metric('Ventas registradas',money(sales))}
+        ${metric('Stock bajo',low)}
+        ${metric('Agotados',out)}
+        ${metric('FAQ',state.faqs.length)}
+      </div>
+
+      <div class="admin-layout">
+        <div class="admin-stack">
+          <section class="admin-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Acciones rápidas</h2>
+                <p class="admin-card-sub">Atajos mejor organizados para las tareas que más vas a usar en el día a día.</p>
+              </div>
+            </div>
+            <div class="admin-actions-grid">
+              ${adminQuickAction('quickAddProduct','📦','Agregar producto','Crea un nuevo producto y súbelo al catálogo.')}
+              ${adminQuickAction('quickAddCombo','🎁','Agregar combo','Publica un combo con imagen, precio y descripción.')}
+              ${adminQuickAction('quickOrders','🧾','Revisar pedidos','Consulta solicitudes recibidas y su estado actual.')}
+              ${adminQuickAction('quickBackup','💾','Crear respaldo','Guarda una copia local de seguridad del panel.')}
+            </div>
+          </section>
+
+          <section class="admin-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Inventario en atención</h2>
+                <p class="admin-card-sub">Productos que requieren revisión por poco stock o por estar agotados.</p>
+              </div>
+              <div class="admin-inline-buttons">
+                <button class="btn btn-secondary btn-sm" id="openInventoryFromCard">Abrir inventario</button>
+              </div>
+            </div>
+            ${stockPreview()}
+          </section>
+        </div>
+
+        <div class="admin-stack">
+          <section class="admin-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Estado operativo</h2>
+                <p class="admin-card-sub">Resumen técnico del funcionamiento actual del área administrativa.</p>
+              </div>
+            </div>
+            ${statusCards()}
+            <div class="admin-note" style="margin-top:12px"><b>Nota:</b> esta versión administra temporalmente desde almacenamiento local. La conexión final a base de datos y autenticación se hará después, sin depender de editar datos manualmente fuera del panel.</div>
+          </section>
+
+          <section class="admin-card">
+            <div class="admin-card-head">
+              <div>
+                <h2>Actividad reciente</h2>
+                <p class="admin-card-sub">Últimos movimientos registrados dentro del entorno administrativo.</p>
+              </div>
+              <div class="admin-inline-buttons">
+                <button class="btn btn-secondary btn-sm" id="openActivityFromCard">Ver todo</button>
+              </div>
+            </div>
+            ${activityPreview()}
+          </section>
+        </div>
+      </div>`;
+
+    $('heroAddProduct').onclick=()=>openProductEditor();
+    $('heroViewOrders').onclick=()=>renderAdminSection('orders');
+    $('heroOpenInventory').onclick=()=>renderAdminSection('inventory');
+    $('heroBackup').onclick=exportBackup;
+    $('quickAddProduct').onclick=()=>openProductEditor();
+    $('quickAddCombo').onclick=()=>typeof openComboEditor==='function'?openComboEditor():toast('La gestión de combos estará disponible en la siguiente mejora.','info');
+    $('quickOrders').onclick=()=>renderAdminSection('orders');
+    $('quickBackup').onclick=exportBackup;
+    $('openInventoryFromCard').onclick=()=>renderAdminSection('inventory');
+    $('openActivityFromCard').onclick=()=>renderAdminSection('activity');
+  };
+})();
+</script>
+
+<script>
+/* v9.7 · Tarjetas del resumen convertidas en informes administrativos completos */
+(function(){
+  const detailStyle=document.createElement('style');
+  detailStyle.id='np-admin-v97-style';
+  detailStyle.textContent=`
+    .metric.metric-clickable{cursor:pointer;transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease}
+    .metric.metric-clickable:hover,.metric.metric-clickable:focus-visible{transform:translateY(-2px);border-color:rgba(39,211,255,.34)!important;box-shadow:0 18px 38px rgba(0,174,255,.13)!important;outline:none}
+    .metric.metric-clickable::after{content:'Ver detalle →';position:absolute;right:14px;bottom:12px;color:#68dfff;font-size:.55rem;font-weight:900;letter-spacing:.02em;opacity:.72}
+    .metric.metric-clickable .metric-note{padding-right:76px}
+    .admin-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+    .admin-detail-title small{display:block;color:#79a4c8;font-size:.62rem;text-transform:uppercase;letter-spacing:.13em;margin-bottom:4px}
+    .admin-detail-title h2{font-size:1.24rem;line-height:1.15;margin:0}
+    .admin-detail-title p{margin-top:6px;color:#91aac6;font-size:.67rem;line-height:1.6;max-width:760px}
+    .admin-detail-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .admin-detail-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+    .admin-detail-stat{padding:12px 13px;border-radius:17px;border:1px solid rgba(108,193,255,.1);background:rgba(255,255,255,.025)}
+    .admin-detail-stat span{display:block;color:#86a1bd;font-size:.59rem;margin-bottom:5px}
+    .admin-detail-stat strong{display:block;color:#20d7ff;font-size:1.05rem}
+    .admin-record-list{display:grid;gap:10px}
+    .admin-record{padding:14px;border-radius:19px;border:1px solid rgba(110,194,255,.1);background:linear-gradient(145deg,rgba(12,31,52,.96),rgba(7,20,35,.96));box-shadow:0 10px 26px rgba(0,0,0,.12)}
+    .admin-record-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+    .admin-record-title{display:flex;gap:10px;align-items:flex-start;min-width:0}
+    .admin-record-title img{width:58px;height:58px;object-fit:cover;border-radius:13px;border:1px solid rgba(120,196,255,.12);background:#07111e;flex:0 0 auto}
+    .admin-record-title h3{font-size:.84rem;line-height:1.25;margin:0;word-break:break-word}
+    .admin-record-title p{color:#8ea8c4;font-size:.61rem;line-height:1.5;margin-top:4px}
+    .admin-record-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:12px}
+    .admin-fieldbox{padding:10px;border-radius:13px;background:rgba(255,255,255,.026);border:1px solid rgba(255,255,255,.045);min-width:0}
+    .admin-fieldbox span{display:block;color:#7896b5;font-size:.53rem;text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+    .admin-fieldbox b,.admin-fieldbox p{display:block;color:#e7f2ff;font-size:.65rem;line-height:1.5;margin:0;overflow-wrap:anywhere}
+    .admin-record-description{margin-top:10px;padding:11px 12px;border-radius:14px;background:rgba(255,255,255,.022);color:#b7c8db;font-size:.64rem;line-height:1.65}
+    .admin-record-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:11px}
+    .admin-items{display:grid;gap:7px;margin-top:10px}
+    .admin-item-line{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;padding:9px 10px;border-radius:12px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.04);font-size:.62rem}
+    .admin-item-line span{color:#9cb2ca}.admin-item-line b{color:#eaf4ff}
+    .admin-customer-block{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+    .admin-empty-detail{padding:28px 16px;text-align:center;color:#89a4c0;font-size:.7rem;border:1px dashed rgba(112,193,255,.14);border-radius:18px}
+    .admin-category-bar{height:7px;border-radius:999px;background:rgba(255,255,255,.05);overflow:hidden;margin-top:8px}
+    .admin-category-bar i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#00d9ff,#2684ff)}
+    .admin-order-total{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:10px;padding:11px 12px;border-radius:14px;background:rgba(0,217,255,.055);border:1px solid rgba(0,217,255,.11)}
+    .admin-order-total strong{color:#18d7ff;font-size:.9rem}
+    .admin-subheading{margin:16px 0 9px;font-size:.8rem;color:#eef7ff}
+    @media(max-width:900px){.admin-detail-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-record-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:620px){
+      .admin-detail-summary{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .admin-record-grid,.admin-customer-block{grid-template-columns:1fr 1fr}
+      .admin-record-head{flex-direction:column}
+      .admin-item-line{grid-template-columns:minmax(0,1fr) auto}
+      .admin-item-line .item-total{grid-column:1/-1;text-align:right}
+      .admin-detail-actions{width:100%}.admin-detail-actions .btn{flex:1}
+    }
+    @media(max-width:420px){.admin-record-grid,.admin-customer-block{grid-template-columns:1fr}.admin-detail-stat strong{font-size:.92rem}.admin-record-title img{width:52px;height:52px}}
+  `;
+  document.head.appendChild(detailStyle);
+
+  const dashboardTargets={
+    'Productos':'metric-products','Combos':'metric-combos','Categorías':'metric-categories','Clientes':'metric-users',
+    'Pedidos':'metric-orders','Ventas registradas':'metric-sales','Stock bajo':'metric-low-stock','Agotados':'metric-out-stock','FAQ':'metric-faqs'
+  };
+  const dashboardIcons={
+    'Productos':'📦','Combos':'🎁','Categorías':'🏷️','Clientes':'👥','Pedidos':'🧾','Ventas registradas':'💰','Stock bajo':'⚠️','Agotados':'⛔','FAQ':'❓'
+  };
+  const dashboardNotes={
+    'Productos':'Catálogo principal','Combos':'Paquetes publicados','Categorías':'Organización actual','Clientes':'Usuarios registrados','Pedidos':'Solicitudes recibidas','Ventas registradas':'Total acumulado','Stock bajo':'Revisar pronto','Agotados':'Sin existencia','FAQ':'Ayuda al cliente'
+  };
+
+  metric=function(label,value){
+    const target=dashboardTargets[label]||'';
+    return `<article class="metric ${target?'metric-clickable':''}" ${target?`data-metric-target="${target}" role="button" tabindex="0" aria-label="Ver detalle de ${esc(label)}"`:''}><div class="metric-top"><small>${esc(label)}</small><span class="metric-icon">${dashboardIcons[label]||'•'}</span></div><strong>${value}</strong><span class="metric-note">${dashboardNotes[label]||'Resumen general'}</span></article>`;
+  };
+
+  function backHeader(title,description,actions=''){
+    return `<div class="admin-detail-head"><div class="admin-detail-title"><small>Detalle del resumen</small><h2>${title}</h2><p>${description}</p></div><div class="admin-detail-actions"><button class="btn btn-secondary btn-sm" data-back-dashboard>← Resumen</button>${actions}</div></div>`;
+  }
+  function bindBack(){document.querySelectorAll('[data-back-dashboard]').forEach(b=>b.onclick=()=>renderAdminSection('dashboard'))}
+  function fmtDate(value,withTime=true){if(!value)return '—';const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value);return withTime?d.toLocaleString('es-GT'):d.toLocaleDateString('es-GT')}
+  function safeText(v,fallback='—'){return v===undefined||v===null||v===''?fallback:String(v)}
+  function orderRevenue(list){return list.reduce((s,o)=>s+Number(o.total||0),0)}
+  function itemCount(list){return list.reduce((s,o)=>s+(o.items||[]).reduce((a,i)=>a+Number(i.qty||0),0),0)}
+  function summaryStats(stats){return `<div class="admin-detail-summary">${stats.map(s=>`<div class="admin-detail-stat"><span>${esc(s.label)}</span><strong>${s.value}</strong></div>`).join('')}</div>`}
+  function field(label,value){return `<div class="admin-fieldbox"><span>${esc(label)}</span><b>${esc(safeText(value))}</b></div>`}
+
+  function adminMetricProducts(){
+    const totalStock=state.products.reduce((s,p)=>s+Number(p.stock||0),0);
+    const featured=state.products.filter(p=>p.featured).length;
+    const low=state.products.filter(p=>Number(p.stock||0)>0&&Number(p.stock||0)<=Number(state.settings.lowStock||5)).length;
+    const out=state.products.filter(p=>Number(p.stock||0)<=0).length;
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Productos',`Información completa de los ${state.products.length} productos publicados: contenido, precio, multimedia, inventario, valoración y estado.`,`<button class="btn btn-primary btn-sm" id="detailAddProduct">Agregar producto</button>`)}${summaryStats([{label:'Productos',value:state.products.length},{label:'Stock total',value:totalStock},{label:'Destacados',value:featured},{label:'Alertas',value:low+out}])}<div class="admin-record-list">${state.products.map(p=>{const images=(p.images||[]).filter(Boolean);const status=Number(p.stock||0)<=0?'No disponible':Number(p.stock||0)<=Number(state.settings.lowStock||5)?'Pocas unidades':'Disponible';return `<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><img src="${esc(p.image||images[0]||'')}" alt=""><div><h3>${esc(p.name)}</h3><p>${esc(p.category||'Sin categoría')} · ID: ${esc(p.id)}</p></div></div><span class="admin-badge ${Number(p.stock||0)<=0?'bad':Number(p.stock||0)<=Number(state.settings.lowStock||5)?'warn':'ok'}">${status}</span></div><div class="admin-record-grid">${field('Precio',money(p.price))}${field('Precio anterior',p.oldPrice?money(p.oldPrice):'—')}${field('Stock',p.stock)}${field('Valoración',`${Number(p.rating||0).toFixed(1)} / 5 · ${Number(p.reviews||0)} reseñas`)}${field('Etiqueta',p.badgeText||'—')}${field('Destacado',p.featured?'Sí':'No')}${field('Imágenes',Math.max(1,images.length||1))}${field('Video',p.videoUrl?'Configurado':'No configurado')}</div><div class="admin-record-description"><b>Descripción:</b> ${esc(p.description||'Sin descripción.')}${p.videoUrl?`<br><br><b>Enlace de video:</b> ${esc(p.videoUrl)}`:''}</div><div class="admin-record-actions"><button class="btn btn-primary btn-sm" data-detail-edit-product="${p.id}">Editar</button><button class="btn btn-secondary btn-sm" data-detail-stock-product="${p.id}">Inventario</button></div></article>`}).join('')||'<div class="admin-empty-detail">No hay productos registrados.</div>'}</div></section>`;
+    bindBack();$('detailAddProduct').onclick=()=>openProductEditor();$('adminContent').querySelectorAll('[data-detail-edit-product]').forEach(b=>b.onclick=()=>openProductEditor(b.dataset.detailEditProduct));$('adminContent').querySelectorAll('[data-detail-stock-product]').forEach(b=>b.onclick=()=>{renderAdminSection('inventory');setTimeout(()=>{if($('inventorySearch')){$('inventorySearch').value=state.products.find(p=>p.id===b.dataset.detailStockProduct)?.name||'';$('inventorySearch').dispatchEvent(new Event('input'))}},0)})
+  }
+
+  function adminMetricCombos(){
+    const currentValue=state.combos.reduce((s,c)=>s+Number(c.price||0),0);
+    const withOld=state.combos.filter(c=>Number(c.oldPrice||0)>Number(c.price||0)).length;
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Combos',`Detalle de los ${state.combos.length} combos publicados, con precios, contenido incluido, imagen e información comercial.`,`<button class="btn btn-primary btn-sm" id="detailAddCombo">Agregar combo</button>`)}${summaryStats([{label:'Combos',value:state.combos.length},{label:'Con ahorro',value:withOld},{label:'Valor publicado',value:money(currentValue)},{label:'Elementos incluidos',value:state.combos.reduce((s,c)=>s+(c.includes||[]).length,0)}])}<div class="admin-record-list">${state.combos.map(c=>`<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><img src="${esc(c.image||'')}" alt=""><div><h3>${esc(c.name)}</h3><p>ID: ${esc(c.id)}${c.badgeText?` · ${esc(c.badgeText)}`:''}</p></div></div><span class="admin-badge ok">Publicado</span></div><div class="admin-record-grid">${field('Precio',money(c.price))}${field('Precio anterior',c.oldPrice?money(c.oldPrice):'—')}${field('Ahorro',c.oldPrice&&c.oldPrice>c.price?money(c.oldPrice-c.price):'—')}${field('Incluye',(c.includes||[]).length+' elementos')}</div><div class="admin-record-description"><b>Descripción:</b> ${esc(c.description||'Sin descripción.')}<br><br><b>Detalles:</b> ${esc(c.details||'Sin detalles ampliados.')}<br><br><b>Incluye:</b> ${esc((c.includes||[]).join(' · ')||'Sin elementos especificados.')}</div><div class="admin-record-actions"><button class="btn btn-primary btn-sm" data-detail-edit-combo="${c.id}">Editar</button></div></article>`).join('')||'<div class="admin-empty-detail">No hay combos registrados.</div>'}</div></section>`;
+    bindBack();$('detailAddCombo').onclick=()=>openComboEditor();$('adminContent').querySelectorAll('[data-detail-edit-combo]').forEach(b=>b.onclick=()=>openComboEditor(b.dataset.detailEditCombo));
+  }
+
+  function adminMetricCategories(){
+    const cats=categories();const max=Math.max(1,...cats.map(c=>state.products.filter(p=>p.category===c).length));
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Categorías','Organización completa del catálogo por categoría, incluyendo productos, inventario y alertas de disponibilidad.')}${summaryStats([{label:'Categorías',value:cats.length},{label:'Productos asignados',value:state.products.length},{label:'Promedio por categoría',value:cats.length?(state.products.length/cats.length).toFixed(1):'0'},{label:'Sin categoría',value:state.products.filter(p=>!p.category).length}])}<div class="admin-record-list">${cats.map(c=>{const list=state.products.filter(p=>p.category===c);const stock=list.reduce((s,p)=>s+Number(p.stock||0),0);const low=list.filter(p=>p.stock>0&&p.stock<=Number(state.settings.lowStock||5)).length;const out=list.filter(p=>p.stock<=0).length;const prices=list.map(p=>Number(p.price||0));return `<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><div><h3>🏷️ ${esc(c)}</h3><p>${list.length} productos asociados</p></div></div><span class="admin-badge ${out?'bad':low?'warn':'ok'}">${out?`${out} agotados`:low?`${low} bajos`:'Estable'}</span></div><div class="admin-record-grid">${field('Productos',list.length)}${field('Stock total',stock)}${field('Stock bajo',low)}${field('Agotados',out)}${field('Precio mínimo',prices.length?money(Math.min(...prices)):'—')}${field('Precio máximo',prices.length?money(Math.max(...prices)):'—')}</div><div class="admin-category-bar"><i style="width:${Math.max(8,list.length/max*100)}%"></i></div><div class="admin-record-description"><b>Productos:</b> ${esc(list.map(p=>p.name).join(' · ')||'Sin productos.')}</div><div class="admin-record-actions"><button class="btn btn-secondary btn-sm" data-open-category="${esc(c)}">Ver productos</button></div></article>`}).join('')||'<div class="admin-empty-detail">No hay categorías.</div>'}</div></section>`;
+    bindBack();$('adminContent').querySelectorAll('[data-open-category]').forEach(b=>b.onclick=()=>{renderAdminSection('products');setTimeout(()=>{if($('adminProductSearch')){$('adminProductSearch').value=b.dataset.openCategory;$('adminProductSearch').dispatchEvent(new Event('input'))}},0)});
+  }
+
+  function adminMetricUsers(){
+    const orderByUser=id=>state.orders.filter(o=>o.userId===id||o.customer?.email===state.users.find(u=>u.id===id)?.email);
+    const totalSpend=state.users.reduce((s,u)=>s+orderRevenue(orderByUser(u.id)),0);
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Clientes','Ficha completa de clientes registrados y su relación con pedidos, entregas y compras. Los datos de contraseña no se muestran por seguridad.')}${summaryStats([{label:'Clientes',value:state.users.length},{label:'Con pedidos',value:state.users.filter(u=>orderByUser(u.id).length).length},{label:'Pedidos asociados',value:state.users.reduce((s,u)=>s+orderByUser(u.id).length,0)},{label:'Valor asociado',value:money(totalSpend)}])}<div class="admin-record-list">${state.users.map(u=>{const orders=orderByUser(u.id);const spent=orderRevenue(orders);return `<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><div><h3>👤 ${esc(u.fullName||u.username||'Cliente')}</h3><p>ID: ${esc(u.id)} · Registro: ${fmtDate(u.createdAt)}</p></div></div><span class="admin-badge ok">Cuenta activa</span></div><div class="admin-customer-block">${field('Usuario',u.username)}${field('Correo',u.email)}${field('Teléfono',u.phone)}${field('Departamento',u.department)}${field('Municipio',u.municipality)}${field('Dirección',u.address)}${field('Referencia',u.reference)}${field('Credencial','Protegida · no visible')}</div><div class="admin-record-grid">${field('Pedidos',orders.length)}${field('Total comprado',money(spent))}${field('Último pedido',orders.length?fmtDate(orders[0].createdAt):'—')}${field('Estado cliente',orders.length?'Con actividad':'Sin pedidos')}</div>${orders.length?`<div class="admin-record-description"><b>Pedidos:</b> ${esc(orders.map(o=>`${o.id} · ${money(o.total)} · ${o.status}`).join(' | '))}</div>`:''}</article>`}).join('')||'<div class="admin-empty-detail">No hay clientes registrados.</div>'}</div></section>`;
+    bindBack();
+  }
+
+  function orderCard(o){
+    const c=o.customer||{};const items=o.items||[];
+    return `<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><div><h3>🧾 ${esc(o.id)}</h3><p>${esc(c.fullName||'Cliente')} · ${fmtDate(o.createdAt)}</p></div></div><span class="admin-badge ${o.status==='Cancelado'?'bad':o.status==='Entregado'?'ok':'warn'}">${esc(o.status||'Nuevo')}</span></div><div class="admin-customer-block">${field('Cliente',c.fullName)}${field('Correo',c.email)}${field('Teléfono',c.phone)}${field('Departamento',c.department)}${field('Municipio',c.municipality)}${field('Dirección',c.address)}${field('Referencia',c.reference)}${field('Usuario ID',o.userId)}</div><h3 class="admin-subheading">Productos del pedido</h3><div class="admin-items">${items.map(i=>`<div class="admin-item-line"><div><b>${esc(i.name)}</b><span> · ${esc(i.type||'product')}</span></div><span>${Number(i.qty||0)} × ${money(i.price)}</span><b class="item-total">${money(Number(i.qty||0)*Number(i.price||0))}</b></div>`).join('')||'<div class="admin-empty-detail">Sin artículos.</div>'}</div><div class="admin-record-grid">${field('Subtotal',money(o.subtotal??o.total))}${field('Descuento',money(o.discount||0))}${field('Promoción',o.promotion?.code||'—')}${field('Estado',o.status||'Nuevo')}${field('Creado',fmtDate(o.createdAt))}${field('Actualizado',fmtDate(o.updatedAt))}</div>${o.notes?`<div class="admin-record-description"><b>Notas del cliente:</b> ${esc(o.notes)}</div>`:''}<div class="admin-order-total"><span>Total del pedido</span><strong>${money(o.total)}</strong></div><div class="admin-record-actions"><select data-detail-order-status="${esc(o.id)}">${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" data-detail-copy-order="${esc(o.id)}">Copiar pedido</button></div></article>`;
+  }
+
+  function bindOrderDetailActions(){
+    $('adminContent').querySelectorAll('[data-detail-order-status]').forEach(s=>s.onchange=()=>{const o=state.orders.find(x=>x.id===s.dataset.detailOrderStatus);if(!o)return;o.status=s.value;o.updatedAt=new Date().toISOString();write(KEYS.orders,state.orders);logActivity('Estado de pedido',`${o.id} → ${o.status}`);toast('Estado actualizado.','success')});
+    $('adminContent').querySelectorAll('[data-detail-copy-order]').forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>x.id===b.dataset.detailCopyOrder);if(o){copyText(orderMessage(o));toast('Pedido copiado.','success')}})
+  }
+
+  function adminMetricOrders(){
+    const total=orderRevenue(state.orders);const pending=state.orders.filter(o=>!['Entregado','Cancelado'].includes(o.status)).length;const delivered=state.orders.filter(o=>o.status==='Entregado').length;
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Pedidos','Información completa de cada solicitud: cliente, dirección, productos, importes, descuentos, estado, fechas y notas.',`<button class="btn btn-secondary btn-sm" id="detailExportOrders">Exportar CSV</button>`)}${summaryStats([{label:'Pedidos',value:state.orders.length},{label:'En proceso',value:pending},{label:'Entregados',value:delivered},{label:'Total registrado',value:money(total)}])}<div class="admin-record-list">${state.orders.map(orderCard).join('')||'<div class="admin-empty-detail">No hay pedidos registrados.</div>'}</div></section>`;
+    bindBack();bindOrderDetailActions();$('detailExportOrders').onclick=()=>exportCsv('pedidos',state.orders.map(o=>({id:o.id,cliente:o.customer?.fullName,correo:o.customer?.email,telefono:o.customer?.phone,total:o.total,estado:o.status,fecha:o.createdAt,productos:(o.items||[]).map(i=>`${i.name} x${i.qty}`).join(' | ')})));
+  }
+
+  function adminMetricSales(){
+    const orders=state.orders;const total=orderRevenue(orders);const delivered=orders.filter(o=>o.status==='Entregado');const cancelled=orders.filter(o=>o.status==='Cancelado');const avg=orders.length?total/orders.length:0;
+    const productMap={};orders.forEach(o=>(o.items||[]).forEach(i=>{const key=i.name||i.id;productMap[key]??={qty:0,revenue:0};productMap[key].qty+=Number(i.qty||0);productMap[key].revenue+=Number(i.qty||0)*Number(i.price||0)}));const top=Object.entries(productMap).sort((a,b)=>b[1].revenue-a[1].revenue).slice(0,8);
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Ventas registradas','Análisis de importes registrados en pedidos, ticket promedio, estados y productos con mayor valor acumulado.')}${summaryStats([{label:'Total registrado',value:money(total)},{label:'Ticket promedio',value:money(avg)},{label:'Entregados',value:delivered.length},{label:'Cancelados',value:cancelled.length}])}<h3 class="admin-subheading">Productos con mayor valor registrado</h3><div class="admin-record-list">${top.map(([name,d],idx)=>`<article class="admin-mini-item"><div><b>#${idx+1} · ${esc(name)}</b><small>${d.qty} unidades registradas</small></div><span class="admin-badge ok">${money(d.revenue)}</span></article>`).join('')||'<div class="admin-empty-detail">Todavía no hay datos de ventas.</div>'}</div><h3 class="admin-subheading">Pedidos que componen el total</h3><div class="admin-record-list">${orders.map(o=>`<article class="admin-record"><div class="admin-record-head"><div><h3>${esc(o.id)}</h3><p>${esc(o.customer?.fullName||'Cliente')} · ${fmtDate(o.createdAt)}</p></div><span class="admin-badge ${o.status==='Cancelado'?'bad':o.status==='Entregado'?'ok':'warn'}">${esc(o.status||'Nuevo')}</span></div><div class="admin-record-grid">${field('Subtotal',money(o.subtotal??o.total))}${field('Descuento',money(o.discount||0))}${field('Total',money(o.total))}${field('Artículos',itemCount([o]))}</div></article>`).join('')||'<div class="admin-empty-detail">No hay pedidos registrados.</div>'}</div></section>`;
+    bindBack();
+  }
+
+  function adminMetricStock(filter){
+    const lowLimit=Number(state.settings.lowStock||5);const isOut=filter==='out';const list=state.products.filter(p=>isOut?Number(p.stock||0)<=0:Number(p.stock||0)>0&&Number(p.stock||0)<=lowLimit);const title=isOut?'Productos agotados':'Productos con stock bajo';
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader(title,isOut?'Productos sin existencias. No pueden agregarse al carrito hasta recuperar inventario.':`Productos con existencias iguales o inferiores al límite configurado (${lowLimit}).`)}${summaryStats([{label:isOut?'Agotados':'Stock bajo',value:list.length},{label:'Unidades totales',value:list.reduce((s,p)=>s+Number(p.stock||0),0)},{label:'Límite de alerta',value:lowLimit},{label:'Valor de inventario',value:money(list.reduce((s,p)=>s+Number(p.stock||0)*Number(p.price||0),0))}])}<div class="admin-record-list">${list.map(p=>`<article class="admin-record"><div class="admin-record-head"><div class="admin-record-title"><img src="${esc(p.image||'')}" alt=""><div><h3>${esc(p.name)}</h3><p>${esc(p.category)} · ${money(p.price)}</p></div></div><span class="admin-badge ${isOut?'bad':'warn'}">${isOut?'Agotado':`${p.stock} unidades`}</span></div><div class="admin-record-grid">${field('Stock actual',p.stock)}${field('Precio',money(p.price))}${field('Valor en stock',money(Number(p.stock||0)*Number(p.price||0)))}${field('Estado',isOut?'No disponible':'Pocas unidades')}</div><div class="admin-record-actions"><button class="btn btn-primary btn-sm" data-stock-set="${p.id}">Definir stock</button><button class="btn btn-secondary btn-sm" data-stock-plus="${p.id}">+1 unidad</button></div></article>`).join('')||`<div class="admin-empty-detail">${isOut?'No hay productos agotados.':'No hay productos con stock bajo.'}</div>`}</div></section>`;
+    bindBack();$('adminContent').querySelectorAll('[data-stock-set]').forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>x.id===b.dataset.stockSet);const n=await npPrompt(`Existencias para ${p.name}`,p.stock);if(n===null||isNaN(Number(n)))return;p.stock=Math.max(0,Number(n));write(KEYS.products,state.products);purgeUnavailableCart(true);adminMetricStock(filter);renderStore()});$('adminContent').querySelectorAll('[data-stock-plus]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.stockPlus);p.stock=Math.max(0,Number(p.stock||0)+1);write(KEYS.products,state.products);purgeUnavailableCart(true);adminMetricStock(filter);renderStore()});
+  }
+
+  function adminMetricFaqs(){
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0">${backHeader('Preguntas frecuentes','Contenido completo de ayuda pública que aparece en la tienda. Puedes revisar, editar o eliminar cada respuesta.',`<button class="btn btn-primary btn-sm" id="detailAddFaq">Agregar pregunta</button>`)}${summaryStats([{label:'Preguntas',value:state.faqs.length},{label:'Publicadas',value:state.faqs.length},{label:'Con respuesta',value:state.faqs.filter(f=>f.a?.trim()).length},{label:'Sin respuesta',value:state.faqs.filter(f=>!f.a?.trim()).length}])}<div class="admin-record-list">${state.faqs.map((f,i)=>`<article class="admin-record"><div class="admin-record-head"><div><h3>${i+1}. ${esc(f.q)}</h3><p>ID: ${esc(f.id)}</p></div><span class="admin-badge ok">Publicada</span></div><div class="admin-record-description"><b>Respuesta completa:</b><br>${esc(f.a||'Sin respuesta.')}</div><div class="admin-record-actions"><button class="btn btn-primary btn-sm" data-detail-edit-faq="${f.id}">Editar</button><button class="btn btn-red btn-sm" data-detail-delete-faq="${f.id}">Eliminar</button></div></article>`).join('')||'<div class="admin-empty-detail">No hay preguntas frecuentes.</div>'}</div></section>`;
+    bindBack();$('detailAddFaq').onclick=()=>openFaqEditor();$('adminContent').querySelectorAll('[data-detail-edit-faq]').forEach(b=>b.onclick=()=>openFaqEditor(b.dataset.detailEditFaq));$('adminContent').querySelectorAll('[data-detail-delete-faq]').forEach(b=>b.onclick=async()=>{if(!await npConfirm('¿Eliminar esta pregunta?'))return;state.faqs=state.faqs.filter(f=>f.id!==b.dataset.detailDeleteFaq);write(KEYS.faqs,state.faqs);renderFaqs();adminMetricFaqs()});
+  }
+
+  const renderAdminSectionV97Base=renderAdminSection;
+  renderAdminSection=function(section){
+    const custom={
+      'metric-products':()=>adminMetricProducts(),
+      'metric-combos':()=>adminMetricCombos(),
+      'metric-categories':()=>adminMetricCategories(),
+      'metric-users':()=>adminMetricUsers(),
+      'metric-orders':()=>adminMetricOrders(),
+      'metric-sales':()=>adminMetricSales(),
+      'metric-low-stock':()=>adminMetricStock('low'),
+      'metric-out-stock':()=>adminMetricStock('out'),
+      'metric-faqs':()=>adminMetricFaqs()
+    };
+    if(custom[section]){
+      state.adminSection=section;
+      renderAdminNav();
+      const titles={'metric-products':'Productos','metric-combos':'Combos','metric-categories':'Categorías','metric-users':'Clientes','metric-orders':'Pedidos','metric-sales':'Ventas','metric-low-stock':'Stock bajo','metric-out-stock':'Agotados','metric-faqs':'FAQ'};
+      $('adminTitle').textContent=titles[section]||'Detalle';
+      custom[section]();
+      return;
+    }
+    renderAdminSectionV97Base(section);
+  };
+
+  const adminDashboardV97Base=adminDashboard;
+  adminDashboard=function(){
+    adminDashboardV97Base();
+    $('adminContent').querySelectorAll('[data-metric-target]').forEach(card=>{
+      const open=()=>renderAdminSection(card.dataset.metricTarget);
+      card.onclick=open;
+      card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
+    });
+  };
+})();
+</script>
+
+<script>
+/* CRULOX v9.8 — arquitectura administrativa jerárquica */
+(function(){
+  const ADMIN_GROUPS={
+    home:{label:'Inicio',icon:'⌂',desc:'Acceso principal y estado general.',items:[
+      {section:'dashboard',icon:'📊',label:'Resumen',desc:'Indicadores clave de toda la tienda.'}
+    ]},
+    catalog:{label:'Catálogo',icon:'▦',desc:'Todo lo relacionado con lo que vendes.',items:[
+      {section:'products',icon:'📦',label:'Productos',desc:'Crear, editar, duplicar y eliminar productos.'},
+      {section:'combos',icon:'🎁',label:'Combos',desc:'Administrar paquetes y ofertas combinadas.'},
+      {section:'inventory',icon:'📋',label:'Inventario',desc:'Existencias, stock bajo y agotados.'},
+      {section:'categories',icon:'🏷️',label:'Categorías',desc:'Organizar el catálogo por categorías.'}
+    ]},
+    operation:{label:'Operación',icon:'↗',desc:'Pedidos, ventas, promociones y existencias críticas.',items:[
+      {section:'orders',icon:'🧾',label:'Pedidos',desc:'Seguimiento completo de solicitudes.'},
+      {section:'metric-sales',icon:'💰',label:'Ventas',desc:'Importes registrados y rendimiento.'},
+      {section:'promotions',icon:'🎟️',label:'Promociones',desc:'Códigos, descuentos y condiciones.'},
+      {section:'metric-low-stock',icon:'⚠️',label:'Stock bajo',desc:'Productos que requieren reposición.'},
+      {section:'metric-out-stock',icon:'⛔',label:'Agotados',desc:'Productos sin existencias.'}
+    ]},
+    customers:{label:'Clientes',icon:'◎',desc:'Usuarios, datos y relación comercial.',items:[
+      {section:'users',icon:'👥',label:'Clientes',desc:'Perfiles registrados y pedidos asociados.'}
+    ]},
+    content:{label:'Contenido',icon:'✦',desc:'Información pública, ayuda e identidad de la tienda.',items:[
+      {section:'faqs',icon:'❓',label:'Preguntas frecuentes',desc:'Contenido de ayuda que ve el cliente.'},
+      {section:'settings',icon:'🏪',label:'Tienda',desc:'Identidad, textos, redes y configuración comercial.'},
+      {section:'bots',icon:'💬',label:'Atención',desc:'Canal de consultas y soporte al cliente.'}
+    ]},
+    system:{label:'Sistema',icon:'⚙',desc:'Control técnico y continuidad operativa.',items:[
+      {section:'backup',icon:'💾',label:'Respaldos',desc:'Exportar, importar y restaurar información.'},
+      {section:'activity',icon:'🕘',label:'Actividad',desc:'Historial de acciones administrativas.'}
+    ]}
+  };
+
+  const SECTION_GROUP={};
+  Object.entries(ADMIN_GROUPS).forEach(([g,data])=>data.items.forEach(i=>SECTION_GROUP[i.section]=g));
+  Object.assign(SECTION_GROUP,{
+    'metric-products':'catalog','metric-combos':'catalog','metric-categories':'catalog',
+    'metric-users':'customers','metric-orders':'operation','metric-sales':'operation',
+    'metric-low-stock':'operation','metric-out-stock':'operation','metric-faqs':'content'
+  });
+
+  const SECTION_TITLES={
+    home:'Administración',dashboard:'Resumen',products:'Productos',combos:'Combos',inventory:'Inventario',categories:'Categorías',
+    orders:'Pedidos',promotions:'Promociones',users:'Clientes',faqs:'Preguntas frecuentes',settings:'Tienda',bots:'Atención',
+    backup:'Respaldos',activity:'Actividad','metric-products':'Productos','metric-combos':'Combos','metric-categories':'Categorías',
+    'metric-users':'Clientes','metric-orders':'Pedidos','metric-sales':'Ventas','metric-low-stock':'Stock bajo','metric-out-stock':'Agotados','metric-faqs':'FAQ'
+  };
+
+  const css=document.createElement('style');
+  css.id='np-admin-v98-style';
+  css.textContent=`
+    /* Estructura base: una sola columna y navegación jerárquica */
+    .admin-overlay{background:#030914!important;color:#edf6ff}
+    .admin-shell{display:grid!important;grid-template-columns:1fr!important;height:100%!important;background:#030914!important}
+    .admin-sidebar{position:relative!important;top:auto!important;z-index:20!important;width:100%!important;padding:0!important;display:block!important;overflow:visible!important;border:0!important;border-bottom:1px solid rgba(122,193,255,.09)!important;background:linear-gradient(180deg,#071522 0%,#05101b 100%)!important;box-shadow:0 10px 28px rgba(0,0,0,.22)!important}
+    .admin-brand-row{display:flex;align-items:center;justify-content:space-between;gap:14px;max-width:1240px;margin:auto;padding:13px 18px 9px}
+    .admin-brand{width:205px!important;height:48px!important;margin:0!important;object-fit:contain!important;filter:drop-shadow(0 7px 16px rgba(0,210,255,.16))}
+    .admin-brand-meta{display:flex;align-items:center;gap:8px;color:#8098b3;font-size:.62rem;font-weight:800}
+    .admin-brand-status{width:8px;height:8px;border-radius:50%;background:#1de27a;box-shadow:0 0 0 4px rgba(29,226,122,.1)}
+    .admin-nav{max-width:1240px!important;width:100%!important;margin:auto!important;padding:7px 18px 14px!important;display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:8px!important}
+    .admin-nav button{min-width:0!important;min-height:50px!important;padding:9px 10px!important;border-radius:15px!important;border:1px solid rgba(122,193,255,.075)!important;background:rgba(255,255,255,.025)!important;color:#adc2da!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;text-align:center!important;font-size:.68rem!important;font-weight:850!important;box-shadow:none!important;white-space:nowrap!important}
+    .admin-nav button .np-admin-menu-icon{font-size:.88rem;opacity:.9}
+    .admin-nav button:hover{border-color:rgba(0,211,255,.16)!important;background:rgba(0,211,255,.05)!important;color:#e8f9ff!important}
+    .admin-nav button.active{color:#03101c!important;background:linear-gradient(135deg,#18d8ff,#2789ff)!important;border-color:rgba(255,255,255,.18)!important;box-shadow:0 9px 22px rgba(0,169,255,.2)!important}
+
+    .admin-main{min-width:0!important;overflow:auto!important;background:radial-gradient(circle at 50% -8%,rgba(0,201,255,.055),transparent 30%),#030914!important}
+    .admin-top{position:sticky!important;top:0!important;z-index:15!important;min-height:58px!important;padding:8px 18px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:12px!important;background:rgba(3,9,20,.94)!important;backdrop-filter:blur(18px)!important;border-bottom:1px solid rgba(122,193,255,.07)!important}
+    .admin-top .section-kicker{display:none!important}
+    .admin-top h1{font-size:.92rem!important;font-weight:850!important;color:#dceaff!important;letter-spacing:0!important}
+    .admin-top .toolbar{display:flex!important;gap:7px!important;width:auto!important}
+    .admin-top .btn{min-height:34px!important;padding:7px 11px!important;font-size:.58rem!important;border-radius:11px!important;width:auto!important}
+    .admin-content{max-width:1240px!important;width:100%!important;margin:0 auto!important;padding:14px 18px 34px!important}
+
+    /* Breadcrumb + segundo nivel */
+    .np-admin-breadcrumb{max-width:1240px;margin:0 auto;padding:13px 18px 0;color:#6f89a5;font-size:.58rem;display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden}
+    .np-admin-breadcrumb b{color:#bcd1e7;font-weight:850;overflow:hidden;text-overflow:ellipsis}
+    .np-admin-subnav-wrap{max-width:1240px;margin:0 auto;padding:10px 18px 2px}
+    .np-admin-subnav{display:flex;gap:7px;overflow-x:auto;padding-bottom:7px;scrollbar-width:none}
+    .np-admin-subnav::-webkit-scrollbar{display:none}
+    .np-admin-subnav button{flex:0 0 auto;min-height:37px;border-radius:12px;border:1px solid rgba(120,191,255,.08);background:#0a1727;color:#9eb7d1;padding:7px 11px;font-size:.61rem;font-weight:850;white-space:nowrap}
+    .np-admin-subnav button.active{background:rgba(0,211,255,.1);color:#38ddff;border-color:rgba(0,211,255,.18)}
+
+    /* Tercer nivel: acciones de contexto */
+    .np-admin-context{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:0 0 12px;padding:9px;border:1px solid rgba(120,191,255,.07);border-radius:15px;background:rgba(255,255,255,.018)}
+    .np-admin-context-label{font-size:.55rem;color:#68839f;font-weight:900;text-transform:uppercase;letter-spacing:.1em;margin-right:2px}
+    .np-admin-context button{border:0;border-radius:10px;background:#0b1a2c;color:#b6cbe2;padding:7px 10px;font-size:.57rem;font-weight:850;min-height:32px}
+    .np-admin-context button.primary{background:linear-gradient(135deg,#16d7fa,#2587ff);color:#03101c}
+    .np-admin-context button.danger{background:rgba(255,87,126,.08);color:#ff819e}
+
+    /* Inicio / directorio */
+    .np-admin-home{display:grid;gap:14px}
+    .np-admin-welcome{padding:18px 19px;border-radius:21px;border:1px solid rgba(119,193,255,.09);background:linear-gradient(145deg,#0a1a2d,#071421);display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .np-admin-welcome h2{font-size:1.03rem;line-height:1.25;margin:0 0 5px}
+    .np-admin-welcome p{font-size:.65rem;line-height:1.55;color:#8fa8c3;margin:0;max-width:690px}
+    .np-admin-welcome .np-admin-now{flex:0 0 auto;padding:8px 11px;border-radius:999px;background:rgba(30,226,122,.08);border:1px solid rgba(30,226,122,.13);color:#65f1ab;font-size:.58rem;font-weight:900}
+    .np-admin-menu-title{display:flex;align-items:end;justify-content:space-between;gap:10px;padding:1px 2px}
+    .np-admin-menu-title h3{font-size:.83rem;margin:0}
+    .np-admin-menu-title span{color:#6f89a4;font-size:.56rem}
+    .np-admin-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+    .np-admin-group-card{position:relative;overflow:hidden;min-height:142px;padding:15px;border-radius:19px;border:1px solid rgba(121,193,255,.08);background:linear-gradient(145deg,#0a1a2c,#071421);text-align:left;color:#e9f4ff;display:grid;grid-template-rows:auto 1fr auto;gap:9px;box-shadow:0 10px 25px rgba(0,0,0,.12)}
+    .np-admin-group-card::after{content:"";position:absolute;width:100px;height:100px;border-radius:50%;right:-42px;top:-45px;background:radial-gradient(circle,rgba(0,211,255,.12),transparent 68%)}
+    .np-admin-group-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .np-admin-group-icon{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(0,211,255,.07);border:1px solid rgba(0,211,255,.1);color:#2edcff;font-size:.9rem}
+    .np-admin-group-count{font-size:.53rem;color:#6683a0;font-weight:850}
+    .np-admin-group-card h4{font-size:.83rem;margin:0 0 4px}
+    .np-admin-group-card p{font-size:.59rem;line-height:1.5;color:#8fa8c3;margin:0}
+    .np-admin-group-go{font-size:.56rem;font-weight:900;color:#35dfff}
+    .np-admin-group-card:hover{transform:translateY(-1px);border-color:rgba(0,211,255,.17);background:linear-gradient(145deg,#0b2034,#071624)}
+
+    /* Landing de cada área */
+    .np-admin-area{display:grid;gap:13px}
+    .np-admin-area-head{padding:16px 17px;border-radius:19px;border:1px solid rgba(119,193,255,.08);background:#081625}
+    .np-admin-area-head h2{font-size:.98rem;margin:0 0 5px}
+    .np-admin-area-head p{color:#8ba4bf;font-size:.63rem;line-height:1.55;margin:0}
+    .np-admin-area-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .np-admin-area-link{min-height:100px;padding:13px;border-radius:17px;border:1px solid rgba(121,193,255,.08);background:rgba(255,255,255,.022);color:#e9f4ff;text-align:left;display:grid;grid-template-columns:40px 1fr auto;align-items:center;gap:11px}
+    .np-admin-area-link i{width:40px;height:40px;border-radius:13px;display:grid;place-items:center;font-style:normal;background:rgba(0,211,255,.07);font-size:.95rem}
+    .np-admin-area-link b{display:block;font-size:.73rem;margin-bottom:4px}
+    .np-admin-area-link small{display:block;font-size:.57rem;line-height:1.45;color:#849eb9}
+    .np-admin-area-link em{font-style:normal;color:#2fdcff;font-size:.85rem}
+
+    /* Resumen: sin hero gigante */
+    .np-admin-summary-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .np-admin-summary-head h2{font-size:.9rem;margin:0}
+    .np-admin-summary-head p{font-size:.57rem;color:#7893ae;margin-top:3px}
+    .admin-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:9px!important;margin-top:0!important}
+    .metric{min-height:100px!important;padding:12px!important;border-radius:17px!important;background:linear-gradient(145deg,#0a1b2e,#071522)!important;border:1px solid rgba(120,191,255,.075)!important;box-shadow:none!important;cursor:pointer}
+    .metric::before{height:1px!important;opacity:.65}
+    .metric-top{margin-bottom:7px!important}
+    .metric-icon{width:32px!important;height:32px!important;border-radius:10px!important;font-size:.78rem!important}
+    .metric small{font-size:.57rem!important}
+    .metric strong{font-size:1.2rem!important}
+    .metric-note{font-size:.52rem!important;margin-top:4px!important}
+    .np-admin-summary-row{display:grid;grid-template-columns:1.1fr .9fr;gap:10px;margin-top:10px}
+
+    /* Paneles internos */
+    .admin-card{padding:14px!important;border-radius:18px!important;background:#081625!important;border:1px solid rgba(120,191,255,.075)!important;box-shadow:none!important}
+    .admin-card-head{margin-bottom:10px!important;gap:8px!important;flex-wrap:wrap}
+    .admin-card h2{font-size:.84rem!important}
+    .admin-card-sub{font-size:.58rem!important;line-height:1.5!important}
+    .toolbar{gap:6px!important}
+    .toolbar input,.toolbar select{min-height:34px!important;font-size:.6rem!important;border-radius:10px!important;background:#0a1929!important}
+    .btn{border-radius:11px!important}
+    .btn-sm{min-height:32px!important;padding:6px 9px!important;font-size:.55rem!important}
+    .admin-list{gap:7px!important}
+    .admin-list-item{padding:10px!important;border-radius:14px!important;background:rgba(255,255,255,.02)!important}
+    .admin-list-item h3{font-size:.68rem!important}.admin-list-item p{font-size:.56rem!important}
+    .table-wrap{border-radius:14px!important;background:#071421!important}
+    th,td{padding:9px!important;font-size:.59rem!important}th{background:#0a192a!important}
+    .status{font-size:.52rem!important}
+    .notice{font-size:.62rem!important;line-height:1.55!important;border-radius:15px!important;padding:11px!important}
+
+    @media(max-width:900px){
+      .admin-brand-row{padding:10px 12px 7px}.admin-brand{width:175px!important;height:42px!important}
+      .admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;padding:7px 12px 11px!important;gap:6px!important}
+      .admin-nav button{min-height:44px!important;font-size:.62rem!important;border-radius:13px!important}
+      .admin-content{padding:11px 12px 28px!important}.admin-top{padding:7px 12px!important;min-height:52px!important}
+      .np-admin-breadcrumb{padding:10px 12px 0}.np-admin-subnav-wrap{padding:8px 12px 0}
+      .np-admin-groups{grid-template-columns:repeat(2,minmax(0,1fr))}
+      .admin-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      .np-admin-summary-row{grid-template-columns:1fr}
+    }
+    @media(max-width:560px){
+      .admin-brand-meta{display:none}.admin-brand{width:160px!important;height:39px!important}
+      .admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+      .admin-nav button{padding:7px 4px!important;gap:4px!important;font-size:.56rem!important;min-height:42px!important}
+      .admin-nav button .np-admin-menu-icon{font-size:.76rem}
+      .admin-top h1{font-size:.8rem!important}.admin-top .btn{font-size:.52rem!important;padding:6px 8px!important}
+      .np-admin-welcome{padding:14px;align-items:flex-start;flex-direction:column}.np-admin-welcome .np-admin-now{align-self:flex-start}
+      .np-admin-groups{grid-template-columns:1fr 1fr;gap:8px}.np-admin-group-card{min-height:132px;padding:12px;border-radius:16px}
+      .np-admin-group-card h4{font-size:.73rem}.np-admin-group-card p{font-size:.54rem}
+      .np-admin-area-grid{grid-template-columns:1fr}.np-admin-area-link{min-height:86px}
+      .np-admin-context{padding:7px;gap:5px}.np-admin-context-label{width:100%}.np-admin-context button{font-size:.53rem;padding:6px 8px;min-height:29px}
+      .metric{min-height:92px!important;padding:10px!important}.metric strong{font-size:1.05rem!important}
+      .admin-card{padding:11px!important}.admin-card-head .toolbar{width:100%}.admin-card-head .toolbar input,.admin-card-head .toolbar select{flex:1;min-width:0}
+    }
+    @media(max-width:360px){
+      .admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+      .np-admin-groups{grid-template-columns:1fr}
+    }
+  `;
+  document.head.appendChild(css);
+
+  function ensureAdminChrome(){
+    const aside=document.querySelector('.admin-sidebar');
+    if(!aside)return;
+    if(!aside.querySelector('.admin-brand-row')){
+      const brand=aside.querySelector('.admin-brand');
+      const row=document.createElement('div');row.className='admin-brand-row';
+      brand.parentNode.insertBefore(row,brand);row.appendChild(brand);
+      const meta=document.createElement('div');meta.className='admin-brand-meta';meta.innerHTML='<span class="admin-brand-status"></span><span>Administración CRULOX</span>';row.appendChild(meta);
+    }
+    let breadcrumb=document.getElementById('adminBreadcrumb');
+    if(!breadcrumb){breadcrumb=document.createElement('div');breadcrumb.id='adminBreadcrumb';breadcrumb.className='np-admin-breadcrumb';document.querySelector('.admin-main').insertBefore(breadcrumb,document.querySelector('.admin-top').nextSibling)}
+    let sub=document.getElementById('adminSubnavWrap');
+    if(!sub){sub=document.createElement('div');sub.id='adminSubnavWrap';sub.className='np-admin-subnav-wrap';breadcrumb.insertAdjacentElement('afterend',sub)}
+  }
+
+  function currentGroup(section=state.adminSection){const s=String(section||'');if(s.startsWith('group:'))return s.slice(6);return SECTION_GROUP[s]||'home'}
+  function renderPrimaryNav(){
+    ensureAdminChrome();
+    const group=currentGroup();
+    $('adminNav').innerHTML=Object.entries(ADMIN_GROUPS).map(([key,g])=>`<button type="button" data-admin-group="${key}" class="${key===group?'active':''}"><span class="np-admin-menu-icon">${g.icon}</span><span>${g.label}</span></button>`).join('');
+    $('adminNav').onclick=e=>{const b=e.target.closest('[data-admin-group]');if(!b)return;openAdminGroup(b.dataset.adminGroup)};
+  }
+
+  function renderBreadcrumb(section=state.adminSection){
+    ensureAdminChrome();
+    const g=currentGroup(section),gd=ADMIN_GROUPS[g];
+    const title=SECTION_TITLES[section]||gd.label;
+    $('adminBreadcrumb').innerHTML=section==='home'?`<span>Panel administrativo</span><span>›</span><b>Inicio</b>`:`<span>Panel administrativo</span><span>›</span><span>${gd.label}</span><span>›</span><b>${title}</b>`;
+  }
+
+  function renderSubnav(section=state.adminSection){
+    ensureAdminChrome();
+    const group=currentGroup(section),data=ADMIN_GROUPS[group];
+    if(group==='home'){$('adminSubnavWrap').innerHTML='';return}
+    $('adminSubnavWrap').innerHTML=`<nav class="np-admin-subnav">${data.items.map(i=>`<button type="button" data-admin-sub="${i.section}" class="${i.section===section?'active':''}">${i.icon} ${i.label}</button>`).join('')}</nav>`;
+    $('adminSubnavWrap').onclick=e=>{const b=e.target.closest('[data-admin-sub]');if(b)renderAdminSection(b.dataset.adminSub)};
+  }
+
+  function contextActions(section){
+    const map={
+      dashboard:[['catalog','Abrir catálogo',''],['orders','Ver pedidos',''],['activity','Actividad','']],
+      products:[['add-product','Nuevo producto','primary'],['inventory','Inventario',''],['categories','Categorías','']],
+      combos:[['add-combo','Nuevo combo','primary'],['products','Productos','']],
+      inventory:[['inventory','Todos','primary'],['metric-low-stock','Stock bajo',''],['metric-out-stock','Agotados','']],
+      categories:[['products','Productos',''],['add-product','Nuevo producto','primary']],
+      orders:[['orders','Todos','primary'],['metric-sales','Ventas',''],['users','Clientes','']],
+      users:[['orders','Pedidos',''],['metric-sales','Ventas','']],
+      promotions:[['orders','Pedidos',''],['metric-sales','Ventas','']],
+      faqs:[['add-faq','Nueva pregunta','primary'],['settings','Tienda','']],
+      settings:[['faqs','FAQ',''],['bots','Atención','']],
+      bots:[['settings','Tienda','']],
+      backup:[['activity','Actividad','']],
+      activity:[['backup','Respaldos','']]
+    };
+    const actions=map[section]||[];
+    if(!actions.length)return '';
+    return `<div class="np-admin-context"><span class="np-admin-context-label">Acciones</span>${actions.map(([id,label,kind])=>`<button type="button" class="${kind}" data-admin-action="${id}">${label}</button>`).join('')}</div>`;
+  }
+
+  function bindContext(section){
+    const host=$('adminContent');if(!host)return;
+    const ctx=host.querySelector('.np-admin-context');if(!ctx)return;
+    ctx.onclick=e=>{
+      const b=e.target.closest('[data-admin-action]');if(!b)return;const a=b.dataset.adminAction;
+      if(a==='add-product')return openProductEditor();
+      if(a==='add-combo')return openComboEditor();
+      if(a==='add-faq')return openFaqEditor();
+      if(a==='catalog')return openAdminGroup('catalog');
+      renderAdminSection(a);
+    };
+  }
+
+  function injectContext(section){
+    if(section==='home')return;
+    const html=contextActions(section);if(!html)return;
+    const host=$('adminContent');
+    if(host&&!host.querySelector('.np-admin-context'))host.insertAdjacentHTML('afterbegin',html);
+    bindContext(section);
+  }
+
+  function openAdminGroup(group){
+    if(group==='home')return renderAdminSection('home');
+    const data=ADMIN_GROUPS[group];if(!data)return renderAdminSection('home');
+    state.adminSection=`group:${group}`;
+    renderPrimaryNav();renderBreadcrumb(data.items[0]?.section||'home');
+    $('adminSubnavWrap').innerHTML='';
+    $('adminTitle').textContent=data.label;
+    $('adminContent').innerHTML=`<section class="np-admin-area"><header class="np-admin-area-head"><h2>${data.icon} ${data.label}</h2><p>${data.desc}</p></header><div class="np-admin-area-grid">${data.items.map(i=>`<button type="button" class="np-admin-area-link" data-area-section="${i.section}"><i>${i.icon}</i><span><b>${i.label}</b><small>${i.desc}</small></span><em>›</em></button>`).join('')}</div></section>`;
+    $('adminContent').onclick=e=>{const b=e.target.closest('[data-area-section]');if(b)renderAdminSection(b.dataset.areaSection)};
+  }
+
+  function renderAdminHome(){
+    state.adminSection='home';renderPrimaryNav();renderBreadcrumb('home');renderSubnav('home');$('adminTitle').textContent='Administración';
+    $('adminContent').innerHTML=`<section class="np-admin-home"><div class="np-admin-welcome"><div><h2>Centro de administración</h2><p>Elige primero el área en la que quieres trabajar. Cada menú contiene únicamente las herramientas relacionadas, para que el panel sea rápido, predecible y fácil de usar.</p></div><span class="np-admin-now">● Sesión administrativa activa</span></div><div class="np-admin-menu-title"><h3>Áreas principales</h3><span>6 áreas organizadas por función</span></div><div class="np-admin-groups">${Object.entries(ADMIN_GROUPS).filter(([k])=>k!=='home').map(([key,g])=>`<button type="button" class="np-admin-group-card" data-home-group="${key}"><div class="np-admin-group-head"><span class="np-admin-group-icon">${g.icon}</span><span class="np-admin-group-count">Abrir</span></div><div><h4>${g.label}</h4><p>${g.desc}</p></div><span class="np-admin-group-go">Abrir área →</span></button>`).join('')}</div></section>`;
+    $('adminContent').onclick=e=>{const b=e.target.closest('[data-home-group]');if(b)openAdminGroup(b.dataset.homeGroup)};
+  }
+
+  const baseRenderAdminSection=renderAdminSection;
+  renderAdminSection=function(section){
+    if(section==='home')return renderAdminHome();
+    if(String(section).startsWith('group:'))return openAdminGroup(String(section).slice(6));
+    baseRenderAdminSection(section);
+    renderPrimaryNav();renderBreadcrumb(section);renderSubnav(section);injectContext(section);
+    $('adminTitle').textContent=SECTION_TITLES[section]||'Administración';
+  };
+
+  renderAdminNav=function(){renderPrimaryNav()};
+
+  const baseAdminDashboard=adminDashboard;
+  adminDashboard=function(){
+    const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);
+    const low=state.products.filter(p=>Number(p.stock||0)>0&&Number(p.stock||0)<=Number(state.settings.lowStock||5)).length;
+    const out=state.products.filter(p=>Number(p.stock||0)<=0).length;
+    $('adminContent').innerHTML=`<div class="np-

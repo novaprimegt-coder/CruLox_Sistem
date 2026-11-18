@@ -1,0 +1,2412 @@
+turn;
+  const list=confirmedPurchases356();
+  if(!list.length){box.innerHTML='<div class="jmv356-purchases-empty">Todavía no tienes compras confirmadas para mostrar.</div>';return}
+  box.innerHTML=list.map(o=>{
+    const delivery=o.customerDelivery||{};const savedItems=Array.isArray(delivery.items)?delivery.items:[];
+    const items=(o.items||[]).map((item,index)=>{const d=savedItems[index]||{};const recharge=String(item.digitalKind||'').toLowerCase()==='recharge'||/diamant|recarga|free\s*fire|fc\s*point|robux/i.test(`${item.name||''} ${item.digitalType||''}`);return `<section class="jmv356-purchase-item"><h4>${esc356(item.name||'Producto digital')} ×${Number(item.qty||1)}</h4><div class="jmv356-purchase-grid">${recharge?purchaseField356('Cantidad entregada',d.quantity||item.qty):''}${recharge?purchaseField356('ID / cuenta de destino',d.destinationId||defaultDestination356(item)):''}${!recharge?purchaseField356('Fecha de inicio',d.startDate?date356(d.startDate):''):''}${!recharge?purchaseField356('Fecha de corte',d.cutoffDate?date356(d.cutoffDate):''):''}${purchaseField356(recharge?'Detalle de entrega':'Datos de acceso / entrega',d.accessData,true)}${purchaseField356('Información adicional',d.extra,true)}</div></section>`}).join('');
+    return `<article class="jmv356-purchase-card"><div class="jmv356-purchase-card-head"><div><h3>${esc356(o.id||'Compra confirmada')}</h3><time>Confirmada ${esc356(dateTime356(delivery.confirmedAt||o.updatedAt))}</time></div><span class="jmv356-confirmed-badge">Confirmada</span></div>${items}</article>`;
+  }).join('');
+}
+function openMyPurchases356(){
+  const user=currentUser356();if(!user){try{if(typeof renderAccount==='function')renderAccount();if(typeof openModal==='function')openModal('accountModal')}catch(e){}notify356('Inicia sesión para ver tus compras confirmadas.','warn');return}
+  ensurePublicPurchasesUi356();renderMyPurchases356();$356('jmMyPurchasesOverlay')?.classList.add('open');D.body.classList.add('lock');
+}
+function closeMyPurchases356(){const o=$356('jmMyPurchasesOverlay');if(o)o.classList.remove('open');requestAnimationFrame(()=>{if(!D.querySelector('.modal-overlay.open,.side-panel.open,.drawer.open,.admin-overlay.open,#notificationPanel.open,#jmDeliveryOverlay.open'))D.body.classList.remove('lock')})}
+
+function ensureDeliveryModal356(){
+  if($356('jmDeliveryOverlay'))return;
+  const overlay=D.createElement('div');overlay.id='jmDeliveryOverlay';
+  overlay.innerHTML=`<section class="jmv356-delivery-modal" role="dialog" aria-modal="true"><header class="jmv356-delivery-head"><div><small>Entrega al cliente</small><h2 id="jmDeliveryTitle">Datos de compra</h2></div><button class="jmv356-purchases-close" id="jmDeliveryClose" type="button" aria-label="Cerrar">×</button></header><div class="jmv356-delivery-body" id="jmDeliveryBody"></div><div class="jmv356-delivery-actions"><button class="jmv356-delivery-save" id="jmDeliverySave" type="button">Guardar borrador</button><button class="jmv356-delivery-confirm" id="jmDeliveryConfirm" type="button">Confirmar y mostrar al cliente</button></div></section>`;
+  D.body.appendChild(overlay);overlay.addEventListener('click',e=>{if(e.target===overlay)closeDeliveryModal356()});$356('jmDeliveryClose').onclick=closeDeliveryModal356;
+}
+let activeDeliveryOrder356=null;
+function deliveryItemForm356(item,index,current={}){
+  const recharge=String(item.digitalKind||'').toLowerCase()==='recharge'||/diamant|recarga|free\s*fire|fc\s*point|robux/i.test(`${item.name||''} ${item.digitalType||''}`);
+  const destination=current.destinationId||defaultDestination356(item)||'';
+  return `<section class="jmv356-delivery-item" data-jm-delivery-item="${index}"><h3>${esc356(item.name||'Producto digital')} ×${Number(item.qty||1)}</h3><div class="jmv356-delivery-grid">${recharge?`<div class="jmv356-delivery-field"><label>Cantidad entregada</label><input data-df="quantity" type="number" min="0" step="1" value="${esc356(current.quantity??item.qty??1)}"></div><div class="jmv356-delivery-field"><label>ID / cuenta de destino</label><input data-df="destinationId" value="${esc356(destination)}"></div>`:`<div class="jmv356-delivery-field"><label>Fecha de inicio</label><input data-df="startDate" type="date" value="${esc356(current.startDate||'')}"></div><div class="jmv356-delivery-field"><label>Fecha de corte</label><input data-df="cutoffDate" type="date" value="${esc356(current.cutoffDate||'')}"></div>`}<div class="jmv356-delivery-field full"><label>${recharge?'Detalle de entrega / referencia':'Datos de acceso / entrega'}</label><textarea data-df="accessData" placeholder="${recharge?'Ej. recarga aplicada correctamente':'Ej. usuario, acceso, enlace, instrucciones o credenciales entregadas'}">${esc356(current.accessData||'')}</textarea></div><div class="jmv356-delivery-field full"><label>Información adicional (opcional)</label><textarea data-df="extra">${esc356(current.extra||'')}</textarea></div></div></section>`;
+}
+function openDeliveryModal356(order){
+  if(!order||state?.session?.role!=='admin')return;
+  ensureDeliveryModal356();activeDeliveryOrder356=order;
+  const current=order.customerDelivery||{};$356('jmDeliveryTitle').textContent=`Datos para ${order.id}`;
+  $356('jmDeliveryBody').innerHTML=`<div class="jmv356-delivery-note">Completa únicamente los datos que el cliente debe ver después de que la compra haya sido confirmada por tu equipo. Guardar como borrador no la mostrará en “Mis compras”.</div>${(order.items||[]).map((item,index)=>deliveryItemForm356(item,index,(current.items||[])[index]||{})).join('')}`;
+  $356('jmDeliverySave').onclick=()=>saveDelivery356(false);$356('jmDeliveryConfirm').onclick=()=>saveDelivery356(true);
+  $356('jmDeliveryOverlay').classList.add('open');D.body.classList.add('lock');
+}
+function closeDeliveryModal356(){const o=$356('jmDeliveryOverlay');if(o)o.classList.remove('open');activeDeliveryOrder356=null;requestAnimationFrame(()=>{if(!D.querySelector('.modal-overlay.open,.side-panel.open,.drawer.open,.admin-overlay.open,#notificationPanel.open,#jmMyPurchasesOverlay.open'))D.body.classList.remove('lock')})}
+function collectDeliveryItems356(){return [...D.querySelectorAll('#jmDeliveryBody [data-jm-delivery-item]')].map(sec=>{const get=name=>String(sec.querySelector(`[data-df="${name}"]`)?.value||'').trim();return {quantity:get('quantity')?Number(get('quantity')):null,destinationId:get('destinationId'),startDate:get('startDate'),cutoffDate:get('cutoffDate'),accessData:get('accessData').slice(0,1600),extra:get('extra').slice(0,1000)}})}
+function saveDelivery356(confirm){
+  const o=activeDeliveryOrder356;if(!o||state?.session?.role!=='admin')return;
+  const previous=o.customerDelivery?JSON.parse(JSON.stringify(o.customerDelivery)):null;
+  const items=collectDeliveryItems356();const current=o.customerDelivery||{};
+  o.customerDelivery={...current,items,confirmed:confirm?true:current.confirmed===true,updatedAt:new Date().toISOString(),confirmedAt:confirm?(current.confirmedAt||new Date().toISOString()):(current.confirmedAt||null),confirmedBy:confirm?(state.session.email||'admin'):(current.confirmedBy||null)};
+  o.updatedAt=new Date().toISOString();
+  const key=(typeof KEYS!=='undefined'&&KEYS.orders)?KEYS.orders:'jm_digital_orders';
+  if(!safeWrite356(key,state.orders)){if(previous)o.customerDelivery=previous;else delete o.customerDelivery;notify356('No fue posible guardar los datos de entrega.','error');return}
+  notify356(confirm?'Compra confirmada y disponible para el cliente.':'Datos de entrega guardados como borrador.','success');closeDeliveryModal356();setTimeout(decorateAdminOrders356,40);
+}
+function decorateAdminOrders356(){
+  if(state?.session?.role!=='admin')return;
+  const root=$356('adminContent');if(!root)return;
+  const rows=[...root.querySelectorAll('.jmv2-record,.admin-record,.jm-record,.admin-list-item')];
+  rows.forEach(row=>{
+    if(row.querySelector('[data-jm-delivery-open]'))return;
+    const txt=row.textContent||'';const order=(state.orders||[]).find(o=>txt.includes(String(o.id)));if(!order)return;
+    const actions=row.querySelector('aside,.admin-record-actions,.jmv2-toolbar')||row;
+    const b=D.createElement('button');b.type='button';b.className='jmv2-btn jmv356-admin-delivery-btn';b.dataset.jmDeliveryOpen=order.id;b.textContent=order.customerDelivery?.confirmed?'Datos cliente ✓':'Datos cliente';
+    b.onclick=()=>openDeliveryModal356(order);actions.appendChild(b);
+  });
+}
+const adminObserver356=new MutationObserver(()=>{if(state?.session?.role==='admin'&&state.adminSection==='orders')decorateAdminOrders356()});
+function init356(){
+  ensurePublicPurchasesUi356();ensureDeliveryModal356();
+  const admin=$356('adminContent');if(admin)adminObserver356.observe(admin,{childList:true,subtree:true});
+  setInterval(()=>{if(D.hidden)return;if(!D.getElementById('jmMyPurchasesOverlay')||!D.getElementById('jmMyPurchasesBtn'))ensurePublicPurchasesUi356();if(D.getElementById('adminOverlay')?.classList.contains('open')&&state?.session?.role==='admin'&&state.adminSection==='orders')decorateAdminOrders356()},15000);
+}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',init356,{once:true});else init356();
+window.JM_DIGITAL_STORE_V356={VERSION:'3.5.6',openMyPurchases:openMyPurchases356,renderMyPurchases:renderMyPurchases356,openDelivery:openDeliveryModal356};
+console.info('CRULOX · V3.5.6 products + confirmed purchases loaded');
+})();
+</script>
+
+
+<!-- JM V3.5.7 · Restauración de imágenes verticales en catálogo -->
+<style id="jmv357-product-portrait-style">
+/* Corrección puntual: el catálogo vuelve a mostrar las imágenes en formato vertical,
+   igual que la vista de detalle. No modifica lógica, datos ni acciones. */
+.product-image,
+.jmv21-variant-card .product-image{
+  height:auto!important;
+  aspect-ratio:3 / 4!important;
+  padding:8px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  overflow:hidden!important;
+  border-bottom:1px solid rgba(111,209,238,.07)!important;
+  background:
+    radial-gradient(circle at 50% 18%,rgba(29,224,255,.12),transparent 48%),
+    linear-gradient(180deg,rgba(8,24,38,.985),rgba(6,17,29,.995))!important;
+}
+.product-image img,
+.jmv21-variant-card .product-image img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  border-radius:14px!important;
+  background:rgba(255,255,255,.018)!important;
+  transform:none!important;
+}
+.product:hover .product-image img,
+.jmv21-variant-card:hover .product-image img{
+  transform:none!important;
+}
+@media(max-width:560px){
+  .product-image,
+  .jmv21-variant-card .product-image{
+    aspect-ratio:3 / 4!important;
+    padding:7px!important;
+  }
+  .product-image img,
+  .jmv21-variant-card .product-image img{
+    border-radius:13px!important;
+  }
+}
+</style>
+
+
+<!-- JM V3.6.0 · Panel administrativo más ordenado y visual -->
+<style id="jmv360-admin-panel-style">
+.jmv360-admin-shell{
+  min-height:100dvh;
+  background:
+    radial-gradient(circle at 82% 18%, rgba(34,223,243,.09), transparent 28%),
+    radial-gradient(circle at 12% 0%, rgba(48,114,255,.10), transparent 22%),
+    linear-gradient(180deg, #031019 0%, #04111c 48%, #020b12 100%);
+  color:#eef8ff;
+  padding:14px;
+  display:grid;
+  gap:12px;
+}
+.jmv360-topbar,
+.jmv360-nav,
+.jmv360-page-head,
+.jmv360-card,
+.jmv360-bottom-banner{
+  border:1px solid rgba(88,191,232,.15);
+  background:linear-gradient(180deg, rgba(10,24,38,.90), rgba(6,18,30,.96));
+  box-shadow:0 18px 42px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.03);
+}
+.jmv360-topbar{
+  border-radius:22px;
+  padding:14px 16px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+}
+.jmv360-brand{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  min-width:0;
+}
+.jmv360-brand img{width:54px;height:54px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(34,223,243,.22))}
+.jmv360-brand b{display:block;font-size:1.02rem;line-height:1.1;color:#f6fbff}
+.jmv360-brand span{display:block;margin-top:3px;font-size:.66rem;color:#79cdec;line-height:1.25}
+.jmv360-top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.jmv360-action-btn{
+  min-height:50px;
+  padding:0 18px;
+  border-radius:18px;
+  border:1px solid rgba(88,191,232,.20);
+  background:linear-gradient(180deg, rgba(19,31,49,.88), rgba(10,20,34,.94));
+  color:#f0f8ff;
+  font-size:.92rem;
+  font-weight:900;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.jmv360-action-btn.primary{
+  border-color:rgba(34,223,243,.38);
+  box-shadow:inset 0 0 0 1px rgba(34,223,243,.08),0 0 0 2px rgba(34,223,243,.04);
+}
+.jmv360-action-btn i{font-style:normal;font-size:1.15rem;color:#7ce9f8}
+.jmv360-nav{
+  border-radius:22px;
+  padding:10px;
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:10px;
+}
+.jmv360-nav button{
+  min-height:78px;
+  border-radius:18px;
+  border:1px solid rgba(88,191,232,.08);
+  background:linear-gradient(180deg, rgba(16,25,41,.72), rgba(9,17,29,.92));
+  color:#a8bccb;
+  display:grid;
+  place-items:center;
+  gap:6px;
+  padding:10px 8px;
+  text-align:center;
+  font-weight:800;
+  font-size:.80rem;
+  position:relative;
+}
+.jmv360-nav button i{font-style:normal;font-size:1.30rem;color:#c5d7e4;line-height:1}
+.jmv360-nav button span{display:block;line-height:1.05}
+.jmv360-nav button.active,
+.jmv360-nav button:hover{
+  color:#effcff;
+  border-color:rgba(34,223,243,.24);
+  background:linear-gradient(180deg, rgba(20,74,94,.70), rgba(8,33,49,.98));
+  box-shadow:inset 0 0 0 1px rgba(34,223,243,.14),0 0 18px rgba(34,223,243,.10);
+}
+.jmv360-nav button.active i,
+.jmv360-nav button:hover i{color:#5de9fa}
+.jmv360-nav button .jmv360-badge{
+  position:absolute;
+  top:7px;right:8px;
+  min-width:19px;height:19px;padding:0 6px;
+  border-radius:999px;
+  background:linear-gradient(180deg,#ff5e6e,#ff3d55);
+  color:#fff;font-size:.68rem;font-weight:900;
+  display:grid;place-items:center;
+  box-shadow:0 4px 10px rgba(255,52,90,.25);
+}
+.jmv360-main{display:grid;gap:14px;min-width:0}
+.jmv360-page-head{
+  border-radius:24px;
+  padding:18px 20px;
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+.jmv360-page-head small{display:block;color:#8ca6b8;font-size:.77rem;font-weight:900;letter-spacing:.20em;text-transform:uppercase}
+.jmv360-page-head h1{margin:4px 0 6px;color:#ffffff;font-size:2.25rem;line-height:1.02;font-weight:1000;letter-spacing:-.03em}
+.jmv360-page-head p{margin:0;max-width:550px;color:#a9bdcc;font-size:1rem;line-height:1.28}
+.jmv360-date{
+  min-width:220px;
+  padding:10px 12px;
+  border-radius:18px;
+  border:1px solid rgba(88,191,232,.12);
+  background:rgba(255,255,255,.015);
+  color:#dbeaf5;
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+  gap:10px;
+}
+.jmv360-date i{font-style:normal;font-size:1.35rem;color:#dce9f5}
+.jmv360-date b{display:block;font-size:1rem;line-height:1.2}
+.jmv360-date span{display:block;margin-top:2px;color:#a4bac9;font-size:.88rem;line-height:1.25}
+.jmv360-home{display:grid;gap:16px}
+.jmv360-hero{
+  position:relative;
+  overflow:hidden;
+  border-radius:24px;
+  border:1px solid rgba(88,191,232,.18);
+  background:
+    radial-gradient(circle at 78% 68%, rgba(34,223,243,.14), transparent 22%),
+    radial-gradient(circle at 80% 100%, rgba(70,125,255,.12), transparent 30%),
+    linear-gradient(100deg, rgba(8,28,43,.94) 0%, rgba(8,28,43,.96) 42%, rgba(4,17,29,.88) 100%);
+  box-shadow:0 18px 42px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.03);
+  padding:24px;
+  display:grid;
+  grid-template-columns:1.35fr minmax(210px,.85fr);
+  gap:18px;
+}
+.jmv360-hero::after{
+  content:"";
+  position:absolute;inset:auto -6% -30% auto;
+  width:48%;height:180%;
+  background:radial-gradient(circle, rgba(34,223,243,.18) 0%, rgba(34,223,243,.04) 32%, transparent 58%);
+  pointer-events:none;
+}
+.jmv360-hero-copy{position:relative;z-index:1}
+.jmv360-hero-copy h2{margin:0;color:#fff;font-size:1.10rem;line-height:1.2;font-weight:1000}
+.jmv360-hero-copy .accent{display:block;margin-top:4px;color:#38e8fb;font-size:1.82rem;font-weight:1000;line-height:1.05}
+.jmv360-hero-copy p{margin:12px 0 0;max-width:620px;color:#abc0cf;font-size:1rem;line-height:1.5}
+.jmv360-hero-badge{
+  position:absolute;
+  top:18px;left:56%;
+  transform:translateX(-50%);
+  min-width:118px;
+  text-align:center;
+  padding:12px 14px;
+  border-radius:999px;
+  border:1px solid rgba(85,240,128,.24);
+  background:linear-gradient(180deg, rgba(16,72,41,.70), rgba(10,50,31,.92));
+  color:#92fbad;
+  font-size:1rem;
+  font-weight:1000;
+  line-height:1.1;
+}
+.jmv360-hero-visual{position:relative;z-index:1;display:grid;align-content:center;justify-items:center;gap:14px}
+.jmv360-hero-visual img{width:170px;max-width:100%;object-fit:contain;filter:drop-shadow(0 0 18px rgba(34,223,243,.20))}
+.jmv360-hero-points{display:grid;gap:4px;justify-items:start;color:#d8f8ff;font-size:.92rem;font-weight:900;letter-spacing:.02em}
+.jmv360-hero-line{width:64px;height:7px;border-radius:999px;background:linear-gradient(90deg,#24dff3,#36b2ff)}
+.jmv360-section-head{display:flex;align-items:end;justify-content:space-between;gap:12px}
+.jmv360-section-head h3{margin:0;color:#fff;font-size:1.15rem;font-weight:1000;display:flex;align-items:center;gap:10px}
+.jmv360-section-head h3 i{font-style:normal;color:#38e8fb;font-size:1.25rem}
+.jmv360-section-head p{margin:2px 0 0;color:#9ab2c3;font-size:.92rem;line-height:1.35}
+.jmv360-link-btn{
+  min-height:48px;
+  padding:0 18px;
+  border-radius:18px;
+  border:1px solid rgba(88,191,232,.18);
+  background:linear-gradient(180deg, rgba(13,24,39,.85), rgba(10,18,31,.95));
+  color:#ebf9ff;
+  font-size:.96rem;
+  font-weight:900;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+}
+.jmv360-link-btn i{font-style:normal;color:#9fdaf2;font-size:1.1rem}
+.jmv360-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.jmv360-metric{
+  border-radius:22px;
+  border:1px solid rgba(88,191,232,.14);
+  background:linear-gradient(180deg, rgba(9,25,39,.88), rgba(8,20,33,.97));
+  box-shadow:0 10px 30px rgba(0,0,0,.18), inset 0 1px 0 rgba(255,255,255,.025);
+  padding:16px;
+}
+.jmv360-metric-top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.jmv360-metric i{font-style:normal;font-size:1.35rem}
+.jmv360-metric b{display:block;color:#dfeef8;font-size:1rem;line-height:1.1}
+.jmv360-metric strong{display:block;margin-top:6px;color:#33ebfb;font-size:2.15rem;font-weight:1000;line-height:1}
+.jmv360-metric span{display:block;margin-top:6px;color:#9cb3c4;font-size:.96rem;line-height:1.2}
+.jmv360-priorities,
+.jmv360-access-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.jmv360-priority,
+.jmv360-access,
+.jmv360-bottom-banner{
+  border-radius:22px;
+  overflow:hidden;
+}
+.jmv360-priority,
+.jmv360-access{
+  border:1px solid rgba(88,191,232,.16);
+  background:linear-gradient(180deg, rgba(9,23,37,.90), rgba(8,20,34,.98));
+  padding:16px;
+  color:#fff;
+  text-align:left;
+  box-shadow:0 12px 32px rgba(0,0,0,.20), inset 0 1px 0 rgba(255,255,255,.02);
+}
+.jmv360-priority .jmv360-top,
+.jmv360-access .jmv360-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.jmv360-priority i,
+.jmv360-access i{font-style:normal;font-size:1.55rem}
+.jmv360-priority .go,
+.jmv360-access .go{color:#e6f5ff;font-size:1.35rem;opacity:.88}
+.jmv360-priority b,
+.jmv360-access b{display:block;font-size:1.05rem;line-height:1.15;color:#f7fcff}
+.jmv360-priority p,
+.jmv360-access p{margin:6px 0 0;color:#bdd2df;font-size:.96rem;line-height:1.35}
+.jmv360-priority.emerald{background:linear-gradient(180deg, rgba(13,64,61,.86), rgba(8,32,38,.98))}
+.jmv360-priority.gold{background:linear-gradient(180deg, rgba(76,58,17,.82), rgba(34,26,9,.98))}
+.jmv360-priority.blue{background:linear-gradient(180deg, rgba(15,48,95,.85), rgba(9,23,48,.98))}
+.jmv360-priority.violet{background:linear-gradient(180deg, rgba(53,26,109,.84), rgba(23,12,50,.98))}
+.jmv360-access.cyan{background:linear-gradient(180deg, rgba(18,116,126,.76), rgba(10,64,73,.98))}
+.jmv360-access.sky{background:linear-gradient(180deg, rgba(18,90,165,.78), rgba(11,48,91,.98))}
+.jmv360-access.purple{background:linear-gradient(180deg, rgba(108,49,177,.80), rgba(51,19,91,.98))}
+.jmv360-access.amber{background:linear-gradient(180deg, rgba(149,93,18,.78), rgba(86,50,7,.98))}
+.jmv360-access.teal{background:linear-gradient(180deg, rgba(18,126,140,.76), rgba(10,68,77,.98))}
+.jmv360-bottom-banner{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:18px 20px;
+  background:
+    radial-gradient(circle at 78% 50%, rgba(34,223,243,.09), transparent 18%),
+    linear-gradient(100deg, rgba(8,25,40,.96), rgba(5,20,33,.92));
+}
+.jmv360-bottom-banner h3{margin:0;color:#f7fcff;font-size:1.55rem;display:flex;align-items:center;gap:10px}
+.jmv360-bottom-banner h3 i{font-style:normal;color:#3be9fb}
+.jmv360-bottom-banner p{margin:5px 0 0;color:#a9bfce;font-size:1rem;line-height:1.35}
+.jmv360-bottom-banner .jmv360-link-btn{min-width:220px;justify-content:center}
+
+@media(max-width:1180px){
+  .jmv360-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .jmv360-metrics,.jmv360-priorities,.jmv360-access-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .jmv360-hero{grid-template-columns:1fr;}
+  .jmv360-hero-badge{left:auto;right:18px;transform:none}
+}
+@media(max-width:760px){
+  .jmv360-admin-shell{padding:10px;gap:10px}
+  .jmv360-topbar{padding:12px;border-radius:18px;align-items:flex-start;flex-direction:column}
+  .jmv360-top-actions{width:100%;justify-content:stretch}.jmv360-top-actions .jmv360-action-btn{flex:1 1 140px;justify-content:center;min-height:46px;font-size:.84rem}
+  .jmv360-brand img{width:42px;height:42px}.jmv360-brand b{font-size:.88rem}.jmv360-brand span{font-size:.58rem}
+  .jmv360-nav{padding:8px;border-radius:18px;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .jmv360-nav button{min-height:68px;border-radius:15px;font-size:.72rem;padding:8px 5px}.jmv360-nav button i{font-size:1.12rem}
+  .jmv360-page-head{padding:14px;border-radius:18px;flex-direction:column;align-items:flex-start}
+  .jmv360-page-head h1{font-size:1.85rem}.jmv360-page-head p{font-size:.86rem}
+  .jmv360-date{min-width:0;width:100%;justify-content:flex-start;border-radius:14px;padding:9px 10px}.jmv360-date b{font-size:.88rem}.jmv360-date span{font-size:.76rem}
+  .jmv360-hero{padding:16px;border-radius:18px;gap:14px}.jmv360-hero-copy h2{font-size:.98rem}.jmv360-hero-copy .accent{font-size:1.45rem}.jmv360-hero-copy p{font-size:.88rem;line-height:1.42}.jmv360-hero-badge{position:static;transform:none;margin-bottom:4px;justify-self:start;font-size:.84rem;padding:9px 12px;min-width:auto}.jmv360-hero-visual{justify-items:start}.jmv360-hero-visual img{width:110px}.jmv360-hero-points{font-size:.82rem}
+  .jmv360-section-head{align-items:flex-start;flex-direction:column}.jmv360-section-head h3{font-size:1rem}.jmv360-section-head p{font-size:.82rem}.jmv360-link-btn{min-height:42px;border-radius:14px;font-size:.82rem;padding:0 14px}
+  .jmv360-metrics,.jmv360-priorities,.jmv360-access-grid{grid-template-columns:1fr 1fr;gap:9px}
+  .jmv360-metric,.jmv360-priority,.jmv360-access{border-radius:16px;padding:12px}
+  .jmv360-metric b{font-size:.85rem}.jmv360-metric strong{font-size:1.65rem}.jmv360-metric span{font-size:.76rem}
+  .jmv360-priority b,.jmv360-access b{font-size:.92rem}.jmv360-priority p,.jmv360-access p{font-size:.80rem}
+  .jmv360-bottom-banner{padding:14px;border-radius:18px;flex-direction:column;align-items:flex-start}.jmv360-bottom-banner h3{font-size:1.15rem}.jmv360-bottom-banner p{font-size:.84rem}.jmv360-bottom-banner .jmv360-link-btn{min-width:0;width:100%}
+}
+@media(max-width:420px){
+  .jmv360-nav{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .jmv360-metrics,.jmv360-priorities,.jmv360-access-grid{grid-template-columns:1fr}
+}
+</style>
+<script id="jmv360-admin-panel-script">
+(()=>{
+'use strict';
+const D=document;
+const oldRenderAdminV2 = (typeof renderAdminV2==='function') ? renderAdminV2 : null;
+function esc360(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function fmtDateTime360(){
+  const now=new Date();
+  try{
+    const date=now.toLocaleDateString('es-GT',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    const time=now.toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'});
+    return {date, time};
+  }catch(e){return {date:'',time:''}}
+}
+function navIcon360(id){return ({home:'⌂',services:'◫',orders:'🛒',clients:'👥',availability:'◔',promotions:'🏷',messages:'🔔',settings:'⚙'})[id]||'•'}
+function navBadge360(id){
+  try{
+    if(id==='orders') return pendingCount?.()||0;
+    if(id==='messages') return (Array.isArray(state.notifications)?state.notifications.filter(n=>!n.read).length:0) || 0;
+    return 0;
+  }catch(e){return 0}
+}
+function buildNav360(){
+  return NAV.filter(([id])=>['home','services','orders','clients','messages','settings'].includes(id)).map(([id,ic,label])=>{
+    const badge=navBadge360(id);
+    return `<button type="button" data-jmv2-section="${esc360(id)}"><i>${esc360(navIcon360(id))}</i><span>${esc360(label==='Atención'?'Notificaciones':label)}</span>${badge?`<b class="jmv360-badge">${badge>99?'99+':badge}</b>`:''}</button>`;
+  }).join('');
+}
+function adminShell360(){
+  if(!admin) return null;
+  if(admin.dataset.jmv360Shell!=='1'){
+    admin.dataset.jmv360Shell='1';
+    admin.innerHTML=`<div class="jmv360-admin-shell"><header class="jmv360-topbar"><div class="jmv360-brand"><img src="${esc360(BRAND_LOGO)}" alt="CRULOX"><div><b>CRULOX</b><span>Operación 100% digital</span></div></div><div class="jmv360-top-actions"><button type="button" class="jmv360-action-btn primary" id="adminStoreBtn"><i>🏪</i><span>Tienda</span></button><button type="button" class="jmv360-action-btn" id="adminLogout"><i>⎋</i><span>Salir</span></button></div></header><nav class="jmv360-nav" id="adminNav">${buildNav360()}</nav><main class="jmv360-main"><section class="jmv360-page-head"><div><small>Centro de control digital</small><h1 id="adminTitle">Panel principal</h1><p id="jmv360PageLead">Gestiona tu tienda, pedidos y servicios desde un solo lugar.</p></div><div class="jmv360-date" id="jmv360Date"><i>🗓</i><div><b></b><span></span></div></div></section><section class="jmv360-home" id="adminContent"></section></main></div>`;
+  } else {
+    const nav = D.getElementById('adminNav'); if(nav) nav.innerHTML = buildNav360();
+  }
+  const nav=D.getElementById('adminNav');
+  if(nav) nav.onclick=e=>{const b=e.target.closest('[data-jmv2-section]'); if(b) renderAdminV2(b.dataset.jmv2Section);};
+  const store=D.getElementById('adminStoreBtn'); if(store) store.onclick=()=>{admin.classList.remove('open');D.body.classList.remove('lock')};
+  const logout=D.getElementById('adminLogout'); if(logout) logout.onclick=()=>{state.session=null;safeWrite(KEYS.session,null);admin.classList.remove('open');D.body.classList.remove('lock');try{renderHeader()}catch(e){}notify('Sesión cerrada.','success')};
+  refreshDateTime360();
+  return D.getElementById('adminContent');
+}
+function refreshDateTime360(){
+  const box=D.getElementById('jmv360Date'); if(!box) return;
+  const {date,time}=fmtDateTime360();
+  const b=box.querySelector('b'); const s=box.querySelector('span');
+  if(b) b.textContent = date ? date.replace(/\.$/, '') : '';
+  if(s) s.textContent = time ? `${time}` : '';
+}
+function setHead360(title,lead){
+  const t=D.getElementById('adminTitle'); if(t) t.textContent=title;
+  const p=D.getElementById('jmv360PageLead'); if(p) p.textContent=lead;
+  refreshDateTime360();
+}
+function metricCard360(icon,title,value,note){
+  return `<article class="jmv360-metric"><div class="jmv360-metric-top"><i>${esc360(icon)}</i><b>${esc360(title)}</b></div><strong>${esc360(value)}</strong><span>${esc360(note)}</span></article>`;
+}
+function priorityCard360(cls,icon,title,text,target){
+  return `<button type="button" class="jmv360-priority ${esc360(cls)}" data-jmv360-go="${esc360(target)}"><div class="jmv360-top"><i>${esc360(icon)}</i><span class="go">›</span></div><b>${esc360(title)}</b><p>${esc360(text)}</p></button>`;
+}
+function accessCard360(cls,icon,title,text,target,mode='section'){
+  return `<button type="button" class="jmv360-access ${esc360(cls)}" data-jmv360-go="${esc360(target)}" data-jmv360-mode="${esc360(mode)}"><div class="jmv360-top"><i>${esc360(icon)}</i><span class="go">›</span></div><b>${esc360(title)}</b><p>${esc360(text)}</p></button>`;
+}
+function homeAdmin360(){
+  purgeExpiredReservations();
+  const limited=state.products.filter(p=>(normalizeProductV2(p),p.availabilityMode==='limited'));
+  const low=limited.filter(p=>Number(p.stock)>0&&Number(p.stock)<=Number(state.settings.lowStock||3)).length;
+  const out=limited.filter(p=>Number(p.stock)<=0).length;
+  const payPending=state.orders.filter(o=>o.status==='Pago pendiente').length;
+  const prep=state.orders.filter(o=>['Pago confirmado','Preparando acceso','Listo para entregar'].includes(o.status)).length;
+  const totalServices=state.products.length;
+  const pending=pendingCount();
+  const revenue=money2(paidRevenue());
+  const reserves=reservationCount();
+  const content=D.getElementById('adminContent'); if(!content) return;
+  setHead360('Panel principal','Gestiona tu tienda, pedidos y servicios desde un solo lugar.');
+  content.innerHTML = `
+    <section class="jmv360-hero">
+      <div class="jmv360-hero-copy">
+        <h2>CRULOX</h2>
+        <span class="accent">Operación 100% digital</span>
+        <p>El flujo está optimizado para perfiles, cursos, diamantes/recargas, membresías, licencias y activaciones. No existe logística física.</p>
+      </div>
+      <span class="jmv360-hero-badge">V2.0<br>DIGITAL</span>
+      <div class="jmv360-hero-visual">
+        <img src="${esc360(BRAND_LOGO)}" alt="CRULOX">
+        <div class="jmv360-hero-points"><span>MÁS VENTAS</span><span>MÁS PERSONAS</span><span>MÁS POSIBILIDADES</span></div>
+        <div class="jmv360-hero-line"></div>
+      </div>
+    </section>
+    <section>
+      <div class="jmv360-section-head"><div><h3><i>▮▮▮</i><span>Métricas clave</span></h3><p>Resumen en tiempo real de tu operación.</p></div><button type="button" class="jmv360-link-btn" data-jmv360-go="orders"><span>Ver más</span><i>›</i></button></div>
+      <div class="jmv360-metrics">
+        ${metricCard360('◫','Servicios',String(totalServices),'en catálogo')}
+        ${metricCard360('🧾','Pendientes',String(pending),'requieren acción')}
+        ${metricCard360('💳','Pago pendiente',String(payPending),'por confirmar')}
+        ${metricCard360('◔','Preparando',String(prep),'pagados / en proceso')}
+        ${metricCard360('▮▮','Ingresos',String(revenue),'confirmados')}
+        ${metricCard360('👥','Reservas',String(reserves),'cupos retenidos')}
+        ${metricCard360('▣','Stock bajo',String(low),'servicios limitados')}
+        ${metricCard360('⊘','Sin cupos',String(out),'requieren reposición')}
+      </div>
+    </section>
+    <section>
+      <div class="jmv360-section-head"><div><h3><i>⚡</i><span>Prioridades operativas</span></h3><p>Acciones que tienen impacto inmediato en ventas y entregas.</p></div><button type="button" class="jmv360-link-btn" data-jmv360-go="orders"><span>Ver todas</span><i>›</i></button></div>
+      <div class="jmv360-priorities">
+        ${priorityCard360('emerald','💳',`${payPending} pagos pendientes`,'Confirmar pagos y continuar pedidos.','orders')}
+        ${priorityCard360('gold','🚚',`${prep} por entregar`,'Preparar accesos, recargas o cursos.','orders')}
+        ${priorityCard360('blue','👥',`${out} sin cupos`,'Reponer perfiles o capacidad limitada.','availability')}
+        ${priorityCard360('violet','＋','Nuevo servicio','Crear una venta digital correctamente tipificada.','create-service')}
+      </div>
+    </section>
+    <section>
+      <div class="jmv360-section-head"><div><h3><i>🚀</i><span>Accesos rápidos</span></h3><p>Tus funciones más utilizadas, siempre a la mano.</p></div></div>
+      <div class="jmv360-access-grid">
+        ${accessCard360('cyan','＋','Crear servicio','Agrega un nuevo producto o servicio.','create-service','action')}
+        ${accessCard360('sky','🛒','Ver pedidos','Revisa estado, pagos y entregas.','orders')}
+        ${accessCard360('purple','💳','Confirmar pagos','Entra directo a los pedidos por validar.','orders')}
+        ${accessCard360('amber','▣','Gestionar stock','Controla cupos, perfiles y disponibilidad.','availability')}
+        ${accessCard360('teal','💬','Mensajes Typebots','Administra accesos y enlaces de Typebot.','messages')}
+      </div>
+    </section>
+    <section class="jmv360-bottom-banner">
+      <div><h3><i>◈</i><span>Tu tienda, 100% digital</span></h3><p>Más rápida. Más simple. Más lejos.</p></div>
+      <button type="button" class="jmv360-link-btn" id="jmv360OpenStore"><span>CRULOX</span><i>›</i></button>
+    </section>`;
+  bindHome360();
+}
+function bindHome360(){
+  const root=D.getElementById('adminContent'); if(!root) return;
+  root.querySelectorAll('[data-jmv360-go]').forEach(b=>b.onclick=()=>{
+    const target=b.dataset.jmv360Go; const mode=b.dataset.jmv360Mode||'section';
+    if(target==='create-service' || mode==='action') return openServiceEditorV2?.();
+    return renderAdminV2(target);
+  });
+  const openStore=D.getElementById('jmv360OpenStore'); if(openStore) openStore.onclick=()=>{admin.classList.remove('open');D.body.classList.remove('lock')};
+}
+function renderAdminV360(section='home'){
+  if(state.session?.role==='agent') return oldRenderAdminV2 ? oldRenderAdminV2(section) : false;
+  if(state.session?.role!=='admin') return false;
+  adminShell360();
+  purgeExpiredReservations();
+  const aliases={dashboard:'home',products:'services',inventory:'availability',users:'clients',bots:'messages',backup:'settings',activity:'home',categories:'services',faqs:'settings'};
+  section=aliases[section]||section;
+  if(!NAV.some(x=>x[0]===section)) section='home';
+  state.adminSection=section;
+  navActive(section);
+  const titles={home:'Panel principal',services:'Servicios digitales',availability:'Disponibilidad',orders:'Pedidos digitales',clients:'Clientes',promotions:'Promociones',messages:'Atención y Typebots',settings:'Ajustes'};
+  const leads={home:'Gestiona tu tienda, pedidos y servicios desde un solo lugar.',services:'Organiza y edita tu catálogo digital.',availability:'Controla cupos, stock y reservas de disponibilidad.',orders:'Supervisa pagos, comprobantes, entrega y estado operativo.',clients:'Consulta tus clientes y su actividad dentro del sistema.',promotions:'Administra promociones y beneficios comerciales.',messages:'Gestiona enlaces de Typebot y atención digital.',settings:'Ajusta parámetros clave de la operación.'};
+  setHead360(titles[section]||'Panel digital', leads[section]||'Gestiona la operación de tu tienda.');
+  if(section==='home') homeAdmin360();
+  else if(section==='services') servicesAdminV2();
+  else if(section==='availability') availabilityAdminV2();
+  else if(section==='orders') ordersAdminV2();
+  else if(section==='clients') clientsAdminV2();
+  else if(section==='promotions') promotionsAdminV2();
+  else if(section==='messages') messagesAdminV2();
+  else if(section==='settings') settingsAdminV2();
+  refreshDateTime360();
+  const nav=D.getElementById('adminNav'); if(nav) nav.innerHTML=buildNav360();
+  navActive(section);
+  return true;
+}
+try{window.adminShell=adminShell360;adminShell=adminShell360}catch(e){}
+try{window.homeAdminV2=homeAdmin360;homeAdminV2=homeAdmin360}catch(e){}
+try{window.renderAdminV2=renderAdminV360;renderAdminV2=renderAdminV360}catch(e){}
+try{window.openAdmin=(section='home')=>{if(state.session?.role==='agent' && typeof oldRenderAdminV2==='function') return oldRenderAdminV2(section); if(state.session?.role!=='admin') return false; admin.classList.add('open'); D.body.classList.add('lock'); return renderAdminV360(section);};}catch(e){}
+setInterval(refreshDateTime360,60000);
+window.JM_DIGITAL_STORE_V360={VERSION:'3.6.0',renderAdmin:renderAdminV360};
+})();
+</script>
+
+
+<!-- JM V3.6.1 · Corrección de acceso a Perfil / Panel -->
+<script id="jmv361-profile-access-fix">
+(()=>{
+'use strict';
+const D=document;
+const v2=window.JM_DIGITAL_STORE_V2||null;
+const overlay=()=>D.getElementById('adminOverlay');
+const account=()=>D.getElementById('accountModal');
+const byId=id=>D.getElementById(id);
+const safeWrite361=(key,val)=>{try{if(typeof write==='function')return write(key,val);localStorage.setItem(key,JSON.stringify(val));return true}catch(e){return false}};
+const notify361=(m,t='info')=>{try{if(typeof toast==='function')toast(m,t)}catch(e){}};
+const currentRole361=()=>state?.session?.role||null;
+const isAdmin361=()=>currentRole361()==='admin';
+const isAgent361=()=>currentRole361()==='agent';
+const esc361=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const money361=n=>`${String(state?.settings?.currency||'Q').trim()||'Q'}${Number(n||0).toFixed(2)}`;
+const paidSet361=new Set(['Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado']);
+const completeSet361=new Set(['Entregado digital','Completado']);
+const canceledSet361=new Set(['Cancelado','Reserva vencida']);
+function pendingCount361(){return (state?.orders||[]).filter(o=>!completeSet361.has(o.status)&&!canceledSet361.has(o.status)).length}
+function paidRevenue361(){return (state?.orders||[]).filter(o=>o.payment?.status==='Confirmado'||paidSet361.has(o.status)).reduce((s,o)=>s+Number(o.total||0),0)}
+function reservationCount361(){return (state?.orders||[]).filter(o=>o.inventory?.reservationStatus==='reserved').reduce((s,o)=>s+(o.inventory?.items||[]).reduce((x,i)=>x+Number(i.qty||0),0),0)}
+function markNav361(section){D.querySelectorAll('#adminNav [data-jmv2-section]').forEach(b=>b.classList.toggle('active',b.dataset.jmv2Section===section))}
+function dateTime361(){const n=new Date();try{return {date:n.toLocaleDateString('es-GT',{weekday:'short',day:'numeric',month:'short',year:'numeric'}),time:n.toLocaleTimeString('es-GT',{hour:'numeric',minute:'2-digit'})}}catch(e){return {date:'',time:''}}}
+function refreshDate361(){const box=byId('jmv360Date');if(!box)return;const x=dateTime361();const b=box.querySelector('b'),s=box.querySelector('span');if(b)b.textContent=x.date;if(s)s.textContent=x.time}
+function navBadge361(id){if(id==='orders')return pendingCount361();return 0}
+function buildNav361(){const items=[['home','⌂','Inicio'],['services','◫','Servicios'],['orders','🛒','Pedidos'],['clients','👥','Clientes'],['messages','🔔','Notificaciones'],['settings','⚙','Ajustes']];return items.map(([id,ic,label])=>{const badge=navBadge361(id);return `<button type="button" data-jmv2-section="${id}"><i>${ic}</i><span>${label}</span>${badge?`<b class="jmv360-badge">${badge>99?'99+':badge}</b>`:''}</button>`}).join('')}
+function ensureShell361(){
+  const a=overlay();if(!a)return null;
+  if(a.dataset.jmv361Shell!=='1'){
+    a.dataset.jmv361Shell='1';
+    a.dataset.jmv2Shell='1';
+    a.innerHTML=`<div class="jmv360-admin-shell"><header class="jmv360-topbar"><div class="jmv360-brand"><img src="${esc361(BRAND_LOGO)}" alt="CRULOX"><div><b>CRULOX</b><span>Operación 100% digital</span></div></div><div class="jmv360-top-actions"><button type="button" class="jmv360-action-btn primary" id="adminStoreBtn"><i>🏪</i><span>Tienda</span></button><button type="button" class="jmv360-action-btn" id="adminLogout"><i>⎋</i><span>Salir</span></button></div></header><nav class="jmv360-nav" id="adminNav">${buildNav361()}</nav><main class="jmv360-main"><section class="jmv360-page-head"><div><small>Centro de control digital</small><h1 id="adminTitle">Panel principal</h1><p id="jmv360PageLead">Gestiona tu tienda, pedidos y servicios desde un solo lugar.</p></div><div class="jmv360-date" id="jmv360Date"><i>🗓</i><div><b></b><span></span></div></div></section><section class="jmv360-home" id="adminContent"></section></main></div>`;
+  }
+  const nav=byId('adminNav');if(nav){nav.innerHTML=buildNav361();nav.onclick=e=>{const b=e.target.closest('[data-jmv2-section]');if(b)renderAdmin361(b.dataset.jmv2Section)}}
+  const store=byId('adminStoreBtn');if(store)store.onclick=()=>{a.classList.remove('open');D.body.classList.remove('lock');try{renderHeader()}catch(e){}};
+  const logout=byId('adminLogout');if(logout)logout.onclick=()=>{state.session=null;safeWrite361(KEYS.session,null);a.classList.remove('open');D.body.classList.remove('lock');try{renderHeader()}catch(e){}notify361('Sesión cerrada correctamente.','success')};
+  refreshDate361();return byId('adminContent');
+}
+function setHead361(title,lead){const t=byId('adminTitle'),p=byId('jmv360PageLead');if(t)t.textContent=title;if(p)p.textContent=lead;refreshDate361()}
+function metric361(icon,title,value,note){return `<article class="jmv360-metric"><div class="jmv360-metric-top"><i>${icon}</i><b>${esc361(title)}</b></div><strong>${esc361(value)}</strong><span>${esc361(note)}</span></article>`}
+function priority361(cls,icon,title,text,target){return `<button type="button" class="jmv360-priority ${cls}" data-jmv361-go="${target}"><div class="jmv360-top"><i>${icon}</i><span class="go">›</span></div><b>${esc361(title)}</b><p>${esc361(text)}</p></button>`}
+function access361(cls,icon,title,text,target,action='section'){return `<button type="button" class="jmv360-access ${cls}" data-jmv361-go="${target}" data-jmv361-action="${action}"><div class="jmv360-top"><i>${icon}</i><span class="go">›</span></div><b>${esc361(title)}</b><p>${esc361(text)}</p></button>`}
+function home361(){
+  try{v2?.purgeExpiredReservations?.()}catch(e){}
+  const products=state?.products||[],orders=state?.orders||[];
+  const limited=products.filter(p=>String(p.availabilityMode||'limited')==='limited');
+  const low=limited.filter(p=>Number(p.stock)>0&&Number(p.stock)<=Number(state?.settings?.lowStock||3)).length;
+  const out=limited.filter(p=>Number(p.stock)<=0).length;
+  const payPending=orders.filter(o=>o.status==='Pago pendiente').length;
+  const prep=orders.filter(o=>['Pago confirmado','Preparando acceso','Listo para entregar'].includes(o.status)).length;
+  const c=byId('adminContent');if(!c)return;
+  setHead361('Panel principal','Gestiona tu tienda, pedidos y servicios desde un solo lugar.');
+  c.innerHTML=`<section class="jmv360-hero"><div class="jmv360-hero-copy"><h2>CRULOX</h2><span class="accent">Operación 100% digital</span><p>El flujo está optimizado para perfiles, cursos, diamantes/recargas, membresías, licencias y activaciones. No existe logística física.</p></div><span class="jmv360-hero-badge">V2.0<br>DIGITAL</span><div class="jmv360-hero-visual"><img src="${esc361(BRAND_LOGO)}" alt="CRULOX"><div class="jmv360-hero-points"><span>MÁS VENTAS</span><span>MÁS PERSONAS</span><span>MÁS POSIBILIDADES</span></div><div class="jmv360-hero-line"></div></div></section><section><div class="jmv360-section-head"><div><h3><i>▮▮▮</i><span>Métricas clave</span></h3><p>Resumen en tiempo real de tu operación.</p></div><button type="button" class="jmv360-link-btn" data-jmv361-go="orders"><span>Ver más</span><i>›</i></button></div><div class="jmv360-metrics">${metric361('◫','Servicios',String(products.length),'en catálogo')}${metric361('🧾','Pendientes',String(pendingCount361()),'requieren acción')}${metric361('💳','Pago pendiente',String(payPending),'por confirmar')}${metric361('◔','Preparando',String(prep),'pagados / en proceso')}${metric361('▮▮','Ingresos',money361(paidRevenue361()),'confirmados')}${metric361('👥','Reservas',String(reservationCount361()),'cupos retenidos')}${metric361('▣','Stock bajo',String(low),'servicios limitados')}${metric361('⊘','Sin cupos',String(out),'requieren reposición')}</div></section><section><div class="jmv360-section-head"><div><h3><i>⚡</i><span>Prioridades operativas</span></h3><p>Acciones que tienen impacto inmediato en ventas y entregas.</p></div><button type="button" class="jmv360-link-btn" data-jmv361-go="orders"><span>Ver todas</span><i>›</i></button></div><div class="jmv360-priorities">${priority361('emerald','💳',`${payPending} pagos pendientes`,'Confirmar pagos y continuar pedidos.','orders')}${priority361('gold','🚚',`${prep} por entregar`,'Preparar accesos, recargas o cursos.','orders')}${priority361('blue','👥',`${out} sin cupos`,'Reponer perfiles o capacidad limitada.','availability')}${priority361('violet','＋','Nuevo servicio','Crear una venta digital correctamente tipificada.','create-service')}</div></section><section><div class="jmv360-section-head"><div><h3><i>🚀</i><span>Accesos rápidos</span></h3><p>Tus funciones más utilizadas, siempre a la mano.</p></div></div><div class="jmv360-access-grid">${access361('cyan','＋','Crear servicio','Agrega un nuevo producto o servicio.','create-service','action')}${access361('sky','🛒','Ver pedidos','Revisa estado, pagos y entregas.','orders')}${access361('purple','💳','Confirmar pagos','Entra directo a los pedidos por validar.','orders')}${access361('amber','▣','Gestionar stock','Controla cupos, perfiles y disponibilidad.','availability')}${access361('teal','💬','Mensajes Typebots','Administra accesos y enlaces de Typebot.','messages')}</div></section><section class="jmv360-bottom-banner"><div><h3><i>◈</i><span>Tu tienda, 100% digital</span></h3><p>Más rápida. Más simple. Más lejos.</p></div><button type="button" class="jmv360-link-btn" id="jmv361OpenStore"><span>CRULOX</span><i>›</i></button></section>`;
+  c.querySelectorAll('[data-jmv361-go]').forEach(b=>b.onclick=()=>{const t=b.dataset.jmv361Go;if(t==='create-service')return v2?.openServiceEditor?.();renderAdmin361(t)});
+  const s=byId('jmv361OpenStore');if(s)s.onclick=()=>{overlay()?.classList.remove('open');D.body.classList.remove('lock')};
+}
+function renderAdmin361(section='home'){
+  if(!isAdmin361())return false;
+  const alias={dashboard:'home',products:'services',inventory:'availability',users:'clients',bots:'messages',backup:'settings',activity:'home',categories:'services',faqs:'settings'};
+  section=alias[section]||section;
+  ensureShell361();
+  if(section==='home'){state.adminSection='home';markNav361('home');home361();return true}
+  const titles={services:'Servicios digitales',availability:'Disponibilidad',orders:'Pedidos digitales',clients:'Clientes',promotions:'Promociones',messages:'Atención y Typebots',settings:'Ajustes'};
+  const leads={services:'Organiza y edita tu catálogo digital.',availability:'Controla cupos, stock y reservas de disponibilidad.',orders:'Supervisa pagos, comprobantes, entrega y estado operativo.',clients:'Consulta tus clientes y su actividad dentro del sistema.',promotions:'Administra promociones y beneficios comerciales.',messages:'Gestiona enlaces de Typebot y atención digital.',settings:'Ajusta parámetros clave de la operación.'};
+  try{
+    if(v2?.renderAdmin) v2.renderAdmin(section); else return false;
+    if(section==='messages')setTimeout(()=>{try{window.JM_DIGITAL_STORE_V352?.injectBotManagement?.()}catch(e){}},30);
+    setHead361(titles[section]||'Panel digital',leads[section]||'Gestiona la operación de tu tienda.');
+    const nav=byId('adminNav');if(nav){nav.innerHTML=buildNav361();nav.onclick=e=>{const b=e.target.closest('[data-jmv2-section]');if(b)renderAdmin361(b.dataset.jmv2Section)}}
+    markNav361(section);refreshDate361();return true;
+  }catch(error){console.error('JM V3.6.1 admin render',error);notify361('No fue posible abrir esta sección.','error');return false}
+}
+function openAdmin361(section='home'){
+  if(isAgent361()){
+    const legacy=window.NP_TEAM_API_V105;
+    try{if(legacy&&typeof legacy.applyNav==='function'&&typeof window.renderAdminSection==='function'){const a=overlay();a?.classList.add('open');D.body.classList.add('lock');window.renderAdminSection(section==='dashboard'?'home':section);setTimeout(()=>legacy.applyNav(),0);return true}}catch(e){}
+    return false;
+  }
+  if(!isAdmin361())return false;
+  const a=overlay();if(!a)return false;a.classList.add('open');D.body.classList.add('lock');return renderAdmin361(section);
+}
+function openProfile361(){
+  if(isAdmin361()||isAgent361())return openAdmin361('home');
+  try{if(typeof renderAccount==='function')renderAccount();if(typeof openModal==='function')openModal('accountModal');else{account()?.classList.add('open');D.body.classList.add('lock')}return true}catch(error){console.error('JM V3.6.1 profile',error);notify361('No fue posible abrir tu perfil.','error');return false}
+}
+function bindProfile361(){const p=byId('profileBtn'),d=byId('drawerProfile'),f=byId('footerProfile');if(p)p.onclick=openProfile361;if(d)d.onclick=()=>{try{if(typeof closeAllPanels==='function')closeAllPanels()}catch(e){}openProfile361()};if(f)f.onclick=openProfile361}
+window.openAdmin=openAdmin361;
+try{openAdmin=openAdmin361}catch(e){}
+window.JM_DIGITAL_STORE_V361={VERSION:'3.6.1',openProfile:openProfile361,openAdmin:openAdmin361,renderAdmin:renderAdmin361};
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>{bindProfile361();refreshDate361()},{once:true});else{bindProfile361();refreshDate361()}
+window.addEventListener('pageshow',bindProfile361);
+})();
+</script>
+
+
+<!-- JM V3.6.2 · Panel compacto + operación interna + WhatsApp solo para seguimientos autorizados -->
+<style id="jmv362-compact-internal-style">
+/* ======================= PANEL: TODO MÁS COMPACTO ======================= */
+#adminOverlay .jmv360-admin-shell{padding:7px!important;gap:7px!important;font-size:12px!important}
+#adminOverlay .jmv360-topbar{padding:8px 10px!important;border-radius:15px!important;gap:8px!important}
+#adminOverlay .jmv360-brand{gap:7px!important}
+#adminOverlay .jmv360-brand img{width:34px!important;height:34px!important}
+#adminOverlay .jmv360-brand b{font-size:.72rem!important}
+#adminOverlay .jmv360-brand span{font-size:.45rem!important;margin-top:1px!important}
+#adminOverlay .jmv360-top-actions{gap:5px!important}
+#adminOverlay .jmv360-action-btn{min-height:32px!important;padding:0 9px!important;border-radius:10px!important;font-size:.58rem!important;gap:5px!important}
+#adminOverlay .jmv360-action-btn i{font-size:.78rem!important}
+#adminOverlay .jmv360-nav{padding:5px!important;border-radius:14px!important;gap:5px!important;grid-template-columns:repeat(6,minmax(0,1fr))!important}
+#adminOverlay .jmv360-nav button{min-height:44px!important;padding:5px 3px!important;border-radius:10px!important;gap:3px!important;font-size:.49rem!important}
+#adminOverlay .jmv360-nav button i{font-size:.78rem!important}
+#adminOverlay .jmv360-nav button .jmv360-badge{top:3px!important;right:4px!important;min-width:14px!important;height:14px!important;padding:0 4px!important;font-size:.43rem!important}
+#adminOverlay .jmv360-main{gap:7px!important}
+#adminOverlay .jmv360-page-head{padding:9px 11px!important;border-radius:15px!important;gap:8px!important}
+#adminOverlay .jmv360-page-head small{font-size:.43rem!important;letter-spacing:.13em!important}
+#adminOverlay .jmv360-page-head h1{font-size:1.22rem!important;margin:2px 0 3px!important}
+#adminOverlay .jmv360-page-head p{font-size:.57rem!important;line-height:1.25!important;max-width:420px!important}
+#adminOverlay .jmv360-date{min-width:135px!important;padding:6px 7px!important;border-radius:10px!important;gap:6px!important}
+#adminOverlay .jmv360-date i{font-size:.78rem!important}
+#adminOverlay .jmv360-date b{font-size:.55rem!important}
+#adminOverlay .jmv360-date span{font-size:.48rem!important;margin-top:1px!important}
+#adminOverlay .jmv360-home{gap:9px!important}
+#adminOverlay .jmv360-hero{padding:11px!important;border-radius:15px!important;gap:9px!important;grid-template-columns:1.4fr minmax(120px,.6fr)!important}
+#adminOverlay .jmv360-hero-copy h2{font-size:.65rem!important}
+#adminOverlay .jmv360-hero-copy .accent{font-size:.95rem!important;margin-top:2px!important}
+#adminOverlay .jmv360-hero-copy p{font-size:.53rem!important;line-height:1.35!important;margin-top:6px!important;max-width:520px!important}
+#adminOverlay .jmv360-hero-badge{top:9px!important;left:57%!important;min-width:66px!important;padding:5px 7px!important;font-size:.48rem!important}
+#adminOverlay .jmv360-hero-visual{gap:6px!important}
+#adminOverlay .jmv360-hero-visual img{width:76px!important}
+#adminOverlay .jmv360-hero-points{gap:1px!important;font-size:.43rem!important}
+#adminOverlay .jmv360-hero-line{width:34px!important;height:4px!important}
+#adminOverlay .jmv360-section-head{gap:6px!important}
+#adminOverlay .jmv360-section-head h3{font-size:.70rem!important;gap:5px!important}
+#adminOverlay .jmv360-section-head h3 i{font-size:.76rem!important}
+#adminOverlay .jmv360-section-head p{font-size:.50rem!important;margin-top:1px!important}
+#adminOverlay .jmv360-link-btn{min-height:30px!important;padding:0 9px!important;border-radius:9px!important;font-size:.52rem!important;gap:5px!important}
+#adminOverlay .jmv360-metrics{gap:6px!important}
+#adminOverlay .jmv360-metric{padding:8px!important;border-radius:12px!important}
+#adminOverlay .jmv360-metric-top{gap:5px!important;margin-bottom:3px!important}
+#adminOverlay .jmv360-metric i{font-size:.76rem!important}
+#adminOverlay .jmv360-metric b{font-size:.53rem!important}
+#adminOverlay .jmv360-metric strong{font-size:1.03rem!important;margin-top:3px!important}
+#adminOverlay .jmv360-metric span{font-size:.44rem!important;margin-top:3px!important}
+#adminOverlay .jmv360-priorities,#adminOverlay .jmv360-access-grid{gap:6px!important}
+#adminOverlay .jmv360-priority,#adminOverlay .jmv360-access{padding:8px!important;border-radius:12px!important}
+#adminOverlay .jmv360-priority .jmv360-top,#adminOverlay .jmv360-access .jmv360-top{margin-bottom:5px!important}
+#adminOverlay .jmv360-priority i,#adminOverlay .jmv360-access i{font-size:.82rem!important}
+#adminOverlay .jmv360-priority .go,#adminOverlay .jmv360-access .go{font-size:.80rem!important}
+#adminOverlay .jmv360-priority b,#adminOverlay .jmv360-access b{font-size:.56rem!important}
+#adminOverlay .jmv360-priority p,#adminOverlay .jmv360-access p{font-size:.46rem!important;margin-top:3px!important;line-height:1.28!important}
+#adminOverlay .jmv360-bottom-banner{padding:9px 11px!important;border-radius:13px!important;gap:7px!important}
+#adminOverlay .jmv360-bottom-banner h3{font-size:.70rem!important;gap:5px!important}
+#adminOverlay .jmv360-bottom-banner p{font-size:.49rem!important;margin-top:2px!important}
+#adminOverlay .jmv360-bottom-banner .jmv360-link-btn{min-width:120px!important}
+
+/* Vistas internas V2: formularios, tablas, botones y tarjetas también compactos */
+#adminOverlay .jmv2-admin-content{padding:7px!important}
+#adminOverlay .jmv2-admin-card{padding:8px!important;border-radius:11px!important;margin-top:6px!important}
+#adminOverlay .jmv2-card-head{gap:6px!important;margin-bottom:6px!important}
+#adminOverlay .jmv2-card-head h2{font-size:.61rem!important}
+#adminOverlay .jmv2-card-head p{font-size:.45rem!important;line-height:1.3!important;margin-top:1px!important}
+#adminOverlay .jmv2-toolbar{gap:4px!important}
+#adminOverlay .jmv2-toolbar input,#adminOverlay .jmv2-toolbar select,#adminOverlay .jmv2-admin-card input,#adminOverlay .jmv2-admin-card select,#adminOverlay .jmv2-admin-card textarea{min-height:26px!important;border-radius:7px!important;padding:4px 6px!important;font-size:.48rem!important}
+#adminOverlay .jmv2-field{gap:3px!important}
+#adminOverlay .jmv2-field label{font-size:.44rem!important}
+#adminOverlay .jmv2-field textarea{min-height:54px!important}
+#adminOverlay .jmv2-form-grid{gap:5px!important}
+#adminOverlay .jmv2-form-actions{gap:4px!important;margin-top:6px!important}
+#adminOverlay .jmv2-btn{min-height:26px!important;padding:4px 7px!important;border-radius:7px!important;font-size:.46rem!important}
+#adminOverlay .jmv2-table-wrap{border-radius:8px!important}
+#adminOverlay .jmv2-table{min-width:690px!important}
+#adminOverlay .jmv2-table th,#adminOverlay .jmv2-table td{padding:5px 6px!important;font-size:.44rem!important}
+#adminOverlay .jmv2-table td b{font-size:.48rem!important}
+#adminOverlay .jmv2-table img{width:28px!important;height:25px!important;border-radius:5px!important}
+#adminOverlay .jmv2-records{gap:5px!important}
+#adminOverlay .jmv2-record{padding:7px!important;border-radius:9px!important;gap:6px!important}
+#adminOverlay .jmv2-record h3{font-size:.52rem!important}
+#adminOverlay .jmv2-record p{font-size:.43rem!important;margin-top:1px!important;line-height:1.3!important}
+#adminOverlay .jmv2-record select{min-height:25px!important;padding:3px 5px!important;font-size:.44rem!important}
+#adminOverlay .jmv2-status{padding:3px 5px!important;font-size:.40rem!important}
+#adminOverlay .jmv2-order-statusline{gap:3px!important;margin-top:4px!important}
+#adminOverlay .jmv352-bot-row{padding:7px!important;border-radius:9px!important;gap:6px!important}
+#adminOverlay .jmv352-bot-row h3{font-size:.52rem!important}
+#adminOverlay .jmv352-bot-row p{font-size:.42rem!important}
+#adminOverlay .jmv352-bot-status{font-size:.40rem!important}
+
+/* Seguimiento WhatsApp: excepción controlada */
+#adminOverlay .jmv362-policy{padding:8px 9px;border-radius:10px;border:1px solid rgba(34,223,243,.11);background:rgba(34,223,243,.035);font-size:.46rem;line-height:1.35;color:#a9bfcd;margin-bottom:7px}
+#adminOverlay .jmv362-policy b{color:#e8f9ff}
+#adminOverlay .jmv362-follow-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#adminOverlay .jmv362-follow-card{padding:8px;border-radius:11px;border:1px solid rgba(91,195,229,.10);background:rgba(255,255,255,.018)}
+#adminOverlay .jmv362-follow-card h3{font-size:.53rem;margin:0;color:#f1faff}
+#adminOverlay .jmv362-follow-card strong{display:block;font-size:1rem;color:#32e5f5;margin-top:3px}
+#adminOverlay .jmv362-follow-card p{font-size:.42rem;color:#839bab;line-height:1.3;margin:3px 0 0}
+#adminOverlay .jmv362-follow-list{display:grid;gap:4px;margin-top:7px}
+#adminOverlay .jmv362-follow-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:6px 7px;border-radius:8px;border:1px solid rgba(255,255,255,.045);background:rgba(255,255,255,.014)}
+#adminOverlay .jmv362-follow-row b{font-size:.46rem;color:#e8f5fc;display:block}
+#adminOverlay .jmv362-follow-row span{font-size:.39rem;color:#7992a3;display:block;margin-top:1px;overflow-wrap:anywhere}
+#adminOverlay .jmv362-wa-btn{min-height:25px;padding:4px 7px;border-radius:7px;border:1px solid rgba(46,218,126,.17);background:rgba(46,218,126,.07);color:#7aeeaa;font-size:.42rem;font-weight:900;white-space:nowrap}
+#adminOverlay .jmv362-empty{padding:9px;text-align:center;border:1px dashed rgba(110,194,222,.10);border-radius:8px;color:#6f8999;font-size:.43rem}
+
+@media(max-width:760px){
+  #adminOverlay .jmv360-admin-shell{padding:5px!important;gap:5px!important}
+  #adminOverlay .jmv360-topbar{padding:7px 8px!important;flex-direction:row!important;align-items:center!important}
+  #adminOverlay .jmv360-top-actions{width:auto!important;flex-wrap:nowrap!important}
+  #adminOverlay .jmv360-top-actions .jmv360-action-btn{flex:0 0 auto!important;min-height:29px!important;padding:0 7px!important;font-size:.51rem!important}
+  #adminOverlay .jmv360-brand img{width:30px!important;height:30px!important}
+  #adminOverlay .jmv360-brand b{font-size:.64rem!important}#adminOverlay .jmv360-brand span{font-size:.41rem!important}
+  #adminOverlay .jmv360-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;padding:4px!important;gap:4px!important}
+  #adminOverlay .jmv360-nav button{min-height:38px!important;font-size:.45rem!important;border-radius:8px!important}
+  #adminOverlay .jmv360-nav button i{font-size:.70rem!important}
+  #adminOverlay .jmv360-page-head{padding:8px 9px!important;flex-direction:row!important;align-items:center!important}
+  #adminOverlay .jmv360-page-head h1{font-size:1rem!important}#adminOverlay .jmv360-page-head p{font-size:.50rem!important}
+  #adminOverlay .jmv360-date{width:auto!important;min-width:104px!important;padding:5px 6px!important}
+  #adminOverlay .jmv360-date b{font-size:.48rem!important}#adminOverlay .jmv360-date span{font-size:.42rem!important}
+  #adminOverlay .jmv360-hero{grid-template-columns:1fr minmax(80px,.38fr)!important;padding:9px!important}
+  #adminOverlay .jmv360-hero-copy .accent{font-size:.82rem!important}#adminOverlay .jmv360-hero-copy p{font-size:.47rem!important}
+  #adminOverlay .jmv360-hero-badge{position:static!important;transform:none!important;justify-self:start!important;min-width:auto!important;font-size:.42rem!important;padding:4px 6px!important;margin:0!important}
+  #adminOverlay .jmv360-hero-visual{justify-items:center!important}#adminOverlay .jmv360-hero-visual img{width:58px!important}#adminOverlay .jmv360-hero-points{font-size:.36rem!important}
+  #adminOverlay .jmv360-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  #adminOverlay .jmv360-priorities,#adminOverlay .jmv360-access-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:4px!important}
+  #adminOverlay .jmv362-follow-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:390px){
+  #adminOverlay .jmv360-page-head p{display:none!important}
+  #adminOverlay .jmv360-date{min-width:92px!important}
+  #adminOverlay .jmv360-hero-copy p{max-width:230px!important}
+}
+</style>
+<script id="jmv362-compact-internal-script">
+(()=>{
+'use strict';
+const D=document;
+const FOLLOW_CART_KEY='jm_digital_v362_cart_followup';
+const INTERNAL_CHANNEL='Plataforma CRULOX';
+const originalWindowOpen362=window.open.bind(window);
+const esc362=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const read362=(k,f)=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):f}catch(e){return f}};
+const write362=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}};
+const notify362=(m,t='info')=>{try{if(typeof toast==='function')toast(m,t)}catch(e){}};
+const user362=()=>{try{return typeof currentUser==='function'?currentUser():null}catch(e){return null}};
+const phoneDigits362=v=>String(v||'').replace(/\D/g,'');
+const isWaUrl362=url=>/^(?:https?:\/\/)?(?:wa\.me|api\.whatsapp\.com|web\.whatsapp\.com|whatsapp\.com)\b/i.test(String(url||'').replace(/^https?:\/\//i,''))||/wa\.me\//i.test(String(url||''));
+function openFollowupWhatsapp362(phone,message){
+  const digits=phoneDigits362(phone);if(!digits){notify362('Este cliente no tiene un teléfono válido para seguimiento.','warn');return false}
+  const url=`https://wa.me/${digits}?text=${encodeURIComponent(message)}`;
+  const w=originalWindowOpen362(url,'_blank','noopener,noreferrer');if(w){try{w.opener=null}catch(e){}}return !!w;
+}
+/* Bloquea cualquier uso heredado de WhatsApp fuera del centro autorizado. */
+window.open=function(url,...args){
+  if(isWaUrl362(url)){notify362('WhatsApp está reservado únicamente para recordatorios de renovación y seguimiento comercial autorizado.','warn');return null}
+  return originalWindowOpen362(url,...args);
+};
+
+function normalizeInternalOrders362(){
+  let changed=false;
+  for(const o of state?.orders||[]){
+    o.fulfillment=o.fulfillment||{};
+    if(o.fulfillment.channel!==INTERNAL_CHANNEL){o.fulfillment.channel=INTERNAL_CHANNEL;changed=true}
+    if(o.digital&&o.digital.channel!==INTERNAL_CHANNEL){o.digital.channel=INTERNAL_CHANNEL;changed=true}
+  }
+  if(changed){try{if(typeof write==='function')write(KEYS.orders,state.orders);else write362((KEYS?.orders)||'jm_digital_orders',state.orders)}catch(e){}}
+}
+function patchPublic362(){
+  const hero=D.getElementById('heroSupport');if(hero)hero.textContent='Abrir chat';
+  const footer=D.getElementById('footerSupport');if(footer)footer.textContent='💬 Chat interno';
+  const mail=D.getElementById('footerEmail');if(mail){mail.textContent='🔔 Atención dentro de la plataforma';mail.removeAttribute('href')}
+  const float=D.getElementById('floatSupport');if(float)float.setAttribute('aria-label','Chat interno');
+  D.querySelectorAll('[data-social-support]').forEach(el=>el.remove());
+}
+function patchAccountLabels362(){
+  D.querySelectorAll('#accountModal label').forEach(l=>{if(/WhatsApp\s*\/\s*tel[eé]fono/i.test(l.textContent||''))l.childNodes.forEach?.(()=>{}),l.innerHTML=l.innerHTML.replace(/WhatsApp\s*\/\s*tel[eé]fono/ig,'Teléfono de contacto')});
+  D.querySelectorAll('#accountModal .profile-info small').forEach(s=>{if(/WhatsApp/i.test(s.textContent||''))s.textContent='Teléfono de contacto'});
+}
+const previousAccountFields362=window.accountFields;
+if(typeof previousAccountFields362==='function'){
+  window.accountFields=function(){return previousAccountFields362().map(f=>f.key==='phone'?{...f,label:'Teléfono de contacto'}:f)};
+  try{accountFields=window.accountFields}catch(e){}
+}
+const previousRenderAccount362=window.renderAccount;
+if(typeof previousRenderAccount362==='function'){
+  window.renderAccount=function(){const r=previousRenderAccount362.apply(this,arguments);setTimeout(patchAccountLabels362,0);return r};
+  try{renderAccount=window.renderAccount}catch(e){}
+}
+
+function patchCheckout362(){
+  const method=D.getElementById('jmv2PaymentMethod');
+  if(method){
+    [...method.options].filter(o=>/WhatsApp/i.test(o.textContent||o.value||'')).forEach(o=>o.remove());
+    if(!method.options.length){const o=D.createElement('option');o.value='Pago registrado en plataforma';o.textContent='Pago registrado en plataforma';method.appendChild(o)}
+    if(/WhatsApp/i.test(method.value||''))method.selectedIndex=0;
+  }
+  const channel=D.getElementById('jmv2DeliveryChannel');
+  if(channel){channel.innerHTML=`<option>${INTERNAL_CHANNEL}</option>`;channel.value=INTERNAL_CHANNEL;const label=channel.closest('.field')?.querySelector('label');if(label)label.textContent='Entrega y seguimiento'}
+  const old=D.getElementById('coDigitalChannel');
+  if(old){old.innerHTML=`<option>${INTERNAL_CHANNEL}</option>`;old.value=INTERNAL_CHANNEL;const label=old.closest('.field')?.querySelector('label');if(label)label.textContent='Entrega y seguimiento'}
+  const summary=D.querySelector('#checkoutModal .jmv2-checkout-summary p');if(summary)summary.textContent=summary.textContent.replace(/No solicitamos dirección física\.?/i,'Toda la gestión, confirmación y entrega se realiza dentro de la plataforma.');
+}
+const previousOpenCheckout362=window.openCheckout;
+if(typeof previousOpenCheckout362==='function'){
+  window.openCheckout=function(){const r=previousOpenCheckout362.apply(this,arguments);setTimeout(patchCheckout362,20);return r};
+  try{openCheckout=window.openCheckout}catch(e){}
+  const btn=D.getElementById('checkoutBtn');if(btn)btn.onclick=window.openCheckout;
+}
+D.addEventListener('submit',e=>{if(e.target?.id==='checkoutForm')setTimeout(()=>{normalizeInternalOrders362();syncCartFollowup362()},120)},true);
+
+/* Registro local de carrito por usuario para seguimiento. En producción pasará a Supabase. */
+function cartRegistry362(){const v=read362(FOLLOW_CART_KEY,{});return v&&typeof v==='object'&&!Array.isArray(v)?v:{}}
+function syncCartFollowup362(){
+  const u=user362();if(!u?.id)return;
+  const reg=cartRegistry362();const items=Array.isArray(state?.cart)?state.cart:[];
+  if(!items.length){delete reg[String(u.id)];write362(FOLLOW_CART_KEY,reg);return}
+  const names=items.map(ci=>{const p=(state.products||[]).find(x=>String(x.id)===String(ci.id));return p?`${p.name} ×${Number(ci.qty||1)}`:null}).filter(Boolean);
+  reg[String(u.id)]={userId:u.id,name:u.fullName||u.username||'Cliente',phone:u.phone||'',items:names,updatedAt:new Date().toISOString()};write362(FOLLOW_CART_KEY,reg);
+}
+const previousAddToCart362=window.addToCart;
+if(typeof previousAddToCart362==='function'){
+  window.addToCart=function(){const r=previousAddToCart362.apply(this,arguments);setTimeout(syncCartFollowup362,20);return r};
+  try{addToCart=window.addToCart}catch(e){}
+}
+D.addEventListener('click',e=>{if(e.target?.closest?.('[data-cart-dec],[data-cart-inc],[data-cart-remove],[data-add],#detailAdd,#checkoutBtn'))setTimeout(syncCartFollowup362,80)},true);
+window.addEventListener('pagehide',syncCartFollowup362);
+
+function userById362(id){return (state.users||[]).find(u=>String(u.id)===String(id))||null}
+function expirationLeads362(){
+  const now=new Date();now.setHours(0,0,0,0);const max=new Date(now);max.setDate(max.getDate()+7);const min=new Date(now);min.setDate(min.getDate()-2);
+  const rows=[];
+  for(const o of state.orders||[]){if(o?.customerDelivery?.confirmed!==true)continue;const items=Array.isArray(o.customerDelivery.items)?o.customerDelivery.items:[];(o.items||[]).forEach((item,i)=>{const cut=items[i]?.cutoffDate;if(!cut)return;const d=new Date(`${cut}T12:00:00`);if(Number.isNaN(d.getTime())||d<min||d>max)return;const days=Math.ceil((d-now)/86400000);rows.push({kind:'expiration',name:o.customer?.fullName||'Cliente',phone:o.customer?.phone||'',orderId:o.id,product:item.name||'Servicio',cutoff:cut,days})})}
+  return rows.sort((a,b)=>a.days-b.days);
+}
+function cartLeads362(){return Object.values(cartRegistry362()).filter(x=>phoneDigits362(x.phone)).map(x=>({...x,kind:'cart'})).sort((a,b)=>Date.parse(b.updatedAt||0)-Date.parse(a.updatedAt||0))}
+function registeredLeads362(){
+  const hasOrders=new Set((state.orders||[]).map(o=>String(o.userId||'')));
+  return (state.users||[]).filter(u=>!hasOrders.has(String(u.id))&&phoneDigits362(u.phone)).map(u=>({kind:'registered',name:u.fullName||u.username||'Cliente',phone:u.phone,userId:u.id,createdAt:u.createdAt}));
+}
+function unpaidLeads362(){
+  return (state.orders||[]).filter(o=>{
+    const receipt=!!o.payment?.receiptDataUrl;const paid=['Confirmado','Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(o.payment?.status)||['Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(o.status);
+    return !paid&&!receipt&&(o.status==='Pago pendiente'||o.payment?.status==='Pendiente'||o.payment?.status==null);
+  }).map(o=>({kind:'unpaid',name:o.customer?.fullName||'Cliente',phone:o.customer?.phone||'',orderId:o.id,total:o.total,createdAt:o.createdAt})).filter(x=>phoneDigits362(x.phone));
+}
+function followMessage362(x){
+  if(x.kind==='expiration')return `Hola ${x.name}. Tu servicio ${x.product} ${x.days<0?'finalizó':x.days===0?'finaliza hoy':`finaliza el ${new Date(`${x.cutoff}T12:00:00`).toLocaleDateString('es-GT')}`}. Si deseas renovarlo, ingresa nuevamente a CRULOX y realiza tu compra desde la plataforma.`;
+  if(x.kind==='cart')return `Hola ${x.name}. Tienes productos pendientes en tu carrito de CRULOX${x.items?.length?`: ${x.items.join(', ')}`:''}. Si aún te interesan, puedes regresar a la plataforma para completar la compra.`;
+  if(x.kind==='registered')return `Hola ${x.name}. Tu cuenta de CRULOX ya está lista. Puedes ingresar a la plataforma y revisar los servicios disponibles cuando quieras.`;
+  return `Hola ${x.name}. Tu pedido ${x.orderId} continúa pendiente de pago. Ingresa a CRULOX para completar el pago y subir tu comprobante dentro de la plataforma.`;
+}
+function followRows362(list){return list.length?`<div class="jmv362-follow-list">${list.slice(0,20).map((x,i)=>`<div class="jmv362-follow-row"><div><b>${esc362(x.name)}${x.product?` · ${esc362(x.product)}`:''}</b><span>${x.orderId?esc362(x.orderId):x.items?.length?esc362(x.items.join(' · ')):x.kind==='registered'?'Cuenta registrada sin compra':x.kind==='expiration'?esc362(x.cutoff):''}</span></div><button class="jmv362-wa-btn" type="button" data-jmv362-wa="${esc362(x.kind)}:${i}">Enviar recordatorio</button></div>`).join('')}</div>`:'<div class="jmv362-empty">No hay personas en este grupo.</div>'}
+function renderFollowupCenter362(){
+  const c=D.getElementById('adminContent');if(!c)return;
+  const exp=expirationLeads362(),cart=cartLeads362(),reg=registeredLeads362(),unpaid=unpaidLeads362();
+  window.JM_V362_FOLLOW_GROUPS={expiration:exp,cart,registered:reg,unpaid};
+  c.innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Control interno y seguimientos</h2><p>Pedidos, pagos, comprobantes, accesos y entregas se gestionan únicamente dentro de CRULOX.</p></div></div><div class="jmv362-policy"><b>WhatsApp se reserva únicamente para cuatro seguimientos:</b> renovación por vencimiento, carrito pendiente, cuenta registrada sin compra y pedido pendiente de pago. No se usa para confirmar pedidos, entregar accesos, soporte normal ni administrar compras.</div><div class="jmv362-follow-grid"><article class="jmv362-follow-card"><h3>Renovaciones próximas</h3><strong>${exp.length}</strong><p>Servicios con fecha de corte dentro de los próximos 7 días.</p>${followRows362(exp)}</article><article class="jmv362-follow-card"><h3>Carritos pendientes</h3><strong>${cart.length}</strong><p>Usuarios registrados que dejaron productos en su carrito.</p>${followRows362(cart)}</article><article class="jmv362-follow-card"><h3>Registrados sin compra</h3><strong>${reg.length}</strong><p>Cuentas creadas que todavía no tienen pedidos.</p>${followRows362(reg)}</article><article class="jmv362-follow-card"><h3>Pedidos sin pago</h3><strong>${unpaid.length}</strong><p>Pedidos sin pago confirmado ni comprobante cargado.</p>${followRows362(unpaid)}</article></div></section>`;
+  c.querySelectorAll('[data-jmv362-wa]').forEach(b=>b.onclick=()=>{const [kind,idx]=String(b.dataset.jmv362Wa).split(':');const x=window.JM_V362_FOLLOW_GROUPS?.[kind]?.[Number(idx)];if(x)openFollowupWhatsapp362(x.phone,followMessage362(x))});
+  setTimeout(()=>{try{window.JM_DIGITAL_STORE_V352?.injectBotManagement?.()}catch(e){}},20);
+}
+
+function patchAdminSection362(section){
+  const s=String(section||state.adminSection||'').toLowerCase();
+  if(s==='messages'){renderFollowupCenter362();return}
+  const c=D.getElementById('adminContent');if(!c)return;
+  c.querySelectorAll('[data-v2waorder],[data-v2clientwa],#jmv2OpenWA').forEach(el=>el.remove());
+  if(s==='clients'){
+    c.querySelectorAll('th').forEach(th=>{if(/WhatsApp/i.test(th.textContent||''))th.textContent='Teléfono'});
+  }
+  if(s==='settings'){
+    const phone=D.getElementById('jmv2SetPhone');if(phone){const label=phone.closest('.jmv2-field')?.querySelector('label');if(label)label.textContent='WhatsApp para recordatorios';const note=D.createElement('small');note.textContent='Solo renovaciones, carritos pendientes, registros sin compra y pedidos sin pago.';note.style.cssText='font-size:.40rem;color:var(--muted);line-height:1.25';if(!phone.parentElement.querySelector('[data-jmv362-phone-note]')){note.dataset.jmv362PhoneNote='1';phone.after(note)}}
+    const form=D.getElementById('jmv2SettingsForm');if(form&&!form.dataset.jmv362Bound){form.dataset.jmv362Bound='1';form.addEventListener('submit',()=>setTimeout(()=>{state.settings.supportBotUrl='#';state.settings.orderBotUrl='#';try{if(typeof write==='function')write(KEYS.settings,state.settings)}catch(e){}},30))}
+  }
+}
+const apiV2=window.JM_DIGITAL_STORE_V2;
+if(apiV2?.renderAdmin){const old=apiV2.renderAdmin;apiV2.renderAdmin=function(section){const r=old.apply(this,arguments);setTimeout(()=>patchAdminSection362(section),15);return r}}
+D.addEventListener('click',e=>{const b=e.target?.closest?.('[data-jmv2-section],[data-jmv361-go]');const s=b?.dataset?.jmv2Section||b?.dataset?.jmv361Go;if(s)setTimeout(()=>patchAdminSection362(s),70)},true);
+
+function enforceNoWhatsApp362(){
+  patchPublic362();patchAccountLabels362();normalizeInternalOrders362();
+  state.settings.supportBotUrl='#';state.settings.orderBotUrl='#';
+  try{if(typeof write==='function')write(KEYS.settings,state.settings)}catch(e){}
+  D.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp.com"]').forEach(a=>{a.removeAttribute('href');a.dataset.jmv362Blocked='1'});
+}
+function init362(){enforceNoWhatsApp362();syncCartFollowup362();setTimeout(()=>patchAdminSection362(state.adminSection),100)}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',init362,{once:true});else init362();
+window.addEventListener('pageshow',()=>{enforceNoWhatsApp362();syncCartFollowup362()});
+window.JM_DIGITAL_STORE_V362={VERSION:'3.6.2',INTERNAL_CHANNEL,renderFollowupCenter:renderFollowupCenter362,syncCartFollowup:syncCartFollowup362};
+})();
+</script>
+<style id="jmv363-style-refine-sections">
+/* ================================================================
+   CRUZCLICK · V3.6.3
+   Refinamiento visual puntual: inicio, pedidos y clientes
+   ================================================================ */
+#adminOverlay.jmv363-ui .jmv360-topbar{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:8px 10px!important;
+  border-radius:15px!important;
+  min-height:auto!important;
+}
+#adminOverlay.jmv363-ui .jmv360-brand{min-width:0!important;gap:8px!important;align-items:center!important}
+#adminOverlay.jmv363-ui .jmv360-brand img{width:31px!important;height:31px!important;flex:0 0 31px!important}
+#adminOverlay.jmv363-ui .jmv360-brand b{font-size:.67rem!important;line-height:1.05!important}
+#adminOverlay.jmv363-ui .jmv360-brand span{font-size:.49rem!important;line-height:1.15!important}
+#adminOverlay.jmv363-ui .jmv360-top-actions{gap:6px!important;justify-self:end!important;display:flex!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+#adminOverlay.jmv363-ui .jmv360-action-btn{min-height:34px!important;padding:0 11px!important;border-radius:11px!important;font-size:.54rem!important;gap:5px!important}
+#adminOverlay.jmv363-ui .jmv360-action-btn i{font-size:.76rem!important}
+#adminOverlay.jmv363-ui .jmv360-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;padding:6px!important;gap:6px!important;border-radius:14px!important}
+#adminOverlay.jmv363-ui .jmv360-nav button{min-height:54px!important;padding:6px 5px!important;border-radius:12px!important;gap:4px!important;font-size:.50rem!important}
+#adminOverlay.jmv363-ui .jmv360-nav button i{font-size:.86rem!important}
+#adminOverlay.jmv363-ui .jmv360-page-head{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:8px!important;padding:9px 10px!important;border-radius:15px!important}
+#adminOverlay.jmv363-ui .jmv360-page-head small{font-size:.42rem!important;letter-spacing:.14em!important}
+#adminOverlay.jmv363-ui .jmv360-page-head h1{font-size:1.05rem!important;line-height:1.03!important;margin:2px 0 1px!important}
+#adminOverlay.jmv363-ui .jmv360-page-head p{font-size:.52rem!important;line-height:1.25!important;max-width:340px!important}
+#adminOverlay.jmv363-ui .jmv360-date{min-width:126px!important;padding:7px 8px!important;border-radius:12px!important;gap:6px!important}
+#adminOverlay.jmv363-ui .jmv360-date i{width:26px!important;height:26px!important;font-size:.72rem!important}
+#adminOverlay.jmv363-ui .jmv360-date b{font-size:.54rem!important}
+#adminOverlay.jmv363-ui .jmv360-date span{font-size:.47rem!important}
+#adminOverlay.jmv363-ui .jmv360-main{gap:7px!important}
+#adminOverlay.jmv363-ui .jmv360-hero,#adminOverlay.jmv363-ui .jmv363-hero{position:relative!important;overflow:hidden!important;display:grid!important;grid-template-columns:minmax(0,1fr) 96px!important;align-items:center!important;gap:10px!important;padding:12px!important;border-radius:16px!important;min-height:auto!important;background:radial-gradient(circle at 80% 32%, rgba(34,223,243,.16), transparent 34%),linear-gradient(145deg, rgba(9,27,42,.96), rgba(3,15,26,.96))!important}
+#adminOverlay.jmv363-ui .jmv360-hero-copy h2{font-size:.78rem!important;line-height:1.08!important;margin:0!important}
+#adminOverlay.jmv363-ui .jmv360-hero-copy .accent{font-size:1.15rem!important;line-height:1.02!important;margin-top:3px!important}
+#adminOverlay.jmv363-ui .jmv360-hero-copy p{font-size:.53rem!important;line-height:1.34!important;margin-top:7px!important;max-width:none!important}
+#adminOverlay.jmv363-ui .jmv360-hero-badge{top:10px!important;right:10px!important;left:auto!important;min-width:58px!important;padding:5px 7px!important;font-size:.42rem!important;border-radius:999px!important}
+#adminOverlay.jmv363-ui .jmv360-hero-visual{gap:6px!important;justify-items:center!important}
+#adminOverlay.jmv363-ui .jmv360-hero-visual img{width:68px!important}
+#adminOverlay.jmv363-ui .jmv360-hero-points{font-size:.37rem!important;gap:1px!important;text-align:center!important;justify-items:center!important}
+#adminOverlay.jmv363-ui .jmv360-hero-line{width:36px!important;height:4px!important}
+#adminOverlay.jmv363-ui .jmv363-hero-mini{display:flex!important;flex-wrap:wrap!important;gap:5px!important;margin-top:8px!important}
+#adminOverlay.jmv363-ui .jmv363-hero-mini span{display:inline-flex!important;align-items:center!important;min-height:22px!important;padding:0 8px!important;border-radius:999px!important;font-size:.46rem!important;font-weight:800!important;letter-spacing:.04em!important;color:#bff7ff!important;border:1px solid rgba(109,226,247,.18)!important;background:rgba(255,255,255,.03)!important}
+#adminOverlay.jmv363-ui .jmv360-section-head{align-items:flex-end!important;gap:7px!important}
+#adminOverlay.jmv363-ui .jmv360-section-head h3{font-size:.70rem!important;gap:5px!important}
+#adminOverlay.jmv363-ui .jmv360-section-head p{font-size:.48rem!important;margin-top:2px!important}
+#adminOverlay.jmv363-ui .jmv360-link-btn{min-height:30px!important;padding:0 11px!important;border-radius:10px!important;font-size:.49rem!important}
+#adminOverlay.jmv363-ui .jmv2-admin-card{padding:9px!important;border-radius:13px!important;border-color:rgba(104,223,241,.11)!important;background:linear-gradient(180deg, rgba(6,24,37,.90), rgba(4,17,28,.92))!important;box-shadow:0 10px 24px rgba(0,0,0,.18)!important}
+#adminOverlay.jmv363-ui .jmv2-card-head{gap:7px!important;margin-bottom:8px!important}
+#adminOverlay.jmv363-ui .jmv2-card-head h2{font-size:.66rem!important;line-height:1.15!important}
+#adminOverlay.jmv363-ui .jmv2-card-head p{font-size:.47rem!important;line-height:1.35!important;margin-top:2px!important;color:#8ea9ba!important}
+#adminOverlay.jmv363-ui .jmv2-toolbar{display:grid!important;grid-template-columns:minmax(0,1fr) 110px!important;gap:6px!important;width:100%!important}
+#adminOverlay.jmv363-ui .jmv2-toolbar input,#adminOverlay.jmv363-ui .jmv2-toolbar select,#adminOverlay.jmv363-ui .jmv2-admin-card input,#adminOverlay.jmv363-ui .jmv2-admin-card select,#adminOverlay.jmv363-ui .jmv2-admin-card textarea{min-height:30px!important;border-radius:10px!important;padding:5px 9px!important;font-size:.50rem!important;background:rgba(4,14,22,.95)!important;border-color:rgba(104,223,241,.12)!important}
+#adminOverlay.jmv363-ui .jmv363-orders-panel .jmv2-records{gap:8px!important}
+#adminOverlay.jmv363-ui .jmv363-order-card,#adminOverlay.jmv363-ui .jmv2-record{padding:9px!important;border-radius:13px!important;border:1px solid rgba(111,224,245,.12)!important;background:linear-gradient(180deg, rgba(9,29,43,.9), rgba(5,18,28,.92))!important;gap:8px!important}
+#adminOverlay.jmv363-ui .jmv363-order-title,#adminOverlay.jmv363-ui .jmv2-record h3{font-size:.58rem!important;line-height:1.25!important;margin:0!important;color:#f4fbff!important}
+#adminOverlay.jmv363-ui .jmv363-order-meta,#adminOverlay.jmv363-ui .jmv2-record p{font-size:.46rem!important;line-height:1.35!important;color:#93acbb!important;margin:2px 0 0!important}
+#adminOverlay.jmv363-ui .jmv2-order-statusline{margin-top:6px!important;gap:5px!important}
+#adminOverlay.jmv363-ui .jmv2-status{font-size:.43rem!important;padding:4px 7px!important;border-radius:999px!important}
+#adminOverlay.jmv363-ui .jmv363-order-actions,#adminOverlay.jmv363-ui .jmv2-record aside{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;align-self:stretch!important}
+#adminOverlay.jmv363-ui .jmv2-record aside select{grid-column:1/-1!important}
+#adminOverlay.jmv363-ui .jmv2-btn{min-height:30px!important;border-radius:10px!important;font-size:.48rem!important;padding:0 9px!important}
+#adminOverlay.jmv363-ui .jmv2-note{font-size:.46rem!important;line-height:1.45!important;padding:8px 9px!important;border-radius:10px!important;background:rgba(255,255,255,.03)!important}
+#adminOverlay.jmv363-ui .jmv363-empty-box{display:grid!important;justify-items:center!important;gap:6px!important;padding:16px 10px!important;border-radius:12px!important;border:1px dashed rgba(108,223,244,.18)!important;background:rgba(255,255,255,.018)!important;text-align:center!important}
+#adminOverlay.jmv363-ui .jmv363-empty-icon{font-size:1rem!important;line-height:1!important;opacity:.9!important}
+#adminOverlay.jmv363-ui .jmv363-empty-box b{font-size:.56rem!important;color:#eaf8ff!important}
+#adminOverlay.jmv363-ui .jmv363-empty-box p{font-size:.47rem!important;color:#88a6b7!important;line-height:1.35!important;margin:0!important;max-width:280px!important}
+#adminOverlay.jmv363-ui .jmv363-client-list{display:none;gap:7px;margin-top:8px}
+#adminOverlay.jmv363-ui .jmv363-client-card{border:1px solid rgba(111,224,245,.12)!important;background:linear-gradient(180deg, rgba(9,28,42,.9), rgba(5,18,29,.92))!important;border-radius:13px!important;padding:9px!important;display:grid!important;gap:8px!important}
+#adminOverlay.jmv363-ui .jmv363-client-top{display:flex!important;align-items:flex-start!important;justify-content:space-between!important;gap:8px!important}
+#adminOverlay.jmv363-ui .jmv363-client-name{min-width:0!important;font-size:.56rem!important;line-height:1.2!important;color:#f4fbff!important}
+#adminOverlay.jmv363-ui .jmv363-client-name b{display:block!important;font-size:.58rem!important;color:#f4fbff!important}
+#adminOverlay.jmv363-ui .jmv363-client-name span{display:block!important;font-size:.44rem!important;color:#8eabbc!important;margin-top:2px!important}
+#adminOverlay.jmv363-ui .jmv363-client-badge{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:22px!important;padding:0 8px!important;border-radius:999px!important;background:rgba(34,223,243,.11)!important;border:1px solid rgba(34,223,243,.18)!important;color:#aef7ff!important;font-size:.43rem!important;font-weight:900!important;white-space:nowrap!important}
+#adminOverlay.jmv363-ui .jmv363-client-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px 8px!important}
+#adminOverlay.jmv363-ui .jmv363-client-grid small{display:block!important;font-size:.40rem!important;text-transform:uppercase!important;letter-spacing:.08em!important;color:#7b98ab!important;margin-bottom:2px!important}
+#adminOverlay.jmv363-ui .jmv363-client-grid b{display:block!important;font-size:.49rem!important;line-height:1.28!important;color:#ebf8ff!important;overflow-wrap:anywhere!important}
+#adminOverlay.jmv363-ui .jmv363-clients-panel .jmv2-table-wrap{border-radius:11px!important;overflow:auto!important;background:rgba(0,0,0,.1)!important}
+#adminOverlay.jmv363-ui .jmv363-clients-panel .jmv2-table th,#adminOverlay.jmv363-ui .jmv363-clients-panel .jmv2-table td{padding:6px 7px!important;font-size:.46rem!important}
+#adminOverlay.jmv363-ui .jmv363-clients-panel .jmv2-table td b{font-size:.50rem!important}
+@media(max-width:820px){#adminOverlay.jmv363-ui .jmv360-page-head{grid-template-columns:minmax(0,1fr) 126px!important}#adminOverlay.jmv363-ui .jmv360-hero{grid-template-columns:minmax(0,1fr) 82px!important;padding:11px!important}#adminOverlay.jmv363-ui .jmv360-hero-copy .accent{font-size:1.02rem!important}#adminOverlay.jmv363-ui .jmv360-hero-copy p{font-size:.50rem!important}#adminOverlay.jmv363-ui .jmv360-hero-visual img{width:60px!important}#adminOverlay.jmv363-ui .jmv2-toolbar{grid-template-columns:1fr!important}#adminOverlay.jmv363-ui .jmv363-client-list{display:grid!important}#adminOverlay.jmv363-ui .jmv363-clients-panel .jmv2-table-wrap{display:none!important}}
+@media(max-width:560px){#adminOverlay.jmv363-ui .jmv360-page-head{grid-template-columns:minmax(0,1fr) 112px!important;padding:8px 9px!important}#adminOverlay.jmv363-ui .jmv360-page-head p{display:none!important}#adminOverlay.jmv363-ui .jmv360-date{min-width:112px!important;padding:6px 7px!important}#adminOverlay.jmv363-ui .jmv360-date i{display:none!important}#adminOverlay.jmv363-ui .jmv360-hero{grid-template-columns:minmax(0,1fr) 72px!important}#adminOverlay.jmv363-ui .jmv360-hero-copy h2{font-size:.70rem!important}#adminOverlay.jmv363-ui .jmv360-hero-copy .accent{font-size:.92rem!important}#adminOverlay.jmv363-ui .jmv360-hero-points{font-size:.34rem!important}#adminOverlay.jmv363-ui .jmv363-order-actions,#adminOverlay.jmv363-ui .jmv2-record aside{grid-template-columns:1fr 1fr!important}#adminOverlay.jmv363-ui .jmv363-client-grid{grid-template-columns:1fr 1fr!important}}
+</style>
+<script id="jmv363-script-refine-sections">
+(function(){
+  const D=document;let rafToken=null;
+  function safe(v){return String(v==null?'':v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+  function overlay(){return D.getElementById('adminOverlay')}
+  function addUiClass(){const ov=overlay();if(ov)ov.classList.add('jmv363-ui')}
+  function enhanceEmpty(box,title,text,icon){if(!box||box.dataset.jmv363Empty==='1')return;box.dataset.jmv363Empty='1';box.innerHTML=`<div class="jmv363-empty-box"><span class="jmv363-empty-icon">${icon}</span><b>${title}</b><p>${text}</p></div>`}
+  function enhanceHero(){const hero=D.querySelector('#adminContent .jmv360-hero');if(!hero)return;hero.classList.add('jmv363-hero');if(hero.dataset.jmv363Hero==='1')return;hero.dataset.jmv363Hero='1';const copy=hero.querySelector('.jmv360-hero-copy');if(copy&&!copy.querySelector('.jmv363-hero-mini')){const strip=D.createElement('div');strip.className='jmv363-hero-mini';strip.innerHTML='<span>Perfiles</span><span>Cursos</span><span>Diamantes</span><span>Licencias</span>';copy.appendChild(strip)}}
+  function enhanceOrders(){const list=D.getElementById('jmv2OrderList');if(!list)return;const panel=list.closest('.jmv2-admin-card');if(panel)panel.classList.add('jmv363-orders-panel');const empty=list.querySelector('.jmv2-empty');if(empty)enhanceEmpty(empty,'No hay pedidos en este filtro','Ajusta la búsqueda o cambia el estado para localizar pedidos.','🧾');list.querySelectorAll('.jmv2-record').forEach(card=>{if(card.dataset.jmv363Order==='1')return;card.dataset.jmv363Order='1';card.classList.add('jmv363-order-card');const title=card.querySelector('h3');if(title)title.classList.add('jmv363-order-title');const meta=card.querySelector(':scope > div > p');if(meta){const div=D.createElement('div');div.className='jmv363-order-meta';div.textContent=(meta.textContent||'').trim();meta.replaceWith(div)}const aside=card.querySelector('aside');if(aside)aside.classList.add('jmv363-order-actions')})}
+  function enhanceClients(){const panel=[...D.querySelectorAll('#adminContent .jmv2-admin-card')].find(el=>/Clientes digitales/i.test(el.querySelector('h2')?.textContent||''));if(!panel)return;panel.classList.add('jmv363-clients-panel');const empty=panel.querySelector('.jmv2-empty');if(empty)enhanceEmpty(empty,'No hay clientes registrados','Los clientes aparecerán aquí cuando se registren o realicen compras en la plataforma.','👥');const table=panel.querySelector('.jmv2-table');if(!table||panel.querySelector('.jmv363-client-list'))return;const rows=[...table.querySelectorAll('tbody tr')].filter(r=>!r.querySelector('.jmv2-empty'));const list=D.createElement('div');list.className='jmv363-client-list';if(!rows.length){list.innerHTML='<div class="jmv363-empty-box"><span class="jmv363-empty-icon">👥</span><b>No hay clientes registrados</b><p>Los clientes aparecerán aquí cuando se registren o realicen compras en la plataforma.</p></div>'}else{list.innerHTML=rows.map(row=>{const cells=row.querySelectorAll('td');if(cells.length<6)return '';const name=cells[0].innerHTML;const email=safe(cells[1].textContent.trim()||'—');const phone=safe(cells[2].textContent.trim()||'—');const orders=safe(cells[3].textContent.trim()||'0');const paid=safe(cells[4].textContent.trim()||'Q0.00');const last=safe(cells[5].textContent.trim()||'—');return `<article class="jmv363-client-card"><div class="jmv363-client-top"><div class="jmv363-client-name">${name}</div><span class="jmv363-client-badge">${orders} pedido${orders==='1'?'':'s'}</span></div><div class="jmv363-client-grid"><div><small>Correo</small><b>${email}</b></div><div><small>Teléfono</small><b>${phone}</b></div><div><small>Compras confirmadas</small><b>${paid}</b></div><div><small>Último pedido</small><b>${last}</b></div></div></article>`}).join('')}const wrap=panel.querySelector('.jmv2-table-wrap');if(wrap)wrap.after(list)}
+  function apply(){addUiClass();enhanceHero();enhanceOrders();enhanceClients()}
+  function queue(){if(rafToken)return;rafToken=requestAnimationFrame(()=>{rafToken=null;apply()})}
+  if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',queue,{once:true});else queue();
+  const queueIfAdmin363=()=>{if(overlay()?.classList.contains('open'))setTimeout(queue,0)};D.addEventListener('click',queueIfAdmin363,true);D.addEventListener('input',queueIfAdmin363,true);D.addEventListener('change',queueIfAdmin363,true);
+  const mo=new MutationObserver(()=>queue());const adminWatchTarget=overlay()||D.getElementById('adminOverlay');if(adminWatchTarget)mo.observe(adminWatchTarget,{childList:true,subtree:true});window.addEventListener('pageshow',queue);
+})();
+</script>
+<style id="jmv364-style-compact-total">
+/* ================================================================
+   CRUZCLICK · V3.6.4
+   Compactación visual total y refinamiento de pedidos/clientes/typebots
+   ================================================================ */
+#adminOverlay .jmv360-admin-shell{padding:5px!important;gap:5px!important}
+#adminOverlay .jmv360-topbar{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:7px 8px!important;
+  border-radius:14px!important;
+  min-height:auto!important;
+}
+#adminOverlay .jmv360-brand{gap:7px!important;min-width:0!important}
+#adminOverlay .jmv360-brand img{width:28px!important;height:28px!important;flex:0 0 28px!important}
+#adminOverlay .jmv360-brand b{font-size:.62rem!important;line-height:1.05!important}
+#adminOverlay .jmv360-brand span{font-size:.44rem!important;line-height:1.15!important}
+#adminOverlay .jmv360-top-actions{gap:6px!important;justify-self:end!important;display:flex!important;flex-wrap:wrap!important;justify-content:flex-end!important}
+#adminOverlay .jmv360-action-btn{min-height:31px!important;padding:0 10px!important;border-radius:10px!important;font-size:.50rem!important;gap:5px!important;box-shadow:0 0 0 1px rgba(87,205,231,.1) inset!important}
+#adminOverlay .jmv360-action-btn i{font-size:.70rem!important}
+#adminOverlay .jmv360-nav{padding:5px!important;gap:5px!important;border-radius:13px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#adminOverlay .jmv360-nav button{min-height:50px!important;padding:5px 4px!important;border-radius:11px!important;gap:4px!important;font-size:.47rem!important}
+#adminOverlay .jmv360-nav button i{font-size:.80rem!important}
+#adminOverlay .jmv360-page-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:8px 9px!important;
+  border-radius:14px!important;
+  min-height:auto!important;
+}
+#adminOverlay .jmv360-page-head small{font-size:.40rem!important;letter-spacing:.15em!important}
+#adminOverlay .jmv360-page-head h1{font-size:.94rem!important;line-height:1.02!important;margin:2px 0 1px!important}
+#adminOverlay .jmv360-page-head p{font-size:.47rem!important;line-height:1.25!important;max-width:320px!important;margin-top:2px!important}
+#adminOverlay .jmv360-date{min-width:116px!important;padding:6px 8px!important;border-radius:11px!important;gap:5px!important}
+#adminOverlay .jmv360-date i{width:24px!important;height:24px!important;font-size:.66rem!important}
+#adminOverlay .jmv360-date b{font-size:.50rem!important}
+#adminOverlay .jmv360-date span{font-size:.44rem!important}
+#adminOverlay .jmv360-main{gap:6px!important}
+#adminOverlay .jmv360-hero{
+  grid-template-columns:minmax(0,1fr) 84px!important;
+  gap:9px!important;
+  padding:10px!important;
+  border-radius:15px!important;
+  min-height:auto!important;
+}
+#adminOverlay .jmv360-hero-copy h2{font-size:.70rem!important;line-height:1.08!important;margin:0!important}
+#adminOverlay .jmv360-hero-copy .accent{font-size:1.02rem!important;line-height:1.02!important;margin-top:3px!important}
+#adminOverlay .jmv360-hero-copy p{font-size:.48rem!important;line-height:1.3!important;margin-top:6px!important}
+#adminOverlay .jmv360-hero-badge{min-width:55px!important;padding:4px 6px!important;font-size:.40rem!important;top:9px!important;right:9px!important}
+#adminOverlay .jmv360-hero-visual img{width:60px!important}
+#adminOverlay .jmv360-hero-points{font-size:.34rem!important;gap:1px!important}
+#adminOverlay .jmv360-hero-line{width:32px!important;height:4px!important}
+#adminOverlay .jmv363-hero-mini{gap:4px!important;margin-top:7px!important}
+#adminOverlay .jmv363-hero-mini span{min-height:20px!important;padding:0 7px!important;font-size:.42rem!important;border-radius:999px!important}
+#adminOverlay .jmv360-section-head{align-items:flex-end!important;gap:6px!important}
+#adminOverlay .jmv360-section-head h3{font-size:.66rem!important;gap:5px!important}
+#adminOverlay .jmv360-section-head p{font-size:.45rem!important;margin-top:1px!important}
+#adminOverlay .jmv360-link-btn{min-height:28px!important;padding:0 10px!important;border-radius:9px!important;font-size:.45rem!important}
+
+#adminOverlay .jmv2-admin-content{padding:6px!important}
+#adminOverlay .jmv2-admin-card{padding:8px!important;border-radius:12px!important;margin-top:6px!important;box-shadow:0 10px 22px rgba(0,0,0,.16)!important}
+#adminOverlay .jmv2-card-head{gap:6px!important;margin-bottom:6px!important}
+#adminOverlay .jmv2-card-head h2{font-size:.60rem!important;line-height:1.15!important}
+#adminOverlay .jmv2-card-head p{font-size:.44rem!important;line-height:1.28!important;margin-top:2px!important}
+#adminOverlay .jmv2-toolbar{display:grid!important;grid-template-columns:minmax(0,1fr) 96px!important;gap:5px!important}
+#adminOverlay .jmv2-toolbar input,
+#adminOverlay .jmv2-toolbar select,
+#adminOverlay .jmv2-admin-card input,
+#adminOverlay .jmv2-admin-card select,
+#adminOverlay .jmv2-admin-card textarea{min-height:28px!important;border-radius:9px!important;padding:4px 8px!important;font-size:.46rem!important}
+#adminOverlay .jmv2-field{gap:3px!important}
+#adminOverlay .jmv2-field label{font-size:.42rem!important}
+#adminOverlay .jmv2-field textarea{min-height:50px!important}
+#adminOverlay .jmv2-form-grid{gap:5px!important}
+#adminOverlay .jmv2-form-actions{gap:5px!important;margin-top:6px!important}
+#adminOverlay .jmv2-btn{min-height:28px!important;padding:0 9px!important;border-radius:9px!important;font-size:.44rem!important;font-weight:800!important}
+#adminOverlay .jmv2-note{font-size:.44rem!important;line-height:1.35!important;padding:7px 8px!important;border-radius:9px!important}
+#adminOverlay .jmv2-empty{padding:8px!important;font-size:.41rem!important;border-radius:9px!important}
+
+#adminOverlay .jmv363-orders-panel .jmv2-records{gap:7px!important}
+#adminOverlay .jmv363-order-card,
+#adminOverlay .jmv2-record{padding:8px!important;border-radius:12px!important;gap:7px!important}
+#adminOverlay .jmv363-order-title,
+#adminOverlay .jmv2-record h3{font-size:.54rem!important;line-height:1.22!important}
+#adminOverlay .jmv363-order-meta,
+#adminOverlay .jmv2-record p{font-size:.43rem!important;line-height:1.3!important;margin-top:1px!important}
+#adminOverlay .jmv2-order-statusline{gap:4px!important;margin-top:4px!important}
+#adminOverlay .jmv2-status{padding:3px 6px!important;font-size:.39rem!important;border-radius:999px!important}
+#adminOverlay .jmv363-order-actions,
+#adminOverlay .jmv2-record aside{gap:5px!important}
+#adminOverlay .jmv2-record aside select{min-height:27px!important;padding:3px 6px!important;font-size:.42rem!important}
+#adminOverlay .jmv363-empty-box{gap:5px!important;padding:13px 9px!important;border-radius:11px!important}
+#adminOverlay .jmv363-empty-icon{font-size:.88rem!important}
+#adminOverlay .jmv363-empty-box b{font-size:.52rem!important}
+#adminOverlay .jmv363-empty-box p{font-size:.43rem!important;max-width:240px!important}
+
+#adminOverlay .jmv363-client-list{gap:6px!important;margin-top:7px!important}
+#adminOverlay .jmv363-client-card{padding:8px!important;border-radius:12px!important;gap:7px!important}
+#adminOverlay .jmv363-client-top{gap:7px!important}
+#adminOverlay .jmv363-client-name{font-size:.52rem!important;line-height:1.15!important}
+#adminOverlay .jmv363-client-name b{font-size:.54rem!important}
+#adminOverlay .jmv363-client-name span{font-size:.41rem!important;margin-top:1px!important}
+#adminOverlay .jmv363-client-badge{min-height:21px!important;padding:0 7px!important;font-size:.40rem!important}
+#adminOverlay .jmv363-client-grid{gap:6px 7px!important}
+#adminOverlay .jmv363-client-grid small{font-size:.38rem!important;margin-bottom:1px!important}
+#adminOverlay .jmv363-client-grid b{font-size:.46rem!important;line-height:1.24!important}
+#adminOverlay .jmv363-clients-panel .jmv2-table th,
+#adminOverlay .jmv363-clients-panel .jmv2-table td{padding:5px 6px!important;font-size:.43rem!important}
+#adminOverlay .jmv363-clients-panel .jmv2-table td b{font-size:.46rem!important}
+
+#adminOverlay .jmv352-bot-grid{gap:6px!important;margin-top:7px!important}
+#adminOverlay .jmv352-bot-row{padding:8px!important;border-radius:10px!important;gap:7px!important}
+#adminOverlay .jmv352-bot-row h3{font-size:.51rem!important;line-height:1.22!important}
+#adminOverlay .jmv352-bot-row p{font-size:.40rem!important;line-height:1.28!important;margin-top:2px!important}
+#adminOverlay .jmv352-bot-actions{gap:4px!important}
+#adminOverlay .jmv352-bot-actions .jmv2-btn{min-height:27px!important;padding:0 8px!important;font-size:.42rem!important}
+#adminOverlay .jmv352-bot-status{margin-top:4px!important;padding:2px 6px!important;font-size:.39rem!important}
+
+#adminOverlay .jmv362-policy{padding:7px 8px!important;border-radius:10px!important;font-size:.42rem!important;line-height:1.32!important;margin-bottom:6px!important}
+#adminOverlay .jmv362-follow-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+#adminOverlay .jmv362-follow-card{padding:7px!important;border-radius:10px!important}
+#adminOverlay .jmv362-follow-card h3{font-size:.50rem!important;line-height:1.18!important}
+#adminOverlay .jmv362-follow-card strong{font-size:.92rem!important;margin-top:2px!important}
+#adminOverlay .jmv362-follow-card p{font-size:.40rem!important;line-height:1.28!important;margin:2px 0 0!important}
+#adminOverlay .jmv362-follow-list{gap:4px!important;margin-top:6px!important}
+#adminOverlay .jmv362-follow-row{padding:5px 6px!important;border-radius:8px!important;gap:5px!important}
+#adminOverlay .jmv362-follow-row b{font-size:.43rem!important;line-height:1.2!important}
+#adminOverlay .jmv362-follow-row span{font-size:.37rem!important;line-height:1.22!important}
+#adminOverlay .jmv362-wa-btn{min-height:23px!important;padding:0 7px!important;border-radius:7px!important;font-size:.39rem!important}
+#adminOverlay .jmv362-empty{padding:8px!important;border-radius:8px!important;font-size:.40rem!important}
+
+@media(max-width:760px){
+  #adminOverlay .jmv360-topbar{padding:6px 7px!important}
+  #adminOverlay .jmv360-brand img{width:26px!important;height:26px!important;flex-basis:26px!important}
+  #adminOverlay .jmv360-brand b{font-size:.58rem!important}
+  #adminOverlay .jmv360-brand span{font-size:.40rem!important}
+  #adminOverlay .jmv360-top-actions{gap:5px!important}
+  #adminOverlay .jmv360-action-btn{min-height:29px!important;padding:0 8px!important;font-size:.47rem!important}
+  #adminOverlay .jmv360-nav button{min-height:46px!important;font-size:.44rem!important}
+  #adminOverlay .jmv360-page-head{grid-template-columns:minmax(0,1fr) 108px!important;padding:7px 8px!important}
+  #adminOverlay .jmv360-page-head h1{font-size:.88rem!important}
+  #adminOverlay .jmv360-page-head p{font-size:.44rem!important}
+  #adminOverlay .jmv360-date{min-width:108px!important;padding:5px 6px!important}
+  #adminOverlay .jmv360-date i{display:none!important}
+  #adminOverlay .jmv360-date b{font-size:.47rem!important}
+  #adminOverlay .jmv360-date span{font-size:.40rem!important}
+  #adminOverlay .jmv360-hero{grid-template-columns:minmax(0,1fr) 72px!important;padding:9px!important}
+  #adminOverlay .jmv360-hero-copy .accent{font-size:.92rem!important}
+  #adminOverlay .jmv360-hero-copy p{font-size:.45rem!important}
+  #adminOverlay .jmv360-hero-visual img{width:54px!important}
+  #adminOverlay .jmv2-toolbar{grid-template-columns:1fr!important}
+  #adminOverlay .jmv2-btn{min-height:27px!important}
+}
+@media(max-width:560px){
+  #adminOverlay .jmv360-admin-shell{padding:4px!important;gap:4px!important}
+  #adminOverlay .jmv360-topbar{grid-template-columns:minmax(0,1fr) auto!important}
+  #adminOverlay .jmv360-nav{gap:4px!important;padding:4px!important}
+  #adminOverlay .jmv360-nav button{min-height:43px!important;padding:4px 3px!important;font-size:.42rem!important;border-radius:10px!important}
+  #adminOverlay .jmv360-page-head p{display:none!important}
+  #adminOverlay .jmv360-page-head h1{font-size:.82rem!important}
+  #adminOverlay .jmv360-date{min-width:98px!important}
+  #adminOverlay .jmv360-hero{grid-template-columns:minmax(0,1fr) 64px!important;gap:7px!important;padding:8px!important}
+  #adminOverlay .jmv360-hero-copy h2{font-size:.64rem!important}
+  #adminOverlay .jmv360-hero-copy .accent{font-size:.82rem!important}
+  #adminOverlay .jmv360-hero-copy p{font-size:.42rem!important}
+  #adminOverlay .jmv363-hero-mini span{font-size:.39rem!important;min-height:18px!important;padding:0 6px!important}
+  #adminOverlay .jmv360-hero-visual img{width:48px!important}
+  #adminOverlay .jmv360-section-head h3{font-size:.61rem!important}
+  #adminOverlay .jmv2-card-head h2{font-size:.57rem!important}
+  #adminOverlay .jmv2-card-head p{font-size:.41rem!important}
+  #adminOverlay .jmv2-toolbar input,
+  #adminOverlay .jmv2-toolbar select,
+  #adminOverlay .jmv2-admin-card input,
+  #adminOverlay .jmv2-admin-card select,
+  #adminOverlay .jmv2-admin-card textarea{font-size:.44rem!important}
+  #adminOverlay .jmv363-order-actions,
+  #adminOverlay .jmv2-record aside{grid-template-columns:1fr 1fr!important}
+  #adminOverlay .jmv363-client-grid,
+  #adminOverlay .jmv362-follow-grid{grid-template-columns:1fr!important}
+  #adminOverlay .jmv352-bot-row{grid-template-columns:1fr!important}
+  #adminOverlay .jmv352-bot-actions{justify-content:flex-start!important}
+}
+</style>
+<style id="jmv365-style-ultra-compact-nav">
+/* ================================================================
+   CRUZCLICK · V3.6.5
+   Reducción extra de botones, textos y navegación interna
+   ================================================================ */
+#adminOverlay .jmv360-admin-shell{padding:4px!important;gap:4px!important}
+#adminOverlay .jmv360-topbar{padding:5px 6px!important;border-radius:13px!important;gap:7px!important}
+#adminOverlay .jmv360-brand{gap:6px!important}
+#adminOverlay .jmv360-brand img{width:24px!important;height:24px!important;flex:0 0 24px!important}
+#adminOverlay .jmv360-brand b{font-size:.54rem!important;line-height:1.03!important}
+#adminOverlay .jmv360-brand span{font-size:.38rem!important;line-height:1.12!important}
+#adminOverlay .jmv360-top-actions{gap:5px!important}
+#adminOverlay .jmv360-action-btn{min-height:27px!important;padding:0 8px!important;border-radius:9px!important;font-size:.43rem!important;gap:4px!important}
+#adminOverlay .jmv360-action-btn i{font-size:.62rem!important}
+
+#adminOverlay .jmv360-nav{padding:4px!important;gap:4px!important;border-radius:12px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+#adminOverlay .jmv360-nav button{min-height:38px!important;padding:3px 2px!important;border-radius:9px!important;gap:3px!important;font-size:.39rem!important;line-height:1.1!important}
+#adminOverlay .jmv360-nav button i{font-size:.63rem!important}
+#adminOverlay .jmv360-nav button .jmv360-badge{top:2px!important;right:3px!important;min-width:11px!important;height:11px!important;padding:0 3px!important;font-size:.32rem!important}
+
+#adminOverlay .jmv360-page-head{padding:6px 7px!important;border-radius:12px!important;gap:7px!important}
+#adminOverlay .jmv360-page-head small{font-size:.35rem!important;letter-spacing:.13em!important}
+#adminOverlay .jmv360-page-head h1{font-size:.74rem!important;line-height:1.02!important;margin:1px 0 0!important}
+#adminOverlay .jmv360-page-head p{font-size:.40rem!important;line-height:1.22!important;margin-top:1px!important}
+#adminOverlay .jmv360-date{min-width:96px!important;padding:4px 6px!important;border-radius:10px!important;gap:3px!important}
+#adminOverlay .jmv360-date i{display:none!important}
+#adminOverlay .jmv360-date b{font-size:.42rem!important;line-height:1.1!important}
+#adminOverlay .jmv360-date span{font-size:.37rem!important;line-height:1.1!important}
+
+#adminOverlay .jmv360-hero{padding:8px!important;gap:7px!important;border-radius:13px!important;grid-template-columns:minmax(0,1fr) 64px!important}
+#adminOverlay .jmv360-hero-copy h2{font-size:.58rem!important}
+#adminOverlay .jmv360-hero-copy .accent{font-size:.84rem!important;line-height:1.02!important}
+#adminOverlay .jmv360-hero-copy p{font-size:.41rem!important;line-height:1.24!important;margin-top:5px!important}
+#adminOverlay .jmv360-hero-badge{padding:3px 5px!important;font-size:.35rem!important;min-width:48px!important;top:8px!important;right:8px!important}
+#adminOverlay .jmv360-hero-visual img{width:46px!important}
+#adminOverlay .jmv360-hero-points{font-size:.31rem!important}
+#adminOverlay .jmv360-hero-line{width:26px!important;height:3px!important}
+#adminOverlay .jmv363-hero-mini{gap:4px!important;margin-top:6px!important}
+#adminOverlay .jmv363-hero-mini span{min-height:17px!important;padding:0 6px!important;font-size:.36rem!important}
+
+#adminOverlay .jmv360-section-head h3{font-size:.56rem!important;gap:4px!important}
+#adminOverlay .jmv360-section-head p{font-size:.40rem!important;line-height:1.22!important}
+#adminOverlay .jmv360-link-btn{min-height:24px!important;padding:0 8px!important;border-radius:8px!important;font-size:.39rem!important}
+#adminOverlay .jmv360-metrics{gap:4px!important}
+#adminOverlay .jmv360-metric{padding:7px!important;border-radius:10px!important}
+#adminOverlay .jmv360-metric i{font-size:.70rem!important}
+#adminOverlay .jmv360-metric b{font-size:.46rem!important}
+#adminOverlay .jmv360-metric strong{font-size:.88rem!important;margin-top:2px!important}
+#adminOverlay .jmv360-metric span{font-size:.39rem!important;line-height:1.2!important;margin-top:2px!important}
+
+#adminOverlay .jmv2-admin-content{padding:5px!important}
+#adminOverlay .jmv2-admin-card{padding:7px!important;border-radius:11px!important;margin-top:5px!important}
+#adminOverlay .jmv2-card-head{gap:5px!important;margin-bottom:5px!important}
+#adminOverlay .jmv2-card-head h2{font-size:.54rem!important;line-height:1.14!important}
+#adminOverlay .jmv2-card-head p{font-size:.39rem!important;line-height:1.24!important}
+#adminOverlay .jmv2-toolbar{gap:4px!important}
+#adminOverlay .jmv2-toolbar input,
+#adminOverlay .jmv2-toolbar select,
+#adminOverlay .jmv2-admin-card input,
+#adminOverlay .jmv2-admin-card select,
+#adminOverlay .jmv2-admin-card textarea{min-height:25px!important;padding:4px 7px!important;border-radius:8px!important;font-size:.41rem!important}
+#adminOverlay .jmv2-btn{min-height:24px!important;padding:0 8px!important;border-radius:8px!important;font-size:.39rem!important}
+#adminOverlay .jmv2-empty{padding:8px!important;font-size:.39rem!important}
+
+#adminOverlay .jmv363-order-card,
+#adminOverlay .jmv2-record{padding:7px!important;border-radius:11px!important;gap:6px!important}
+#adminOverlay .jmv363-order-title,
+#adminOverlay .jmv2-record h3{font-size:.48rem!important;line-height:1.2!important}
+#adminOverlay .jmv363-order-meta,
+#adminOverlay .jmv2-record p{font-size:.39rem!important;line-height:1.24!important}
+#adminOverlay .jmv2-status{padding:2px 5px!important;font-size:.35rem!important}
+#adminOverlay .jmv2-record aside select{min-height:24px!important;font-size:.39rem!important}
+
+#adminOverlay .jmv363-client-card{padding:7px!important;border-radius:11px!important;gap:6px!important}
+#adminOverlay .jmv363-client-name{font-size:.47rem!important}
+#adminOverlay .jmv363-client-name b{font-size:.49rem!important}
+#adminOverlay .jmv363-client-name span{font-size:.37rem!important}
+#adminOverlay .jmv363-client-badge{min-height:18px!important;padding:0 6px!important;font-size:.35rem!important}
+#adminOverlay .jmv363-client-grid{gap:5px 6px!important}
+#adminOverlay .jmv363-client-grid small{font-size:.34rem!important}
+#adminOverlay .jmv363-client-grid b{font-size:.41rem!important;line-height:1.2!important}
+
+#adminOverlay .jmv352-bot-row{padding:7px!important;border-radius:9px!important;gap:5px!important}
+#adminOverlay .jmv352-bot-row h3{font-size:.46rem!important}
+#adminOverlay .jmv352-bot-row p{font-size:.37rem!important;line-height:1.22!important}
+#adminOverlay .jmv352-bot-status{padding:2px 5px!important;font-size:.35rem!important}
+#adminOverlay .jmv352-bot-actions .jmv2-btn{min-height:24px!important;font-size:.38rem!important}
+
+#adminOverlay .jmv362-policy{padding:6px 7px!important;font-size:.38rem!important;line-height:1.24!important}
+#adminOverlay .jmv362-follow-grid{gap:5px!important}
+#adminOverlay .jmv362-follow-card{padding:6px!important;border-radius:9px!important}
+#adminOverlay .jmv362-follow-card h3{font-size:.45rem!important}
+#adminOverlay .jmv362-follow-card strong{font-size:.82rem!important}
+#adminOverlay .jmv362-follow-card p{font-size:.37rem!important;line-height:1.22!important}
+#adminOverlay .jmv362-follow-row{padding:4px 5px!important;gap:4px!important}
+#adminOverlay .jmv362-follow-row b{font-size:.39rem!important}
+#adminOverlay .jmv362-follow-row span{font-size:.34rem!important}
+#adminOverlay .jmv362-wa-btn{min-height:21px!important;padding:0 6px!important;font-size:.35rem!important}
+
+@media(max-width:560px){
+  #adminOverlay .jmv360-topbar{padding:5px!important}
+  #adminOverlay .jmv360-brand img{width:22px!important;height:22px!important;flex-basis:22px!important}
+  #adminOverlay .jmv360-brand b{font-size:.50rem!important}
+  #adminOverlay .jmv360-brand span{font-size:.36rem!important}
+  #adminOverlay .jmv360-action-btn{min-height:25px!important;padding:0 7px!important;font-size:.40rem!important}
+  #adminOverlay .jmv360-nav button{min-height:35px!important;font-size:.36rem!important;border-radius:8px!important}
+  #adminOverlay .jmv360-nav button i{font-size:.58rem!important}
+  #adminOverlay .jmv360-page-head{grid-template-columns:minmax(0,1fr) 92px!important}
+  #adminOverlay .jmv360-page-head h1{font-size:.68rem!important}
+  #adminOverlay .jmv360-page-head small{font-size:.33rem!important}
+  #adminOverlay .jmv360-date{min-width:92px!important}
+  #adminOverlay .jmv360-date b{font-size:.40rem!important}
+  #adminOverlay .jmv360-date span{font-size:.35rem!important}
+  #adminOverlay .jmv360-hero{grid-template-columns:minmax(0,1fr) 58px!important;padding:7px!important}
+  #adminOverlay .jmv360-hero-copy .accent{font-size:.76rem!important}
+  #adminOverlay .jmv2-card-head h2{font-size:.51rem!important}
+  #adminOverlay .jmv2-card-head p{font-size:.37rem!important}
+  #adminOverlay .jmv2-toolbar input,
+  #adminOverlay .jmv2-toolbar select,
+  #adminOverlay .jmv2-admin-card input,
+  #adminOverlay .jmv2-admin-card select,
+  #adminOverlay .jmv2-admin-card textarea{font-size:.39rem!important}
+}
+</style>
+
+<!-- CRULOX V3.7.0 · Rebranding integral visible -->
+<style id="cruzclick-v370-brand-style">
+/* El nuevo recurso es cuadrado; se mantiene completo y sin recorte. */
+.brand img,.loader-logo,.drawer-logo,.footer-logo,.admin-brand,
+.jmv21-footer-brand img,.jmv24-drawer-logo,.jmv360-brand img,.jmv360-hero-visual img,
+.hero-brand-top img{object-fit:contain!important}
+</style>
+<script id="cruzclick-v370-brand-script">
+(()=>{
+'use strict';
+const D=document;
+const NEW_NAME='CRULOX';
+const OLD_NAME=['JM',' Cruz',' L.',' Digital'].join('');
+const OLD_HANDLE=['jm','cruzl','digital'].join('');
+function patchTextNode(node){
+  if(node.nodeType===Node.TEXT_NODE){
+    if(node.nodeValue&&node.nodeValue.includes(OLD_NAME))node.nodeValue=node.nodeValue.split(OLD_NAME).join(NEW_NAME);
+    if(node.nodeValue&&node.nodeValue.includes(OLD_HANDLE))node.nodeValue=node.nodeValue.split(OLD_HANDLE).join('cruzclick');
+    return;
+  }
+  if(node.nodeType!==Node.ELEMENT_NODE)return;
+  if(['SCRIPT','STYLE'].includes(node.tagName))return;
+  if(node.hasAttribute('alt'))node.setAttribute('alt',String(node.getAttribute('alt')||'').split(OLD_NAME).join(NEW_NAME));
+  if(node.hasAttribute('title'))node.setAttribute('title',String(node.getAttribute('title')||'').split(OLD_NAME).join(NEW_NAME));
+  [...node.childNodes].forEach(patchTextNode);
+}
+function patchBrandImage3710(img){
+  if(!img||img.nodeType!==1)return;
+  const alt=img.getAttribute('alt')||'';
+  if(/CRULOX/i.test(alt)||img.classList.contains('loader-logo')||img.classList.contains('drawer-logo')||img.classList.contains('footer-logo')||img.classList.contains('admin-brand')||img.closest('.jmv360-brand,.jmv360-hero-visual,.hero-brand-top,.jmv21-footer-brand,.jmv24-drawer-brand')){
+    if(img.getAttribute('src')!==BRAND_LOGO_FULL)img.src=BRAND_LOGO_FULL;
+    img.alt=NEW_NAME;
+  }
+}
+function patchBrandRoot3710(root){
+  if(!root)return;
+  patchTextNode(root);
+  if(root.nodeType===1){
+    if(root.matches?.('img'))patchBrandImage3710(root);
+    root.querySelectorAll?.('img').forEach(patchBrandImage3710);
+  }
+}
+function applyCruzClickBrand(){
+  try{
+    D.title='CRULOX · Servicios digitales';
+    const meta=D.querySelector('meta[name="description"]');
+    if(meta)meta.content='CRULOX: perfiles, suscripciones, diamantes, cursos y servicios 100% digitales.';
+    const fav=D.querySelector('link[rel="icon"]');if(fav&&fav.getAttribute('href')!==BRAND_LOGO)fav.href=BRAND_LOGO;
+    patchBrandRoot3710(D.body);
+  }catch(e){console.warn('CRULOX visible brand patch',e)}
+}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',applyCruzClickBrand,{once:true});else applyCruzClickBrand();
+let brandPatchPending3710=false;
+const brandQueue3710=new Set();
+const obs=new MutationObserver(records=>{
+  for(const record of records){
+    for(const node of record.addedNodes||[]){
+      if(node.nodeType===1||node.nodeType===3)brandQueue3710.add(node);
+    }
+  }
+  if(brandPatchPending3710||!brandQueue3710.size)return;
+  brandPatchPending3710=true;
+  requestAnimationFrame(()=>{
+    brandPatchPending3710=false;
+    const nodes=[...brandQueue3710];brandQueue3710.clear();
+    nodes.forEach(patchBrandRoot3710);
+  });
+});
+if(D.body)obs.observe(D.body,{childList:true,subtree:true});
+window.addEventListener('pageshow',applyCruzClickBrand);
+window.CRUZCLICK_STORE_V370={VERSION:'3.7.0',applyBrand:applyCruzClickBrand};
+})();
+</script>
+
+
+<!-- CRULOX V3.7.2 · Símbolo transparente real solo en cabecera y portada -->
+<style id="cruzclick-v371-symbol-style">
+/* SOLO las dos ubicaciones solicitadas: cabecera pública y portada principal. */
+.brand img,
+.hero-brand-top img{
+  object-fit:contain!important;
+  background:transparent!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+  mix-blend-mode:normal!important;
+}
+.brand{isolation:isolate!important}
+.hero-brand-top{isolation:isolate!important}
+.brand img{
+  filter:drop-shadow(0 0 8px rgba(34,223,243,.22))!important;
+}
+.hero-brand-top img{
+  filter:drop-shadow(0 10px 22px rgba(34,223,243,.16))!important;
+}
+</style>
+<script id="cruzclick-v371-symbol-script">
+(()=>{
+'use strict';
+const D=document;
+const CRUZCLICK_SYMBOL_V371=BRAND_LOGO_FULL;
+function applySymbolV371(){
+  /* No se toca loader, drawer, footer, panel administrativo ni ninguna otra imagen. */
+  const targets=[
+    D.querySelector('.header .brand img'),
+    D.querySelector('.hero-brand-top img')
+  ].filter(Boolean);
+  targets.forEach(img=>{
+    if(img.src!==CRUZCLICK_SYMBOL_V371)img.src=CRUZCLICK_SYMBOL_V371;
+    img.alt='CRULOX';
+    img.style.background='transparent';
+    img.style.mixBlendMode='normal';
+    img.style.boxShadow='none';
+  });
+}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(applySymbolV371),{once:true});
+else requestAnimationFrame(applySymbolV371);
+let symbolPending371=false;
+const queueSymbol371=()=>{
+  if(symbolPending371)return;
+  symbolPending371=true;
+  requestAnimationFrame(()=>{symbolPending371=false;applySymbolV371()});
+};
+const obs=new MutationObserver(queueSymbol371);
+[D.querySelector('.header'),D.querySelector('.hero-brand-top')].filter(Boolean).forEach(root=>{
+  obs.observe(root,{childList:true,subtree:true,attributes:true,attributeFilter:['src']});
+});
+window.addEventListener('pageshow',applySymbolV371);
+window.CRUZCLICK_STORE_V371={VERSION:'3.7.2',applySymbol:applySymbolV371};
+})();
+</script>
+
+
+<!-- CRULOX V3.7.3 · Experiencia tipo app: sin selección, guardado directo de imágenes ni zoom -->
+<style id="cruzclick-v373-native-style">
+/* Mantiene desplazamiento normal, pero elimina gestos web que no aportan a la experiencia de app. */
+html,body{
+  width:100%;
+  min-height:100%;
+  overscroll-behavior:none!important;
+  -webkit-text-size-adjust:100%!important;
+  text-size-adjust:100%!important;
+  -webkit-tap-highlight-color:transparent!important;
+  touch-action:pan-x pan-y!important;
+}
+/* El contenido visible no se puede seleccionar ni activar con pulsación larga. */
+body,body *{
+  -webkit-user-select:none!important;
+  user-select:none!important;
+  -webkit-touch-callout:none!important;
+}
+/* Los campos siguen siendo editables; copiar/cortar se bloquea por JS. */
+input,textarea,[contenteditable="true"]{
+  -webkit-user-select:text!important;
+  user-select:text!important;
+}
+/* Las imágenes no reciben menú contextual ni arrastre/guardado por interacción directa. */
+img,picture,svg,canvas{
+  -webkit-user-drag:none!important;
+  user-drag:none!important;
+  -webkit-touch-callout:none!important;
+}
+img{pointer-events:none!important}
+/* Controles conservan respuesta táctil de app sin doble toque de zoom. */
+button,a,input,select,textarea,[role="button"]{
+  touch-action:manipulation!important;
+  -webkit-tap-highlight-color:transparent!important;
+}
+</style>
+<script id="cruzclick-v373-native-script">
+(()=>{
+'use strict';
+const D=document;
+const isEditable=(el)=>!!el&&!!el.closest?.('input,textarea,[contenteditable="true"]');
+const stop=(e)=>{e.preventDefault();e.stopPropagation();};
+
+/* Sin menú contextual/long-press web en toda la plataforma. */
+D.addEventListener('contextmenu',stop,{capture:true});
+
+/* Sin copiar ni cortar contenido de la plataforma. */
+D.addEventListener('copy',stop,{capture:true});
+D.addEventListener('cut',stop,{capture:true});
+D.addEventListener('beforecopy',stop,{capture:true});
+D.addEventListener('beforecut',stop,{capture:true});
+
+/* Evita selección de texto fuera de campos que necesitan edición. */
+D.addEventListener('selectstart',(e)=>{if(!isEditable(e.target))stop(e)},{capture:true});
+
+/* Ninguna imagen puede arrastrarse desde la interfaz. */
+D.addEventListener('dragstart',(e)=>{if(e.target?.closest?.('img,picture,svg,canvas'))stop(e)},{capture:true});
+function protectMedia(root=D){
+  root.querySelectorAll?.('img').forEach(img=>{
+    img.draggable=false;
+    img.setAttribute('draggable','false');
+    img.setAttribute('oncontextmenu','return false');
+  });
+}
+protectMedia();
+let mediaProtectFrame=0;
+const mediaProtectRoots=new Set();
+const mediaObserver=new MutationObserver(mutations=>{
+  for(const mutation of mutations){
+    for(const node of mutation.addedNodes){
+      if(node.nodeType===1)mediaProtectRoots.add(node);
+    }
+  }
+  if(mediaProtectFrame||!mediaProtectRoots.size)return;
+  mediaProtectFrame=requestAnimationFrame(()=>{
+    mediaProtectFrame=0;
+    const roots=[...mediaProtectRoots];mediaProtectRoots.clear();
+    const topRoots=roots.filter((root,index)=>!roots.some((other,i)=>i!==index&&other.contains?.(root)));
+    for(const root of topRoots){
+      if(root.matches?.('img')){root.draggable=false;root.setAttribute('draggable','false');root.setAttribute('oncontextmenu','return false')}
+      protectMedia(root);
+    }
+  });
+});
+mediaObserver.observe(D.body||D.documentElement,{childList:true,subtree:true});
+
+/* Bloqueo de pinch zoom y gestos equivalentes. */
+['gesturestart','gesturechange','gestureend'].forEach(type=>D.addEventListener(type,stop,{capture:true,passive:false}));
+/* V3.8.0: eliminado listener global touchmove no-pasivo; touch-action/meta ya controlan zoom sin bloquear el scroll. */
+D.addEventListener('wheel',(e)=>{if(e.ctrlKey||e.metaKey)stop(e)},{capture:true,passive:false});
+
+/* Evita zoom por doble toque fuera de campos editables. */
+/* V3.8.0: eliminado bloqueo JS de doble toque para no hacer síncrono cada touchend; touch-action cubre este caso. */
+
+/* Atajos de navegador que contradicen el modo app. No se bloquea pegar ni escribir. */
+D.addEventListener('keydown',(e)=>{
+  const mod=e.ctrlKey||e.metaKey;
+  if(!mod)return;
+  const key=String(e.key||'').toLowerCase();
+  if(['c','x','s','p','u','+','-','=','0'].includes(key))stop(e);
+},{capture:true});
+
+/* Impide enlaces de descarga directa que pudieran agregarse dinámicamente. */
+D.addEventListener('click',(e)=>{
+  const a=e.target?.closest?.('a[download]');
+  if(a)stop(e);
+},{capture:true});
+
+window.CRUZCLICK_STORE_V373={VERSION:'3.7.3',protectMedia};
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.4 · Compacto admin + ajustes sincronizados -->
+<style id="cruzclick-v374-compact-admin">
+:root{
+  --cc374-compact-gap:6px;
+}
+.jmv2-admin-brand img{width:36px!important;height:36px!important;border-radius:8px!important}
+.jmv2-admin-brand b{font-size:.66rem!important}
+.jmv2-admin-brand span{font-size:.5rem!important}
+.jmv2-admin-note{padding:7px 8px!important;font-size:.5rem!important;line-height:1.35!important}
+.jmv2-admin-top{min-height:50px!important;padding:7px 11px!important}
+.jmv2-admin-top small{font-size:.48rem!important}
+.jmv2-admin-top h1{font-size:.82rem!important}
+.jmv2-admin-actions{gap:5px!important}
+.jmv2-admin-actions button,
+.jmv2-btn{min-height:28px!important;padding:5px 9px!important;font-size:.54rem!important;border-radius:8px!important}
+.jmv2-admin-content{padding:9px!important}
+.jmv2-banner{padding:9px 10px!important;border-radius:12px!important}
+.jmv2-banner b{font-size:.62rem!important}
+.jmv2-banner p{font-size:.52rem!important}
+.jmv2-metrics{gap:6px!important;margin-top:7px!important}
+.jmv2-metric{padding:8px!important;border-radius:11px!important}
+.jmv2-metric small{font-size:.48rem!important}
+.jmv2-metric strong{font-size:.9rem!important;margin-top:2px!important}
+.jmv2-metric span{font-size:.47rem!important}
+.jmv2-admin-card{margin-top:7px!important;padding:9px!important;border-radius:12px!important}
+.jmv2-card-head{gap:8px!important;margin-bottom:7px!important}
+.jmv2-card-head h2{font-size:.69rem!important}
+.jmv2-card-head p{font-size:.51rem!important;line-height:1.3!important}
+.jmv2-toolbar{gap:5px!important}
+.jmv2-toolbar input,.jmv2-toolbar select,.jmv2-admin-card input,.jmv2-admin-card select,.jmv2-admin-card textarea{
+  min-height:28px!important;
+  padding:5px 8px!important;
+  font-size:.55rem!important;
+  border-radius:8px!important;
+}
+.jmv2-table-wrap{border-radius:10px!important}
+.jmv2-table{min-width:700px!important}
+.jmv2-table th,.jmv2-table td{padding:6px 7px!important;font-size:.52rem!important}
+.jmv2-table td b{font-size:.56rem!important}
+.jmv2-records{gap:6px!important}
+.jmv2-record{padding:8px!important;gap:7px!important;border-radius:10px!important}
+.jmv2-record h3{font-size:.61rem!important}
+.jmv2-record p{font-size:.5rem!important;line-height:1.32!important}
+.jmv2-record aside{gap:4px!important;max-width:380px!important}
+.jmv2-record select{min-height:27px!important;padding:4px 6px!important;font-size:.52rem!important;border-radius:8px!important}
+.jmv2-order-statusline{display:flex!important;flex-wrap:wrap!important;gap:4px!important;margin-top:4px!important}
+.jmv2-status{padding:3px 6px!important;font-size:.47rem!important;border-radius:999px!important}
+.jmv2-service-data{margin-top:4px!important;display:grid!important;gap:3px!important}
+.jmv2-service-data div{font-size:.5rem!important;line-height:1.28!important}
+.jmv2-empty{padding:14px 10px!important;font-size:.55rem!important;border-radius:10px!important}
+.jmv2-quick-grid{gap:6px!important}
+.jmv2-quick{padding:8px!important;border-radius:10px!important}
+.jmv2-quick b{font-size:.57rem!important}
+.jmv2-quick p{font-size:.49rem!important;line-height:1.3!important}
+.jmv2-form-grid{gap:6px!important}
+.jmv2-field{gap:3px!important}
+.jmv2-field label{font-size:.5rem!important}
+.jmv2-field textarea{min-height:60px!important}
+.jmv2-form-actions{gap:5px!important;margin-top:8px!important}
+
+.jmv2-inline-stats{display:flex;flex-wrap:wrap;gap:4px;margin:2px 0 8px}
+.jmv2-order-topline{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.jmv2-order-topline strong{font-size:.66rem;color:var(--jmv2-cyan)}
+.jmv2-order-details{margin-top:6px;border:1px solid rgba(128,211,237,.08);border-radius:9px;background:rgba(255,255,255,.018)}
+.jmv2-order-details summary{list-style:none;cursor:pointer;padding:6px 8px;font-size:.52rem;font-weight:800;color:#c9d6dd}
+.jmv2-order-details summary::-webkit-details-marker{display:none}
+.jmv2-order-details[open] summary{border-bottom:1px solid rgba(128,211,237,.08)}
+.jmv2-order-details .jmv2-order-details-body{padding:8px}
+.jmv2-note{font-size:.5rem!important;line-height:1.3!important;padding:6px 7px!important;border-radius:8px!important;background:rgba(255,255,255,.024)}
+
+.jmv2-client-grid{display:grid;gap:6px}
+.jmv2-client-card{padding:8px;border:1px solid var(--jmv2-line);border-radius:11px;background:rgba(255,255,255,.018);display:grid;gap:7px}
+.jmv2-client-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.jmv2-client-head h3{font-size:.62rem;line-height:1.2}
+.jmv2-client-head p{font-size:.49rem;color:var(--muted);margin-top:2px}
+.jmv2-client-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.jmv2-client-meta div{padding:6px 7px;border:1px solid rgba(128,211,237,.08);border-radius:9px;background:rgba(255,255,255,.014)}
+.jmv2-client-meta small{display:block;font-size:.46rem;color:#87a0ad;text-transform:uppercase;letter-spacing:.04em}
+.jmv2-client-meta b{display:block;font-size:.55rem;line-height:1.28;margin-top:2px}
+.jmv2-client-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.jmv2-client-foot span{font-size:.49rem;color:var(--muted)}
+
+.jmv2-settings-sections{display:grid;gap:8px}
+.jmv2-settings-block{border:1px solid rgba(128,211,237,.09);border-radius:11px;background:rgba(255,255,255,.018);overflow:hidden}
+.jmv2-settings-block summary{cursor:pointer;list-style:none;padding:9px 10px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-weight:900;font-size:.58rem;color:#ebf7ff}
+.jmv2-settings-block summary::-webkit-details-marker{display:none}
+.jmv2-settings-block summary span{display:block;font-size:.48rem;color:#8fa8b5;font-weight:700;margin-top:2px}
+.jmv2-settings-body{padding:0 9px 9px}
+.jmv2-settings-tip{padding:7px 8px;border:1px solid rgba(34,223,243,.1);border-radius:9px;background:rgba(34,223,243,.045);font-size:.5rem;line-height:1.35;color:#b8d7e5}
+
+@media (max-width:980px){
+  .jmv2-admin-shell{grid-template-columns:1fr!important}
+  .jmv2-admin-side{padding:9px!important;border-right:0!important;border-bottom:1px solid var(--jmv2-line)!important}
+  .jmv2-admin-brand{padding:4px 4px 8px!important;gap:7px!important}
+  .jmv2-admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;margin-top:8px!important}
+  .jmv2-admin-nav button{padding:8px 6px!important;min-height:68px!important;font-size:.56rem!important;border-radius:12px!important;flex-direction:column!important;justify-content:center!important;gap:5px!important;text-align:center!important}
+  .jmv2-admin-nav button i{width:auto!important;font-size:.95rem!important}
+  .jmv2-admin-top{padding:7px 9px!important;min-height:48px!important}
+  .jmv2-admin-top h1{font-size:.78rem!important}
+  .jmv2-admin-actions button{padding:5px 9px!important;min-height:28px!important;font-size:.54rem!important}
+  .jmv2-metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .jmv2-quick-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .jmv2-card-head{flex-direction:column!important;align-items:stretch!important}
+  .jmv2-toolbar{width:100%!important}
+  .jmv2-toolbar input,.jmv2-toolbar select{flex:1 1 140px!important;width:auto!important}
+  .jmv2-record{grid-template-columns:1fr!important}
+  .jmv2-record aside{max-width:none!important;justify-content:flex-start!important}
+  .jmv2-client-meta{grid-template-columns:1fr 1fr!important}
+  .jmv2-form-grid{grid-template-columns:1fr!important}
+}
+@media (max-width:640px){
+  .jmv2-admin-content{padding:8px!important}
+  .jmv2-admin-nav button{min-height:62px!important;font-size:.54rem!important}
+  .jmv2-admin-nav button span{line-height:1.12!important}
+  .jmv2-banner{padding:8px 9px!important}
+  .jmv2-banner b{font-size:.58rem!important}
+  .jmv2-banner p{font-size:.49rem!important}
+  .jmv2-metric{padding:7px!important}
+  .jmv2-card-head h2{font-size:.65rem!important}
+  .jmv2-card-head p{font-size:.49rem!important}
+  .jmv2-table{min-width:620px!important}
+  .jmv2-client-meta{grid-template-columns:1fr!important}
+}
+</style>
+<script id="cruzclick-v374-compact-admin-script">
+(function(){
+  const D=document;
+  const byId=id=>D.getElementById(id);
+  const qa=(s,r=D)=>Array.from(r.querySelectorAll(s));
+  const say=(m,t='info')=>{try{if(typeof notify==='function')notify(m,t);else if(typeof toast==='function')toast(m,t);else console.log(m)}catch(e){console.log(m)}};
+  const saveSettings374=()=>{try{if(typeof safeWrite==='function'&&window.KEYS?.settings)safeWrite(KEYS.settings,state.settings);else if(typeof write==='function'&&window.KEYS?.settings)write(KEYS.settings,state.settings);else localStorage.setItem((window.KEYS&&KEYS.settings)||'jm_digital_v1_settings',JSON.stringify(state.settings));}catch(e){console.warn('CRULOX V3.7.4 save settings',e)}};
+  const num=(value,fallback,min=null,max=null)=>{let n=Number(value); if(!Number.isFinite(n)) n=Number(fallback); if(min!==null) n=Math.max(min,n); if(max!==null) n=Math.min(max,n); return n;};
+  function ensureSettingDefaults374(){
+    if(!window.state||!state.settings)return;
+    Object.assign(state.settings,{
+      storeName:String(state.settings.storeName||'CRULOX').trim()||'CRULOX',
+      slogan:String(state.settings.slogan||'Plataformas Digitales').trim()||'Plataformas Digitales',
+      subtitle:String(state.settings.subtitle||'Compra digital simple, segura y transparente.\nDe Guatemala al mundo: un marketplace confiable.').trim(),
+      whatsappPhone:String(state.settings.whatsappPhone||'+502 30983655').trim()||'+502 30983655',
+      socialHandle:String(state.settings.socialHandle||'crulox').trim()||'crulox',
+      email:String(state.settings.email||'').trim(),
+      currency:String(state.settings.currency||'Q').trim()||'Q',
+      paymentMethods:String(state.settings.paymentMethods||'Banrural, Industrial, Azteca, PayPal, Remesas').trim()||'Banrural, Industrial, Azteca, PayPal, Remesas',
+      paymentText:String(state.settings.paymentText||'').trim()||String(state.settings.paymentMethods||'').split(',').map(x=>x.trim()).filter(Boolean).join(' · '),
+      lowStock:num(state.settings.lowStock,6,0),
+      reservationHours:num(state.settings.reservationHours,6,1,72),
+      defaultDeliveryEta:String(state.settings.defaultDeliveryEta||'20 - 30 min').trim()||'20 - 30 min',
+      activationText:String(state.settings.activationText||'Activación o entrega digital coordinada').trim()||'Activación o entrega digital coordinada',
+      digitalPolicy:String(state.settings.digitalPolicy||'No realizamos entregas físicas. Cada servicio indica sus datos requeridos, disponibilidad y forma de activación.').trim(),
+      searchPlaceholder:String(state.settings.searchPlaceholder||'Buscar productos').trim()||'Buscar productos',
+      supportButtonText:String(state.settings.supportButtonText||'Abrir chat').trim()||'Abrir chat',
+      purchasesButtonText:String(state.settings.purchasesButtonText||'Mis compras').trim()||'Mis compras',
+      renewalReminderDays:num(state.settings.renewalReminderDays,3,0,30),
+      abandonedCartHours:num(state.settings.abandonedCartHours,12,0,168),
+      noPurchaseReminderDays:num(state.settings.noPurchaseReminderDays,3,0,60),
+      unpaidOrderHours:num(state.settings.unpaidOrderHours,6,0,168),
+      shippingText:'Entrega 100% digital',
+      returnText:'Condiciones según cada servicio digital'
+    });
+  }
+  ensureSettingDefaults374();
+
+  const previousApplySettings374=typeof window.applySettings==='function'?window.applySettings:null;
+  window.applySettings=function(){
+    if(previousApplySettings374){try{previousApplySettings374()}catch(e){console.warn('CRULOX V3.7.4 base applySettings',e)}}
+    ensureSettingDefaults374();
+    try{D.title=`${state.settings.storeName||'CRULOX'} · Tienda digital`}catch(e){}
+    const subtitle=byId('heroSubtitle'); if(subtitle) subtitle.textContent=state.settings.subtitle||'';
+    const support=byId('heroSupport'); if(support) support.textContent=state.settings.supportButtonText||'Abrir chat';
+    const purchases=byId('jmMyPurchasesBtn'); if(purchases) purchases.textContent=state.settings.purchasesButtonText||'Mis compras';
+    const search=byId('searchInput'); if(search) search.setAttribute('placeholder',state.settings.searchPlaceholder||'Buscar productos');
+    qa('.hero-brand-slogan,.jm-brand-copy small').forEach(el=>{el.textContent=state.settings.slogan||'Plataformas Digitales'});
+    qa('.jmv2-admin-brand b').forEach(el=>{el.textContent=state.settings.storeName||'CRULOX'});
+    qa('.jmv2-admin-brand span').forEach(el=>{el.textContent=`Operación 100% digital · ${state.settings.slogan||'Plataformas Digitales'}`});
+  };
+  try{applySettings=window.applySettings}catch(e){}
+
+  function refreshEverything374(section=null){
+    try{if(typeof renderStore==='function')renderStore(); else if(typeof applySettings==='function')applySettings()}catch(e){console.warn('CRULOX V3.7.4 renderStore',e)}
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    try{if(state?.session?.role==='admin' && byId('adminContent') && typeof window.renderAdminSection==='function')window.renderAdminSection(section||state.adminSection||'settings')}catch(e){console.warn('CRULOX V3.7.4 renderAdminSection',e)}
+  }
+
+  window.ordersAdminV2=function(){
+    purgeExpiredReservations();
+    $('adminContent').innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Pedidos digitales</h2><p>Vista compacta para revisar y mover pedidos más rápido.</p></div><div class="jmv2-toolbar"><input id="jmv2OrderSearch" placeholder="Buscar pedido, cliente o servicio"><select id="jmv2OrderStatus"><option value="all">Todos</option>${ORDER_STATUSES.map(s=>`<option>${s}</option>`).join('')}</select></div></div><div class="jmv2-inline-stats" id="jmv2OrderStats"></div><div class="jmv2-records" id="jmv2OrderList"></div></section>`;
+    const draw=()=>{
+      const term=String($('jmv2OrderSearch').value||'').toLowerCase();
+      const st=$('jmv2OrderStatus').value;
+      const all=Array.isArray(state.orders)?state.orders:[];
+      const list=all.filter(o=>(st==='all'||o.status===st)&&(!term||`${o.id} ${o.customer?.fullName||''} ${o.customer?.phone||''} ${(o.items||[]).map(i=>i.name).join(' ')}`.toLowerCase().includes(term)));
+      $('jmv2OrderStats').innerHTML=`<span class="jmv2-status">Mostrando ${list.length}</span><span class="jmv2-status warn">Pendientes ${all.filter(o=>!COMPLETE.has(o.status)&&!CANCELED.has(o.status)).length}</span><span class="jmv2-status ok">Pagados ${all.filter(o=>PAID.has(o.status)).length}</span>`;
+      $('jmv2OrderList').innerHTML=list.map(o=>{
+        const statusClass=CANCELED.has(o.status)?'bad':COMPLETE.has(o.status)?'ok':PAID.has(o.status)?'ok':'warn';
+        const details=orderDataMarkup(o) || '<div style="font-size:.5rem;color:var(--muted)">Sin datos adicionales.</div>';
+        return `<article class="jmv2-record"><div><div class="jmv2-order-topline"><div><h3>${esc2(o.id)} · ${esc2(o.customer?.fullName||'Cliente')}</h3><p>${esc2(new Date(o.createdAt).toLocaleString('es-GT'))} · ${esc2(o.payment?.method||'Pago por coordinar')} · ${esc2(o.fulfillment?.channel||'Interno')}</p></div><strong>${money2(o.total)}</strong></div><div class="jmv2-order-statusline"><span class="jmv2-status ${statusClass}">${esc2(o.status)}</span><span class="jmv2-status ${o.payment?.status==='Confirmado'?'ok':'warn'}">Pago: ${esc2(o.payment?.status||'Pendiente')}</span><span class="jmv2-status">Reserva: ${esc2(o.inventory?.reservationStatus||'legacy')}</span></div><details class="jmv2-order-details"><summary>Ver datos del pedido</summary><div class="jmv2-order-details-body">${details}${o.fulfillment?.note?`<div class="jmv2-note" style="margin-top:7px">Nota entrega: ${esc2(o.fulfillment.note)}</div>`:''}${o.notes?`<div class="jmv2-note" style="margin-top:7px">Nota interna: ${esc2(o.notes)}</div>`:''}</div></details></div><aside><select data-v2orderstatus="${esc2(o.id)}">${ORDER_STATUSES.map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="jmv2-btn" data-v2copyorder="${esc2(o.id)}">Copiar</button><button class="jmv2-btn green" data-v2waorder="${esc2(o.id)}">WhatsApp</button><button class="jmv2-btn" data-v2deliver="${esc2(o.id)}">Entrega</button><button class="jmv2-btn red" data-v2deleteorder="${esc2(o.id)}">Eliminar</button></aside></article>`
+      }).join('')||'<div class="jmv2-empty">No hay pedidos en este filtro.</div>';
+      qa('[data-v2orderstatus]',$('jmv2OrderList')).forEach(s=>s.onchange=()=>{const o=state.orders.find(x=>String(x.id)===String(s.dataset.v2orderstatus));if(!o)return;setOrderStatus(o,s.value);try{renderStore()}catch(e){}draw()});
+      qa('[data-v2copyorder]',$('jmv2OrderList')).forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>String(x.id)===String(b.dataset.v2copyorder));try{await navigator.clipboard.writeText(orderMessageV2(o));say('Pedido copiado.','success')}catch(e){say('No se pudo copiar automáticamente.','warn')}});
+      qa('[data-v2waorder]',$('jmv2OrderList')).forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>String(x.id)===String(b.dataset.v2waorder));if(!o)return;const ph=String(o.customer?.phone||'').replace(/\D/g,'');const msg=customerStatusMessage(o);window.open(`https://wa.me/${ph}?text=${encodeURIComponent(msg)}`,'_blank','noopener,noreferrer')});
+      qa('[data-v2deliver]',$('jmv2OrderList')).forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>String(x.id)===String(b.dataset.v2deliver));if(!o)return;let val=null;try{val=typeof npPrompt==='function'?await npPrompt('Nota interna de entrega (no guardes contraseñas permanentes)',o.fulfillment?.note||''):prompt('Nota interna',o.fulfillment?.note||'')}catch(e){}if(val===null)return;o.fulfillment=o.fulfillment||{};o.fulfillment.note=String(val).slice(0,600);o.updatedAt=nowIso();safeWrite(KEYS.orders,state.orders);draw()});
+      qa('[data-v2deleteorder]',$('jmv2OrderList')).forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>String(x.id)===String(b.dataset.v2deleteorder));if(!o)return;let ok=true;try{if(typeof npConfirm==='function')ok=await npConfirm(`¿Eliminar ${o.id}?`)}catch(e){}if(!ok)return;if(o.inventory?.reservationStatus==='reserved'&&o.payment?.status!=='Confirmado')restoreReservation(o,'order-deleted');state.orders=state.orders.filter(x=>String(x.id)!==String(o.id));safeWrite(KEYS.orders,state.orders);safeWrite(KEYS.products,state.products);try{renderStore()}catch(e){}draw()});
+    };
+    draw();$('jmv2OrderSearch').oninput=draw;$('jmv2OrderStatus').onchange=draw;
+  };
+  try{ordersAdminV2=window.ordersAdminV2}catch(e){}
+
+  window.clientsAdminV2=function(){
+    const paid={};
+    state.orders.filter(o=>o.payment?.status==='Confirmado'||PAID.has(o.status)).forEach(o=>paid[o.userId]=(paid[o.userId]||0)+Number(o.total||0));
+    $('adminContent').innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Clientes digitales</h2><p>Listado compacto con datos útiles para seguimiento y soporte.</p></div><div class="jmv2-toolbar"><input id="jmv2ClientSearch" placeholder="Buscar cliente, correo o teléfono"></div></div><div class="jmv2-inline-stats"><span class="jmv2-status">${state.users.length} clientes</span><span class="jmv2-status ok">${state.orders.filter(o=>o.payment?.status==='Confirmado'||PAID.has(o.status)).length} compras confirmadas</span></div><div class="jmv2-client-grid" id="jmv2ClientList"></div></section>`;
+    const draw=()=>{
+      const term=String($('jmv2ClientSearch').value||'').toLowerCase().trim();
+      const users=(Array.isArray(state.users)?state.users:[]).filter(u=>!term||`${u.fullName||''} ${u.username||''} ${u.email||''} ${u.phone||''}`.toLowerCase().includes(term));
+      $('jmv2ClientList').innerHTML=users.map(u=>{
+        const orders=state.orders.filter(o=>o.userId===u.id);
+        const last=orders.slice().sort((a,b)=>Date.parse(b.createdAt)-Date.parse(a.createdAt))[0];
+        return `<article class="jmv2-client-card"><div class="jmv2-client-head"><div><h3>${esc2(u.fullName||u.username||'—')}</h3><p>${esc2(u.username||'Sin alias')}</p></div><span class="jmv2-status">${orders.length} pedidos</span></div><div class="jmv2-client-meta"><div><small>Correo</small><b>${esc2(u.email||'—')}</b></div><div><small>Teléfono</small><b>${esc2(u.phone||'—')}</b></div><div><small>Compras confirmadas</small><b>${money2(paid[u.id]||0)}</b></div><div><small>Último pedido</small><b>${last?esc2(`${last.status} · ${new Date(last.createdAt).toLocaleDateString('es-GT')}`):'—'}</b></div></div><div class="jmv2-client-foot"><span>ID cliente: ${esc2(u.id||'—')}</span><button class="jmv2-btn green" data-v2clientwa="${esc2(u.id)}">WhatsApp</button></div></article>`;
+      }).join('')||'<div class="jmv2-empty">No hay clientes para mostrar.</div>';
+      qa('[data-v2clientwa]',$('jmv2ClientList')).forEach(b=>b.onclick=()=>{const u=state.users.find(x=>String(x.id)===String(b.dataset.v2clientwa));const ph=String(u?.phone||'').replace(/\D/g,'');window.open(`https://wa.me/${ph}`,'_blank','noopener,noreferrer')});
+    };
+    draw(); $('jmv2ClientSearch').oninput=draw;
+  };
+  try{clientsAdminV2=window.clientsAdminV2}catch(e){}
+
+  window.settingsAdminV2=function(){
+    ensureSettingDefaults374();
+    $('adminContent').innerHTML=`<form class="jmv2-admin-card" id="jmv2SettingsForm" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Ajustes del negocio digital</h2><p>Cambios compactos con reflejo directo en la tienda y en el panel.</p></div></div><div class="jmv2-settings-sections"><details class="jmv2-settings-block" open><summary><div>Identidad pública<span>Marca, contacto y textos visibles</span></div><span>▾</span></summary><div class="jmv2-settings-body"><div class="jmv2-form-grid"><div class="jmv2-field"><label>Marca</label><input id="jmv2SetName" value="${esc2(state.settings.storeName||'CRULOX')}"></div><div class="jmv2-field"><label>Eslogan</label><input id="jmv2SetSlogan" value="${esc2(state.settings.slogan||'Plataformas Digitales')}"></div><div class="jmv2-field"><label>WhatsApp para recordatorios</label><input id="jmv2SetPhone" value="${esc2(state.settings.whatsappPhone||'+502 30983655')}"></div><div class="jmv2-field"><label>Correo</label><input id="jmv2SetEmail" type="email" value="${esc2(state.settings.email||'')}"></div><div class="jmv2-field"><label>Usuario de redes</label><input id="jmv2SetHandle" value="${esc2(state.settings.socialHandle||'crulox')}"></div><div class="jmv2-field"><label>Moneda</label><input id="jmv2SetCurrency" value="${esc2(state.settings.currency||'Q')}"></div><div class="jmv2-field full"><label>Descripción pública</label><textarea id="jmv2SetSubtitle">${esc2(state.settings.subtitle||'')}</textarea></div></div></div></details><details class="jmv2-settings-block" open><summary><div>Operación digital<span>Pagos, reservas y tiempos</span></div><span>▾</span></summary><div class="jmv2-settings-body"><div class="jmv2-form-grid"><div class="jmv2-field full"><label>Métodos de pago separados por coma</label><input id="jmv2SetPayments" value="${esc2(state.settings.paymentMethods||'')}"></div><div class="jmv2-field"><label>Alerta de cupos bajos</label><input id="jmv2SetLow" type="number" min="0" value="${Number(state.settings.lowStock||6)}"></div><div class="jmv2-field"><label>Horas de reserva de cupos</label><input id="jmv2SetReserve" type="number" min="1" max="72" value="${Number(state.settings.reservationHours||6)}"></div><div class="jmv2-field"><label>Entrega estimada por defecto</label><input id="jmv2SetEta" value="${esc2(state.settings.defaultDeliveryEta||'20 - 30 min')}"></div><div class="jmv2-field full"><label>Texto de activación</label><input id="jmv2SetActivation" value="${esc2(state.settings.activationText||'Activación o entrega digital coordinada')}"></div><div class="jmv2-field full"><label>Política de venta digital</label><textarea id="jmv2SetPolicy">${esc2(state.settings.digitalPolicy||'')}</textarea></div></div></div></details><details class="jmv2-settings-block" open><summary><div>Tienda y experiencia<span>Campos que sí se reflejan en la vista pública</span></div><span>▾</span></summary><div class="jmv2-settings-body"><div class="jmv2-form-grid"><div class="jmv2-field"><label>Texto botón principal</label><input id="jmv2SetSupportBtn" value="${esc2(state.settings.supportButtonText||'Abrir chat')}"></div><div class="jmv2-field"><label>Texto botón compras</label><input id="jmv2SetPurchasesBtn" value="${esc2(state.settings.purchasesButtonText||'Mis compras')}"></div><div class="jmv2-field full"><label>Placeholder de búsqueda</label><input id="jmv2SetSearchPlaceholder" value="${esc2(state.settings.searchPlaceholder||'Buscar productos')}"></div></div><div class="jmv2-settings-tip" style="margin-top:8px">Estos campos se actualizan de inmediato en la tienda: marca, eslogan, descripción, moneda, búsqueda y textos principales.</div></div></details><details class="jmv2-settings-block"><summary><div>Seguimientos útiles<span>Valores operativos para recordatorios y control</span></div><span>▾</span></summary><div class="jmv2-settings-body"><div class="jmv2-form-grid"><div class="jmv2-field"><label>Días previos para renovación</label><input id="jmv2SetRenewalDays" type="number" min="0" max="30" value="${Number(state.settings.renewalReminderDays||3)}"></div><div class="jmv2-field"><label>Horas para carrito pendiente</label><input id="jmv2SetCartHours" type="number" min="0" max="168" value="${Number(state.settings.abandonedCartHours||12)}"></div><div class="jmv2-field"><label>Días para registrado sin compra</label><input id="jmv2SetNoPurchaseDays" type="number" min="0" max="60" value="${Number(state.settings.noPurchaseReminderDays||3)}"></div><div class="jmv2-field"><label>Horas para pedido sin pago</label><input id="jmv2SetUnpaidHours" type="number" min="0" max="168" value="${Number(state.settings.unpaidOrderHours||6)}"></div></div><div class="jmv2-settings-tip" style="margin-top:8px">No inventé automatizaciones falsas. Estos valores quedan guardados para que el sistema y tus procesos usen criterios claros de seguimiento.</div></div></details></div><div class="jmv2-form-actions"><button class="jmv2-btn primary" type="submit">Guardar ajustes</button><button class="jmv2-btn" type="button" id="jmv2Backup">Exportar respaldo</button></div></form>`;
+    $('jmv2SettingsForm').onsubmit=e=>{
+      e.preventDefault();
+      const methods=String($('jmv2SetPayments').value||'').trim();
+      const phone=String($('jmv2SetPhone').value||'').trim()||'+502 30983655';
+      Object.assign(state.settings,{
+        businessModel:'digital-only',
+        storeName:String($('jmv2SetName').value||'').trim()||'CRULOX',
+        slogan:String($('jmv2SetSlogan').value||'').trim()||'Plataformas Digitales',
+        whatsappPhone:phone,
+        socialHandle:String($('jmv2SetHandle').value||'').trim()||'crulox',
+        email:String($('jmv2SetEmail').value||'').trim(),
+        currency:String($('jmv2SetCurrency').value||'').trim()||'Q',
+        subtitle:String($('jmv2SetSubtitle').value||'').trim(),
+        paymentMethods:methods,
+        paymentText:methods.split(',').map(x=>x.trim()).filter(Boolean).join(' · '),
+        lowStock:num($('jmv2SetLow').value,6,0),
+        reservationHours:num($('jmv2SetReserve').value,6,1,72),
+        defaultDeliveryEta:String($('jmv2SetEta').value||'').trim()||'20 - 30 min',
+        activationText:String($('jmv2SetActivation').value||'').trim()||'Activación o entrega digital coordinada',
+        digitalPolicy:String($('jmv2SetPolicy').value||'').trim(),
+        searchPlaceholder:String($('jmv2SetSearchPlaceholder').value||'').trim()||'Buscar productos',
+        supportButtonText:String($('jmv2SetSupportBtn').value||'').trim()||'Abrir chat',
+        purchasesButtonText:String($('jmv2SetPurchasesBtn').value||'').trim()||'Mis compras',
+        renewalReminderDays:num($('jmv2SetRenewalDays').value,3,0,30),
+        abandonedCartHours:num($('jmv2SetCartHours').value,12,0,168),
+        noPurchaseReminderDays:num($('jmv2SetNoPurchaseDays').value,3,0,60),
+        unpaidOrderHours:num($('jmv2SetUnpaidHours').value,6,0,168),
+        shippingText:'Entrega 100% digital',
+        returnText:'Condiciones según cada servicio digital',
+        supportBotUrl:`https://wa.me/${phone.replace(/\D/g,'')}`,
+        orderBotUrl:`https://wa.me/${phone.replace(/\D/g,'')}`
+      });
+      saveSettings374();
+      refreshEverything374('settings');
+      say('Ajustes guardados y sincronizados.','success');
+    };
+    $('jmv2Backup').onclick=()=>{try{if(typeof exportBackup==='function')exportBackup();else say('La función de respaldo no está disponible.','warn')}catch(e){say('No se pudo crear el respaldo.','error')}};
+  };
+  try{settingsAdminV2=window.settingsAdminV2}catch(e){}
+
+  if(D.readyState==='loading'){
+    D.addEventListener('DOMContentLoaded',()=>{try{ensureSettingDefaults374(); if(typeof applySettings==='function')applySettings()}catch(e){}},{once:true});
+  }else{
+    try{ensureSettingDefaults374(); if(typeof applySettings==='function')applySettings()}catch(e){}
+  }
+  console.info('CRULOX · V3.7.4 compacto + ajustes sincronizados');
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.5 · Compacto total para todas las funciones visibles -->
+<style id="cruzclick-v375-compact-all-style">
+.jmv2-banner{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:center!important}
+.jmv2-banner b{font-size:.60rem!important}
+.jmv2-banner p{max-width:66ch!important}
+.jmv2-quick-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important}
+.jmv2-quick{display:grid!important;align-content:start!important;gap:3px!important;min-height:unset!important}
+.jmv2-quick i,.jmv2-quick em{font-style:normal!important}
+.jmv375-headline{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.jmv375-list{display:grid;gap:6px}
+.jmv375-service,.jmv375-availability{padding:8px;border:1px solid var(--jmv2-line);border-radius:11px;background:rgba(255,255,255,.018);display:grid;gap:7px}
+.jmv375-service-top,.jmv375-availability-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.jmv375-service-top h3,.jmv375-availability-top h3{font-size:.62rem;line-height:1.2;margin:0}
+.jmv375-service-top p,.jmv375-availability-top p{font-size:.49rem;line-height:1.3;color:var(--muted);margin:2px 0 0}
+.jmv375-thumb{width:32px;height:32px;border-radius:8px;object-fit:cover;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.03)}
+.jmv375-meta{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.jmv375-meta div{padding:6px 7px;border-radius:9px;border:1px solid rgba(128,211,237,.08);background:rgba(255,255,255,.014)}
+.jmv375-meta small{display:block;font-size:.46rem;color:#87a0ad;text-transform:uppercase;letter-spacing:.04em}
+.jmv375-meta b{display:block;font-size:.55rem;line-height:1.26;margin-top:2px;color:#eaf8ff}
+.jmv375-actions{display:flex;flex-wrap:wrap;gap:5px;justify-content:flex-end}
+.jmv375-actions .jmv2-btn{flex:0 0 auto}
+.jmv375-note{font-size:.49rem;color:var(--muted);line-height:1.3}
+.jmv375-top-actions{display:flex;flex-wrap:wrap;gap:5px}
+.jmv375-inline{display:flex;flex-wrap:wrap;gap:4px}
+.jmv375-inline .jmv2-status{margin:0}
+
+.jmv362-policy{padding:8px 9px!important;border-radius:10px!important;font-size:.5rem!important;line-height:1.35!important;background:rgba(255,255,255,.024)!important;border:1px solid rgba(128,211,237,.08)!important}
+.jmv362-follow-grid{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:6px!important;margin-top:8px!important}
+.jmv362-follow-card{padding:8px!important;border-radius:11px!important;background:rgba(255,255,255,.018)!important;border:1px solid var(--jmv2-line)!important}
+.jmv362-follow-card h3{font-size:.60rem!important;margin:0 0 2px!important}
+.jmv362-follow-card strong{font-size:.88rem!important;display:block!important;margin-top:2px!important;color:var(--jmv2-cyan)!important}
+.jmv362-follow-card p{font-size:.49rem!important;line-height:1.3!important;margin-top:4px!important}
+.jmv362-follow-card .jmv362-follow-row{padding:6px 7px!important;border-radius:9px!important;margin-top:6px!important}
+.jmv362-follow-card .jmv362-follow-row b{font-size:.54rem!important}
+.jmv362-follow-card .jmv362-follow-row small{font-size:.47rem!important;line-height:1.25!important}
+.jmv362-follow-card .jmv2-btn{min-height:26px!important;padding:4px 8px!important;font-size:.5rem!important}
+
+#crudModal #jmv2ServiceForm .jmv2-form-grid{gap:6px!important}
+#crudModal #jmv2ServiceForm .jmv2-field label{font-size:.49rem!important}
+#crudModal #jmv2ServiceForm input,
+#crudModal #jmv2ServiceForm select,
+#crudModal #jmv2ServiceForm textarea{min-height:28px!important;padding:5px 8px!important;font-size:.54rem!important;border-radius:8px!important}
+#crudModal #jmv2ServiceForm textarea{min-height:62px!important}
+#crudModal #jmv2ServiceForm small{font-size:.47rem!important;line-height:1.3!important}
+#crudModal #jmv2ServiceForm .jmv2-form-actions{gap:5px!important;margin-top:8px!important}
+#crudModal #jmv2ServiceForm .jmv2-btn{min-height:28px!important;padding:5px 9px!important;font-size:.54rem!important}
+
+@media (max-width:760px){
+  .jmv2-quick-grid,.jmv362-follow-grid{grid-template-columns:1fr!important}
+  .jmv375-meta{grid-template-columns:1fr 1fr!important}
+}
+@media (max-width:560px){
+  .jmv375-service-top,.jmv375-availability-top{gap:6px!important}
+  .jmv375-meta{grid-template-columns:1fr!important}
+  .jmv375-actions{justify-content:flex-start!important}
+}
+</style>
+<script id="cruzclick-v375-compact-all-script">
+(function(){
+  const D=document;
+  const $=id=>D.getElementById(id);
+  const qa=(s,r=D)=>Array.from(r.querySelectorAll(s));
+  const note=(m,t='info')=>{try{if(typeof notify==='function')notify(m,t);else if(typeof toast==='function')toast(m,t);else console.log(m)}catch(e){console.log(m)}};
+  const saveAll=()=>{try{safeWrite(KEYS.products,state.products);safeWrite(KEYS.orders,state.orders);safeWrite(KEYS.settings,state.settings);safeWrite(KEYS.cart,state.cart);safeWrite(KEYS.favorites,state.favorites)}catch(e){console.warn('saveAll V375',e)}};
+  const byType=(p)=>{try{return kindDef(p)}catch(e){return KINDS?.[p.digitalKind]||{label:p.digitalKind||'Servicio'}}};
+  function compactServiceCard375(p){
+    normalizeProductV2(p);
+    const a=avail(p), k=byType(p), reqs=(p.digitalRequirements||[]).length;
+    return `<article class="jmv375-service"><div class="jmv375-service-top"><div style="display:flex;gap:8px;align-items:flex-start"><img class="jmv375-thumb" src="${esc2(p.image||BRAND_LOGO)}" alt=""><div><h3>${esc2(p.name||'Servicio')}</h3><p>${esc2(p.category||'Sin categoría')} · ${esc2(p.platform||'Sin plataforma')}</p></div></div><div class="jmv375-inline"><span class="jmv2-status ${a.cls==='out'?'bad':a.cls==='low'?'warn':'ok'}">${esc2(a.admin)}</span>${p.featured!==false?'<span class="jmv2-status">Destacado</span>':''}</div></div><div class="jmv375-meta"><div><small>Tipo</small><b>${esc2(k.label||'Servicio digital')}</b></div><div><small>Precio</small><b>${money2(p.price)}</b></div><div><small>Entrega</small><b>${esc2(p.deliveryEta||state.settings.defaultDeliveryEta||'—')}</b></div><div><small>Datos requeridos</small><b>${reqs}</b></div></div><div class="jmv375-actions"><button class="jmv2-btn" data-v375edit="${esc2(p.id)}">Editar</button><button class="jmv2-btn" data-v375copy="${esc2(p.id)}">Duplicar</button><button class="jmv2-btn red" data-v375del="${esc2(p.id)}">Eliminar</button></div></article>`;
+  }
+  window.servicesAdminV2=function(){
+    $('adminContent').innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Catálogo de servicios digitales</h2><p>Vista compacta para administrar productos sin desperdiciar espacio.</p></div><div class="jmv2-toolbar"><input id="jmv375ServiceSearch" placeholder="Buscar servicio"><select id="jmv375ServiceKind"><option value="all">Todos los tipos</option>${Object.entries(KINDS).map(([k,d])=>`<option value="${k}">${esc2(d.label)}</option>`).join('')}</select><button class="jmv2-btn primary" id="jmv375AddService">Nuevo</button></div></div><div class="jmv2-inline-stats"><span class="jmv2-status">${state.products.length} servicios</span><span class="jmv2-status warn">${state.products.filter(p=>{normalizeProductV2(p);return p.availabilityMode==='limited'&&Number(p.stock||0)<=Number(state.settings.lowStock||6)}).length} stock bajo</span></div><div class="jmv375-list" id="jmv375ServiceList"></div></section>`;
+    const draw=()=>{
+      const term=String($('jmv375ServiceSearch').value||'').toLowerCase().trim();
+      const kind=$('jmv375ServiceKind').value;
+      const list=(state.products||[]).filter(p=>{normalizeProductV2(p);return (kind==='all'||p.digitalKind===kind)&&(!term||`${p.name||''} ${p.category||''} ${p.platform||''}`.toLowerCase().includes(term))});
+      $('jmv375ServiceList').innerHTML=list.map(compactServiceCard375).join('')||'<div class="jmv2-empty">No hay servicios para mostrar.</div>';
+      qa('[data-v375edit]',$('jmv375ServiceList')).forEach(b=>b.onclick=()=>openServiceEditorV2(b.dataset.v375edit));
+      qa('[data-v375copy]',$('jmv375ServiceList')).forEach(b=>b.onclick=()=>{const p=state.products.find(x=>String(x.id)===String(b.dataset.v375copy));if(!p)return;state.products.unshift({...JSON.parse(JSON.stringify(p)),id:typeof uid==='function'?uid('svc'):`svc-${Date.now()}`,name:`${p.name} copia`,createdAt:nowIso(),updatedAt:nowIso()});saveAll();try{renderStore()}catch(e){}draw()});
+      qa('[data-v375del]',$('jmv375ServiceList')).forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>String(x.id)===String(b.dataset.v375del));if(!p)return;const reserved=(state.orders||[]).some(o=>o.inventory?.reservationStatus==='reserved'&&(o.inventory?.items||[]).some(i=>String(i.productId)===String(p.id)));if(reserved)return note('No puedes eliminar un servicio con cupos reservados en pedidos pendientes.','warn');let ok=true;try{if(typeof npConfirm==='function')ok=await npConfirm(`¿Eliminar ${p.name}?`)}catch(e){}if(!ok)return;state.products=state.products.filter(x=>String(x.id)!==String(p.id));state.cart=state.cart.filter(x=>String(x.id)!==String(p.id));state.favorites=state.favorites.filter(x=>String(x)!==String(p.id));saveAll();try{renderStore()}catch(e){}draw()});
+    };
+    draw();
+    $('jmv375ServiceSearch').oninput=draw;
+    $('jmv375ServiceKind').onchange=draw;
+    $('jmv375AddService').onclick=()=>openServiceEditorV2();
+  };
+  try{servicesAdminV2=window.servicesAdminV2}catch(e){}
+
+  window.availabilityAdminV2=function(){
+    purgeExpiredReservations();
+    $('adminContent').innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Disponibilidad digital</h2><p>Control compacto de cupos, reservas y tipo de disponibilidad.</p></div><div class="jmv375-top-actions"><button class="jmv2-btn" id="jmv375AvailRefresh">Actualizar</button><button class="jmv2-btn" id="jmv375AvailGoServices">Servicios</button></div></div><div class="jmv375-list" id="jmv375AvailList"></div></section>`;
+    const draw=()=>{
+      $('jmv375AvailList').innerHTML=(state.products||[]).map(p=>{normalizeProductV2(p);const a=avail(p),reserved=(state.orders||[]).filter(o=>o.inventory?.reservationStatus==='reserved').reduce((s,o)=>s+(o.inventory?.items||[]).filter(i=>String(i.productId)===String(p.id)).reduce((x,i)=>x+Number(i.qty||0),0),0);return `<article class="jmv375-availability"><div class="jmv375-availability-top"><div><h3>${esc2(p.name)}</h3><p>${esc2(byType(p).label||'Servicio digital')} · ${esc2(p.platform||'Sin plataforma')}</p></div><div class="jmv375-inline"><span class="jmv2-status ${a.cls==='out'?'bad':a.cls==='low'?'warn':'ok'}">${esc2(a.admin)}</span>${reserved?`<span class="jmv2-status warn">${reserved} reservado${reserved===1?'':'s'}</span>`:''}</div></div><div class="jmv375-meta"><div><small>Modo</small><b>${p.availabilityMode==='limited'?'Cupos controlados':p.availabilityMode==='unlimited'?'Ilimitado':'Bajo solicitud'}</b></div><div><small>Precio</small><b>${money2(p.price)}</b></div><div><small>Cupos cargados</small><b>${p.availabilityMode==='limited'?Number(p.stock||0):'—'}</b></div><div><small>Entrega</small><b>${esc2(p.deliveryEta||state.settings.defaultDeliveryEta||'—')}</b></div></div><div class="jmv375-actions"><select data-v375mode="${esc2(p.id)}"><option value="limited" ${p.availabilityMode==='limited'?'selected':''}>Limitado</option><option value="unlimited" ${p.availabilityMode==='unlimited'?'selected':''}>Ilimitado</option><option value="on_request" ${p.availabilityMode==='on_request'?'selected':''}>Bajo solicitud</option></select>${p.availabilityMode==='limited'?`<button class="jmv2-btn" data-v375stock="${esc2(p.id)}">Definir cupos</button>`:''}<button class="jmv2-btn" data-v375editavail="${esc2(p.id)}">Editar</button></div></article>`}).join('')||'<div class="jmv2-empty">No hay servicios.</div>';
+      qa('[data-v375mode]',$('jmv375AvailList')).forEach(s=>s.onchange=()=>{const p=state.products.find(x=>String(x.id)===String(s.dataset.v375mode));if(!p)return;p.availabilityMode=s.value;if(s.value!=='limited')p.stock=9999;else if(Number(p.stock)>=9999)p.stock=0;saveAll();try{renderStore()}catch(e){}draw()});
+      qa('[data-v375stock]',$('jmv375AvailList')).forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>String(x.id)===String(b.dataset.v375stock));if(!p)return;let val=null;try{val=typeof npPrompt==='function'?await npPrompt(`Cupos vendibles para ${p.name}`,p.stock):prompt('Cupos',p.stock)}catch(e){}if(val===null||isNaN(Number(val)))return;p.stock=Math.max(0,Number(val));saveAll();try{renderStore()}catch(e){}draw()});
+      qa('[data-v375editavail]',$('jmv375AvailList')).forEach(b=>b.onclick=()=>openServiceEditorV2(b.dataset.v375editavail));
+    };
+    draw();
+    $('jmv375AvailRefresh').onclick=draw;
+    $('jmv375AvailGoServices').onclick=()=>renderAdminV2('services');
+  };
+  try{availabilityAdminV2=window.availabilityAdminV2}catch(e){}
+
+  window.messagesAdminV2=function(){
+    if(window.JM_DIGITAL_STORE_V362?.renderFollowupCenter){
+      window.JM_DIGITAL_STORE_V362.renderFollowupCenter();
+      return;
+    }
+    $('adminContent').innerHTML=`<section class="jmv2-admin-card" style="margin-top:0"><div class="jmv2-card-head"><div><h2>Seguimientos</h2><p>Centro compacto para los contactos operativos permitidos.</p></div></div><div class="jmv2-note">No hay módulo avanzado cargado en esta ejecución.</div></section>`;
+  };
+  try{messagesAdminV2=window.messagesAdminV2}catch(e){}
+
+  window.homeAdminV2=function(){
+    purgeExpiredReservations();
+    const limited=state.products.filter(p=>(normalizeProductV2(p),p.availabilityMode==='limited')),
+          low=limited.filter(p=>Number(p.stock)>0&&Number(p.stock)<=Number(state.settings.lowStock||6)).length,
+          out=limited.filter(p=>Number(p.stock)<=0).length,
+          payPending=state.orders.filter(o=>o.status==='Pago pendiente').length,
+          prep=state.orders.filter(o=>['Pago confirmado','Preparando acceso','Listo para entregar'].includes(o.status)).length;
+    $('adminContent').innerHTML=`<section class="jmv2-banner"><div><b>${esc2(state.settings.storeName||'CRULOX')} · operación 100% digital</b><p>Panel compacto con prioridad en pedidos, clientes y cupos.</p></div><span class="jmv2-status ok">${esc2(state.settings.slogan||'DIGITAL')}</span></section><div class="jmv2-metrics">${metric('Servicios',state.products.length,'catálogo')}${metric('Pendientes',pendingCount(),'requieren acción')}${metric('Pago pendiente',payPending,'por confirmar')}${metric('Preparando',prep,'pagados / en proceso')}${metric('Ingresos',money2(paidRevenue()),'confirmados')}${metric('Stock bajo',low,'servicios limitados')}</div><section class="jmv2-admin-card"><div class="jmv2-card-head"><div><h2>Acciones rápidas</h2><p>Todo lo importante, sin bloques gigantes ni texto de relleno.</p></div></div><div class="jmv2-quick-grid"><button class="jmv2-quick" data-v375home="orders"><b>🧾 ${payPending} pagos pendientes</b><p>Revisar comprobantes y mover pedidos.</p></button><button class="jmv2-quick" data-v375home="clients"><b>👥 ${state.users.length} clientes</b><p>Consultar historial y contacto.</p></button><button class="jmv2-quick" data-v375home="services"><b>＋ Nuevo servicio</b><p>Crear o editar catálogo digital.</p></button><button class="jmv2-quick" data-v375home="messages"><b>🔔 Seguimientos</b><p>Renovaciones, carritos y no pagados.</p></button></div><div class="jmv375-note" style="margin-top:8px">Sin logística física. El control principal se mantiene dentro del sistema.</div></section>`;
+    qa('[data-v375home]',$('adminContent')).forEach(b=>b.onclick=()=>b.dataset.v375home==='services'?openServiceEditorV2():renderAdminV2(b.dataset.v375home));
+  };
+  try{homeAdminV2=window.homeAdminV2}catch(e){}
+
+  console.info('CRULOX · V3.7.5 compacto total admin');
+})();
+</script>
+
+
+<!-- CRULOX V3.7.6 · compactación enfocada en Pedidos y Clientes -->
+<style id="cruzclick-v376-orders-clients-compact-style">
+.jmv360-admin-shell.jmv376-orders-clients .jmv360-main{gap:9px!important}
+.jmv360-admin-shell.jmv376-orders-clients #adminContent{gap:9px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card{margin-top:0!important;padding:9px!important;border-radius:14px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-card-head{gap:7px!important;margin-bottom:7px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-card-head h2{font-size:.69rem!important;line-height:1.15!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-card-head p{font-size:.49rem!important;line-height:1.28!important;max-width:62ch!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar{gap:4px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar input,
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar select,
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card input,
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card select,
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card textarea{min-height:28px!important;padding:5px 8px!important;font-size:.52rem!important;border-radius:8px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-records{gap:5px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-record{padding:8px!important;border-radius:11px!important;gap:6px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-record h3{font-size:.60rem!important;line-height:1.22!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-record p{font-size:.48rem!important;line-height:1.28!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-record aside{gap:4px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-record select{min-height:26px!important;padding:4px 6px!important;font-size:.48rem!important;border-radius:8px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-status{padding:3px 6px!important;font-size:.44rem!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-note{font-size:.47rem!important;line-height:1.28!important;padding:7px 8px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-btn{min-height:25px!important;padding:4px 7px!important;font-size:.48rem!important;border-radius:8px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-empty{padding:14px!important;font-size:.52rem!important;border-radius:10px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-table{min-width:650px!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-table th,
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-table td{padding:6px 7px!important;font-size:.49rem!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-table td b{font-size:.54rem!important}
+.jmv360-admin-shell.jmv376-orders-clients .jmv2-table img{width:28px!important;height:24px!important;border-radius:5px!important}
+
+@media(max-width:760px){
+  .jmv360-admin-shell.jmv376-orders-clients{padding:8px!important;gap:8px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-topbar{padding:10px 11px!important;border-radius:16px!important;gap:10px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand{gap:8px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand img{width:34px!important;height:34px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand b{font-size:.78rem!important;line-height:1.05!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand span{font-size:.50rem!important;line-height:1.15!important;margin-top:1px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-top-actions{gap:6px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-top-actions .jmv360-action-btn{min-height:38px!important;padding:0 12px!important;border-radius:14px!important;font-size:.72rem!important;gap:7px!important;flex:1 1 110px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-top-actions .jmv360-action-btn i{font-size:.92rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav{padding:6px!important;border-radius:16px!important;gap:6px!important;grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav button{min-height:56px!important;padding:6px 4px!important;border-radius:14px!important;font-size:.63rem!important;gap:4px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav button i{font-size:.98rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav button .jmv360-badge{top:5px!important;right:5px!important;min-width:16px!important;height:16px!important;padding:0 4px!important;font-size:.56rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head{padding:10px 11px!important;border-radius:16px!important;gap:8px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head small{font-size:.55rem!important;letter-spacing:.15em!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head h1{font-size:1.42rem!important;line-height:1.02!important;margin:2px 0 3px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head p{font-size:.70rem!important;line-height:1.2!important;max-width:none!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date{padding:7px 9px!important;border-radius:12px!important;gap:7px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date i{font-size:.92rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date b{font-size:.74rem!important;line-height:1.15!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date span{font-size:.63rem!important;line-height:1.15!important;margin-top:1px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar>*{flex:1 1 118px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record{grid-template-columns:1fr!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record aside{justify-content:flex-start!important;max-width:none!important}
+}
+@media(max-width:420px){
+  .jmv360-admin-shell.jmv376-orders-clients{padding:7px!important;gap:7px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-topbar{padding:9px 10px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand img{width:30px!important;height:30px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand b{font-size:.72rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-brand span{font-size:.47rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-top-actions .jmv360-action-btn{min-height:34px!important;padding:0 10px!important;font-size:.67rem!important;border-radius:12px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav{gap:5px!important;padding:5px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav button{min-height:52px!important;font-size:.59rem!important;border-radius:12px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-nav button i{font-size:.90rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head{padding:9px 10px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head h1{font-size:1.28rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-page-head small{font-size:.50rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date{padding:6px 8px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date b{font-size:.69rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv360-date span{font-size:.59rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card{padding:8px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-card-head h2{font-size:.65rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-card-head p{font-size:.46rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar input,
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-toolbar select,
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card input,
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card select,
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-admin-card textarea{min-height:26px!important;font-size:.49rem!important;padding:4px 7px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record{padding:7px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record h3{font-size:.56rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record p{font-size:.45rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-status{font-size:.41rem!important;padding:3px 5px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-btn{min-height:23px!important;padding:3px 6px!important;font-size:.45rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-record select{min-height:24px!important;font-size:.45rem!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-table{min-width:590px!important}
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-table th,
+  .jmv360-admin-shell.jmv376-orders-clients .jmv2-table td{padding:5px 6px!important;font-size:.46rem!important}
+}
+</style>
+<script id="cruzclick-v376-orders-clients-compact-script">
+(function(){
+  const D=document;
+  function applyCompactContext(){
+    const shell=D.querySelector('.jmv360-admin-shell');
+    if(!shell) return;
+    const sec=String((window.state&&state.adminSection)||'').toLowerCase();
+    shell.classList.toggle('jmv376-orders-clients', sec==='orders' || sec==='clients');
+  }
+  const oldRender=(typeof window.renderAdminV2==='function')?window.renderAdminV2:null;
+  if(oldRender && !oldRender.__v376Wrapped){
+    const wrapped=function(section){
+      const r=oldRender.apply(this,arguments);
+      setTimeout(applyCompactContext,20);
+      return r;
+    };
+    wrapped.__v376Wrapped=true;
+    window.renderAdminV2=wrapped;
+    try{renderAdminV2=wrapped}catch(e){}
+  }
+  D.addEventListener('click',e=>{
+    const btn=e.target&&e.target.closest&&e.target.closest('[data-jmv2-section]');
+    if(btn) setTimeout(applyCompactContext,40);
+  },true);
+  window.addEventListener('pageshow',applyCompactContext);
+  if(D.readyState==='loading') D.addEventListener('DOMContentLoaded',applyCompactContext,{once:true});
+  else applyCompactContext();
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.7 · Panel administrativo básico. La tienda pública no se modifica. -->
+<style id="cruzclick-v377-basic-admin-style">
+#adminOverlay .cc377-admin{
+  min-height:100dvh;
+  box-sizing:border-box;
+  padding:12px;
+  display:grid;
+  align-content:start;
+  gap:10px;
+  background:
+    radial-gradient(circle at 82% 10%,rgba(34,223,243,.07),transparent 25%),
+    linear-gradient(180deg,#031019 0%,#020b12 100%);
+  color:#eef8ff;
+}
+#adminOverlay .cc377-top,
+#adminOverlay .cc377-card{
+  border:1px solid rgba(88,191,232,.14);
+  background:linear-gradient(180deg,rgba(10,24,38,.92),rgba(6,18,30,.97));
+  box-shadow:0 14px 34px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.025);
+}
+#adminOverlay .cc377-top{
+  min-height:58px;
+  border-radius:16px;
+  padding:9px 11px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+}
+#adminOverlay .cc377-brand{display:flex;align-items:center;gap:8px;min-width:0}
+#adminOverlay .cc377-brand img{width:34px;height:34px;object-fit:contain;border-radius:7px}
+#adminOverlay .cc377-brand b{display:block;font-size:.78rem;line-height:1.05;color:#fff}
+#adminOverlay .cc377-brand span{display:block;margin-top:2px;font-size:.48rem;line-height:1.15;color:#78cce9}
+#adminOverlay .cc377-actions{display:flex;align-items:center;gap:6px}
+#adminOverlay .cc377-btn{
+  min-height:32px;
+  padding:0 10px;
+  border-radius:10px;
+  border:1px solid rgba(88,191,232,.18);
+  background:rgba(255,255,255,.025);
+  color:#eef8ff;
+  font-size:.58rem;
+  font-weight:900;
+}
+#adminOverlay .cc377-btn.primary{border-color:rgba(34,223,243,.28);color:#76eafa;background:rgba(34,223,243,.055)}
+#adminOverlay .cc377-card{
+  border-radius:16px;
+  padding:15px 14px;
+  display:grid;
+  gap:5px;
+}
+#adminOverlay .cc377-kicker{font-size:.48rem;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#849ead}
+#adminOverlay .cc377-card h1{margin:0;font-size:1.12rem;line-height:1.05;color:#fff}
+#adminOverlay .cc377-card p{margin:0;font-size:.56rem;line-height:1.4;color:#8fa8b6;max-width:54ch}
+#adminOverlay .cc377-status{
+  margin-top:5px;
+  width:max-content;
+  max-width:100%;
+  padding:5px 8px;
+  border-radius:999px;
+  border:1px solid rgba(57,223,124,.13);
+  background:rgba(57,223,124,.05);
+  color:#7de9a8;
+  font-size:.5rem;
+  font-weight:900;
+}
+@media(max-width:560px){
+  #adminOverlay .cc377-admin{padding:8px;gap:8px}
+  #adminOverlay .cc377-top{padding:8px 9px;border-radius:14px;min-height:52px}
+  #adminOverlay .cc377-brand img{width:30px;height:30px}
+  #adminOverlay .cc377-brand b{font-size:.70rem}
+  #adminOverlay .cc377-brand span{font-size:.44rem}
+  #adminOverlay .cc377-btn{min-height:29px;padding:0 8px;font-size:.53rem}
+  #adminOverlay .cc377-card{padding:12px;border-radius:14px}
+  #adminOverlay .cc377-card h1{font-size:.98rem}
+  #adminOverlay .cc377-card p{font-size:.52rem}
+}
+</style>
+<script id="cruzclick-v377-basic-admin-script">
+(function(){
+  'use strict';
+  const D=document;
+  const overlay=()=>D.getElementById('adminOverlay');
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function brandLogo(){
+    try{return window.BRAND_LOGO||BRAND_LOGO||''}catch(e){return ''}
+  }
+  function closeAdmin377(){
+    const el=overlay(); if(!el)return;
+    el.classList.remove('open');
+    D.body.classList.remove('lock');
+  }
+  function logout377(){
+    try{
+      if(window.state) state.session=null;
+      if(typeof safeWrite==='function'&&window.KEYS?.session)safeWrite(KEYS.session,null);
+    }catch(e){}
+    closeAdmin377();
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    try{if(typeof notify==='function')notify('Sesión cerrada.','success')}catch(e){}
+  }
+  function renderBasicAdmin377(){
+    const el=overlay(); if(!el)return false;
+    const name=(()=>{try{return String(state?.settings?.storeName||'CRULOX')}catch(e){return 'CRULOX'}})();
+    el.innerHTML=`<div class="cc377-admin"><header class="cc377-top"><div class="cc377-brand"><img src="${esc(brandLogo())}" alt="${esc(name)}"><div><b>${esc(name)}</b><span>Administración</span></div></div><div class="cc377-actions"><button type="button" class="cc377-btn primary" id="cc377Store">Tienda</button><button type="button" class="cc377-btn" id="cc377Logout">Salir</button></div></header><main class="cc377-card"><span class="cc377-kicker">Panel de administración</span><h1>Acceso administrativo</h1><p>Panel básico activo. Las herramientas de gestión fueron retiradas de esta interfaz.</p><span class="cc377-status">Acceso habilitado</span></main></div>`;
+    const store=D.getElementById('cc377Store'); if(store)store.onclick=closeAdmin377;
+    const logout=D.getElementById('cc377Logout'); if(logout)logout.onclick=logout377;
+    return true;
+  }
+  function openBasicAdmin377(){
+    const el=overlay(); if(!el)return false;
+    try{if(window.state&&state.session&&state.session.role!=='admin')return false}catch(e){}
+    renderBasicAdmin377();
+    el.classList.add('open');
+    D.body.classList.add('lock');
+    return true;
+  }
+  window.renderAdminV2=renderBasicAdmin377;
+  window.renderAdminSection=renderBasicAdmin377;
+  window.renderAdminNav=function(){return true};
+  window.adminShell=renderBasicAdmin377;
+  window.openAdmin=openBasicAdmin377;
+  try{renderAdminV2=renderBasicAdmin377}catch(e){}
+  try{renderAdminSection=renderBasicAdmin377}catch(e){}
+  try{renderAdminNav=window.renderAdminNav}catch(e){}
+  try{adminShell=renderBasicAdmin377}catch(e){}
+  try{openAdmin=openBasicAdmin377}catch(e){}
+  function init377(){
+    const el=overlay();
+    if(!el)return;
+    renderBasicAdmin377();
+  }
+  if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',init377,{once:true});else init377();
+  window.CRUZCLICK_ADMIN_V377={VERSION:'3.7.7',render:renderBasicAdmin377,open:openBasicAdmin377};
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.8 · RESET REAL DEL PANEL ADMIN. La tienda pública no se toca. -->
+<style id="cruzclick-v378-admin-reset-style">
+#adminOverlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:9999!important;
+  display:none;
+  overflow:auto!important;
+  background:#020a11!important;
+}
+#adminOverlay.open{display:block!important}
+#adminOverlay .cc378-admin{
+  min-height:100dvh;
+  box-sizing:border-box;
+  padding:10px;
+  display:grid;
+  grid-template-rows:auto 1fr;
+  align-content:start;
+  gap:10px;
+  background:
+    radial-gradient(circle at 82% 8%,rgba(20,210,235,.055),transparent 24%),
+    linear-gradient(180deg,#03101a 0%,#020a11 100%);
+  color:#eef8ff;
+}
+#adminOverlay .cc378-bar{
+  min-height:52px;
+  border-radius:14px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  border:1px solid rgba(89,190,225,.13);
+  background:linear-gradient(180deg,rgba(8,23,36,.94),rgba(5,16,27,.98));
+  box-shadow:0 12px 30px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.025);
+}
+#adminOverlay .cc378-brand{display:flex;align-items:center;gap:8px;min-width:0}
+#adminOverlay .cc378-brand img{width:30px;height:30px;object-fit:contain;border-radius:6px;flex:0 0 30px}
+#adminOverlay .cc378-brand b{display:block;font-size:.72rem;line-height:1.05;color:#fff}
+#adminOverlay .cc378-brand span{display:block;margin-top:1px;font-size:.45rem;line-height:1.15;color:#78cce9}
+#adminOverlay .cc378-actions{display:flex;align-items:center;gap:5px;flex:0 0 auto}
+#adminOverlay .cc378-btn{
+  min-height:29px;
+  padding:0 9px;
+  border-radius:9px;
+  border:1px solid rgba(89,190,225,.17);
+  background:rgba(255,255,255,.022);
+  color:#eef8ff;
+  font-size:.53rem;
+  font-weight:900;
+  cursor:pointer;
+  touch-action:manipulation;
+}
+#adminOverlay .cc378-btn.primary{border-color:rgba(34,223,243,.26);color:#75e9f8;background:rgba(34,223,243,.05)}
+#adminOverlay .cc378-main{
+  min-height:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+  padding:0;
+}
+/* CRULOX V3.8.5 · Panel administrativo premium 37 módulos */
+#adminOverlay{background:
+  radial-gradient(circle at 12% 8%,rgba(0,224,255,.11),transparent 24%),
+  radial-gradient(circle at 88% 18%,rgba(67,118,255,.10),transparent 22%),
+  radial-gradient(circle at 55% 92%,rgba(0,255,184,.055),transparent 25%),
+  linear-gradient(180deg,#020813 0%,#04121e 44%,#020812 100%)!important;
+  color:#edfaff;overflow:auto;isolation:isolate}
+#adminOverlay:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.20;
+  background-image:linear-gradient(rgba(114,220,255,.028) 1px,transparent 1px),linear-gradient(90deg,rgba(114,220,255,.028) 1px,transparent 1px);
+  background-size:34px 34px;mask-image:linear-gradient(to bottom,black 0%,transparent 88%);}
+#adminOverlay:after{content:"";position:absolute;inset:8% -10% auto -10%;height:280px;pointer-events:none;opacity:.22;
+  background:radial-gradient(ellipse at center,rgba(0,220,255,.15),transparent 62%);filter:blur(24px);}
+#adminOverlay .cc378-admin{position:relative;z-index:1;min-height:100dvh;padding:12px;display:flex;flex-direction:column;gap:11px}
+#adminOverlay .cc378-bar{min-height:64px;padding:10px 12px;border-radius:18px;border:1px solid rgba(117,220,255,.12);
+  background:linear-gradient(145deg,rgba(10,28,46,.92),rgba(4,16,28,.88));box-shadow:0 20px 55px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.04);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;backdrop-filter:blur(12px)}
+#adminOverlay .cc378-brand{display:flex;align-items:center;gap:10px;min-width:0}
+#adminOverlay .cc378-brand img{width:36px;height:36px;object-fit:contain;border-radius:9px;flex:0 0 36px;box-shadow:0 0 22px rgba(0,220,255,.10)}
+#adminOverlay .cc378-brand b{display:block;font-size:.82rem;line-height:1.05;color:#fff;letter-spacing:-.02em}
+#adminOverlay .cc378-brand span{display:block;margin-top:3px;font-size:.48rem;line-height:1.15;color:#7ccde8;letter-spacing:.10em;text-transform:uppercase}
+#adminOverlay .cc378-actions{display:flex;align-items:center;gap:6px;flex:0 0 auto}
+#adminOverlay .cc378-btn{min-height:34px;padding:0 11px;border-radius:11px;border:1px solid rgba(127,222,255,.14);
+  background:linear-gradient(180deg,rgba(255,255,255,.055),rgba(255,255,255,.025));color:#edfaff;font-size:.56rem;font-weight:900;cursor:pointer;touch-action:manipulation;transition:transform .08s ease,border-color .12s ease,background .12s ease}
+#adminOverlay .cc378-btn.primary{border-color:rgba(0,225,255,.30);color:#7df2ff;background:linear-gradient(180deg,rgba(0,219,255,.10),rgba(0,219,255,.04))}
+#adminOverlay .cc378-btn:active{transform:scale(.98)}
+#adminOverlay .cc378-main{min-height:0;border:0;background:transparent;box-shadow:none;padding:0}
+#adminOverlay .cc378-nav{width:min(100%,1040px);margin:0 auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-content:start}
+#adminOverlay .cc378-nav button{position:relative;overflow:hidden;width:100%;min-height:142px;padding:18px 15px;border-radius:20px;border:1px solid rgba(126,221,255,.12);
+  background:linear-gradient(145deg,rgba(10,33,51,.94) 0%,rgba(4,18,30,.96) 72%);color:#edfaff;
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;gap:11px;text-align:left;font-size:.68rem;font-weight:900;line-height:1.2;cursor:pointer;touch-action:manipulation;
+  transition:transform .12s ease,border-color .12s ease,box-shadow .12s ease,background .12s ease;
+  box-shadow:0 16px 38px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.03)}
+#adminOverlay .cc378-nav button:before{content:"";position:absolute;inset:auto -18% -48% auto;width:180px;height:180px;border-radius:50%;background:radial-gradient(circle,rgba(0,221,255,.12),transparent 68%);pointer-events:none}
+#adminOverlay .cc378-nav button:after{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:linear-gradient(90deg,transparent,rgba(0,226,255,.45),transparent);opacity:.65}
+#adminOverlay .cc378-nav button:hover{transform:translateY(-3px);border-color:rgba(0,224,255,.34);box-shadow:0 20px 44px rgba(0,0,0,.34),0 0 0 1px rgba(0,224,255,.05)}
+#adminOverlay .cc378-nav button:active{transform:translateY(-1px) scale(.995)}
+#adminOverlay .cc378-nav-icon{width:56px;height:56px;border-radius:17px;display:grid;place-items:center;
+  background:linear-gradient(145deg,rgba(0,224,255,.16),rgba(72,111,255,.08));border:1px solid rgba(0,224,255,.20);color:#78f1ff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 0 24px rgba(0,216,255,.08)}
+#adminOverlay .cc378-nav-icon svg{width:30px;height:30px;display:block;stroke:currentColor;fill:none;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}
+#adminOverlay .cc378-nav-index{position:absolute;right:12px;top:11px;font-size:.44rem;letter-spacing:.10em;color:#6f90a0;font-weight:900}
+#adminOverlay .cc378-nav-label{position:relative;z-index:1;font-size:.74rem;line-height:1.15;letter-spacing:-.01em}
+#adminOverlay .cc378-nav-sub{position:relative;z-index:1;color:#7d9bab;font-size:.47rem;font-weight:700;line-height:1.35;max-width:92%}
+#adminOverlay .cc378-nav button:nth-child(37){grid-column:1/-1;width:min(50%,500px);justify-self:center}
+#adminOverlay .cc378-module-window{width:100%;min-height:calc(100dvh - 88px);box-sizing:border-box;padding:18px;border-radius:22px;border:1px solid rgba(126,221,255,.13);
+  background:linear-gradient(145deg,rgba(8,29,47,.96),rgba(3,14,24,.99));box-shadow:0 24px 70px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.035)}
+#adminOverlay .cc378-module-head{display:flex;align-items:center;gap:12px;padding-bottom:14px;border-bottom:1px solid rgba(89,190,225,.10)}
+#adminOverlay .cc378-back{width:42px;height:42px;flex:0 0 42px;border-radius:13px;border:1px solid rgba(89,190,225,.17);background:rgba(255,255,255,.025);color:#8feaf5;display:grid;place-items:center;font-size:1.05rem;font-weight:900;cursor:pointer;touch-action:manipulation}
+#adminOverlay .cc378-module-id{display:flex;align-items:center;gap:10px;min-width:0}
+#adminOverlay .cc378-module-icon{width:48px;height:48px;flex:0 0 48px;border-radius:15px;display:grid;place-items:center;background:linear-gradient(145deg,rgba(0,224,255,.16),rgba(72,111,255,.08));border:1px solid rgba(0,224,255,.20);color:#78f1ff;box-shadow:0 0 26px rgba(0,216,255,.08)}
+#adminOverlay .cc378-module-icon svg{width:28px;height:28px;stroke:currentColor;fill:none;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}
+#adminOverlay .cc378-module-id h1{margin:0;color:#fff;font-size:1.02rem;line-height:1.12}
+#adminOverlay .cc378-module-id p{margin:4px 0 0;color:#88a9b9;font-size:.52rem;line-height:1.4}
+#adminOverlay .cc378-module-body{margin-top:14px;min-height:calc(100dvh - 182px);padding:16px;border-radius:16px;border:1px solid rgba(89,190,225,.09);background:linear-gradient(160deg,rgba(255,255,255,.020),rgba(255,255,255,.008));display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
+#adminOverlay .cc378-module-body .cc378-module-placeholder{max-width:540px}
+#adminOverlay .cc378-m

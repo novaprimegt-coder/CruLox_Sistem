@@ -1,0 +1,297 @@
+er}
+  #cru443Search .cru443-shell{width:100%;height:calc(100dvh - 16px);max-height:calc(100dvh - 16px);border-radius:22px}
+  #cru443Search .cru443-top{min-height:0;padding:22px 18px 17px}
+  #cru443Search .cru443-title{font-size:1.57rem;margin:8px 0 7px}
+  #cru443Search .cru443-sub{font-size:.74rem}
+  #cru443Search .cru443-close{flex-basis:40px;width:40px;height:40px;min-height:40px}
+  #cru443Search .cru443-search-area{padding:17px 18px 8px}
+  #cru443Search .cru443-input-row{min-height:53px;border-radius:14px;padding:0 14px}
+  #cru443Search #cru443Input{height:52px;font-size:16px}
+  #cru443Search .cru443-result-head{min-height:67px;padding:9px 18px 10px}
+  #cru443Search #cru443Results{grid-template-columns:1fr;gap:8px;padding:10px 14px 12px}
+  #cru443Search .cru443-result{grid-template-columns:61px minmax(0,1fr);min-height:81px;gap:0 12px;padding:8px;border-radius:15px}
+  #cru443Search .cru443-result img{width:61px;height:61px;border-radius:11px}
+  #cru443Search .cru443-info b{font-size:.79rem}
+  #cru443Search .cru443-price{font-size:.77rem;margin-top:4px}
+  #cru443Search .cru443-footer{min-height:74px;padding:12px 17px 14px}
+  #cru443Search .cru443-footer small{font-size:.62rem;max-width:155px}
+  #cru443Search #cru443All{min-height:43px;padding:9px 15px;font-size:.72rem}
+}
+@media(max-width:360px){
+  #cru443Search .cru443-top{padding:17px 14px 14px}
+  #cru443Search .cru443-title{font-size:1.38rem}
+  #cru443Search .cru443-sub{font-size:.68rem}
+  #cru443Search .cru443-search-area{padding:13px 14px 7px}
+  #cru443Search .cru443-result-head{padding-inline:14px;gap:5px}
+  #cru443Search #cru443Count{font-size:.57rem;padding:6px 8px}
+  #cru443Search #cru443Results{padding-inline:9px}
+  #cru443Search .cru443-result{grid-template-columns:54px minmax(0,1fr);min-height:74px;column-gap:9px}
+  #cru443Search .cru443-result img{width:54px;height:54px}
+  #cru443Search .cru443-info b{font-size:.72rem}
+  #cru443Search .cru443-info small{font-size:.57rem}
+  #cru443Search .cru443-footer{padding-inline:13px}
+  #cru443Search .cru443-footer small{font-size:.59rem;max-width:112px}
+  #cru443Search #cru443All{padding-inline:11px}
+}
+@media(prefers-reduced-motion:reduce){
+  #cru443Search .cru443-close,#cru443Search .cru443-input-row,#cru443Search .cru443-result,#cru443Search #cru443All{transition:none!important}
+}
+</style>
+<div id="cru443Search" aria-hidden="true">
+ <section class="cru443-shell" role="dialog" aria-modal="true" aria-labelledby="cru443Title" aria-describedby="cru443Subtitle">
+  <div class="cru443-top">
+   <div class="cru443-heading"><span class="cru443-overline"><span class="cru443-live-dot" aria-hidden="true"></span> DESCUBRE EN CRULOX</span><h2 class="cru443-title" id="cru443Title">Buscar en <span>CruLox</span></h2><p class="cru443-sub" id="cru443Subtitle">Encuentra productos, plataformas y servicios digitales.</p></div>
+   <button type="button" class="cru443-close" id="cru443Close" aria-label="Cerrar búsqueda"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6 18 18M18 6 6 18"/></svg></button>
+  </div>
+  <div class="cru443-search-area"><label class="cru443-input-row" for="cru443Input"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" width="21" height="21"><circle cx="10.8" cy="10.8" r="6.8"/><path d="m16 16 5 5"/></svg><input id="cru443Input" type="search" autocomplete="off" spellcheck="false" enterkeyhint="search" placeholder="Nombre, plataforma o servicio..." aria-label="Buscar productos en CruLox" aria-controls="cru443Results" /></label></div>
+  <div class="cru443-result-head"><div class="cru443-result-heading"><span class="cru443-section-kicker">EXPLORAR PRODUCTOS</span><strong id="cru443ResultsTitle">Productos disponibles</strong></div><span id="cru443Count"></span></div>
+  <div id="cru443Results" aria-live="polite"></div>
+  <footer class="cru443-footer"><small>Selecciona un producto para ver sus detalles.</small><button type="button" id="cru443All">Ver resultados</button></footer>
+ </section>
+</div>
+<script id="cru443-search-engine">
+(()=>{
+ 'use strict';
+ const $=id=>document.getElementById(id);
+ const modal=$('cru443Search'),head=$('searchInput'),input=$('cru443Input'),results=$('cru443Results'),count=$('cru443Count'),caption=$('cru443ResultsTitle'),all=$('cru443All');
+ if(!modal||!head||!input||!results)return;
+ const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const clean=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+ const normalizeQuery=s=>clean(s).replace(/\bspoty\b/g,'spotify').replace(/\byt\b/g,'youtube');
+ const prevFiltered=typeof filteredProducts==='function'?filteredProducts:null;
+ const distance=(a,b,limit=2)=>{
+  if(Math.abs(a.length-b.length)>limit)return limit+1;
+  let prev=Array.from({length:b.length+1},(_,j)=>j);
+  for(let i=1;i<=a.length;i++){
+    const row=[i];let min=i;
+    for(let j=1;j<=b.length;j++){const n=Math.min(row[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));row.push(n);if(n<min)min=n}
+    if(min>limit)return limit+1;prev=row;
+  }return prev[b.length];
+ };
+ const score=(p,q)=>{
+  const name=clean(p.name),category=clean(p.category),platform=clean(p.platform),description=clean(p.description),kind=clean(p.digitalType),terms=q.split(' ').filter(Boolean);
+  if(!q)return p.featured?20:1;
+  if(name===q)return 1000;
+  let value=0;
+  if(name.startsWith(q))value=Math.max(value,630);
+  if(name.includes(q))value=Math.max(value,540);
+  if(platform===q)value=Math.max(value,500);
+  else if(platform.includes(q))value=Math.max(value,330);
+  if(category.includes(q))value=Math.max(value,250);
+  if(kind.includes(q))value=Math.max(value,225);
+  if(description.includes(q))value=Math.max(value,115);
+  let hits=0;
+  const nameWords=name.split(' ').filter(Boolean);
+  const platformWords=platform.split(' ').filter(Boolean);
+  for(const word of terms){
+    if(nameWords.some(t=>t===word)){value+=120;hits++;continue}
+    if(nameWords.some(t=>t.startsWith(word)||word.startsWith(t)&&t.length>=3)){value+=82;hits++;continue}
+    if(platformWords.some(t=>t===word||t.startsWith(word))){value+=68;hits++;continue}
+    if(category.split(' ').includes(word)){value+=42;hits++;continue}
+    if(word.length>=4&&[...nameWords,...platformWords].some(t=>distance(t,word,word.length>=7?2:1)<=(word.length>=7?2:1))){value+=64;hits++;continue}
+    if(description.includes(word)){value+=13;hits++;continue}
+  }
+  if(hits===terms.length)value+=110;
+  if(value===0)return 0;
+  if(terms.length>1&&hits===0&&value<180)return 0;
+  if(terms.length>1&&hits<terms.length&&value<190)return 0;
+  return value;
+ };
+ function search(query,limit=60){
+  const q=normalizeQuery(query);
+  let products=[];try{products=(typeof state!=='undefined'&&Array.isArray(state.products))?state.products:[]}catch(_){}
+  const found=products.map((p,i)=>({p,i,n:score(p,q)})).filter(x=>x.n>0).sort((a,b)=>b.n-a.n||a.i-b.i).slice(0,limit).map(x=>x.p);
+  return found;
+ }
+ // Solo mejora los resultados cuando se confirma una búsqueda; sin cambiar el catálogo normal.
+ if(prevFiltered){
+  try{filteredProducts=function(){
+   if(!String(state?.query||'').trim())return prevFiltered();
+   const found=search(state.query,1000);
+   return found.filter(p=>state.category==='all'||p.category===state.category);
+  }}catch(_){}
+ }
+ let active=false,previousFocus=null,found=[],current=-1,suppressHeaderFocus=false;
+ function display(){
+   const q=input.value.trim(),items=search(q,30);found=items;current=-1;
+   const view=items.slice(0,12);
+   caption.textContent=q?'Resultados de la búsqueda':'Descubre nuestros productos';
+   count.textContent=q?(items.length===30?'30 o más coincidencias':`${items.length} coincidencia${items.length===1?'':'s'}`):'Catálogo CruLox';
+   all.disabled=items.length===0;
+   all.textContent=q?'Ver resultados':'Explorar catálogo';
+   results.innerHTML=view.length?view.map(p=>{
+     const img=p.image||'';const price=typeof money==='function'?money(Number(p.price||0)):`Q${Number(p.price||0).toFixed(2)}`;
+     const label=String(p.name||'Producto digital');
+     const meta=[p.platform,p.category,p.duration].map(x=>String(x||'').trim()).filter(Boolean).filter((x,i,a)=>a.findIndex(y=>clean(y)===clean(x))===i).slice(0,2).join(' · ');
+     return `<button type="button" class="cru443-result" data-cru443-id="${escapeHTML(p.id)}" aria-label="Ver detalles de ${escapeHTML(label)}"><img src="${escapeHTML(img)}" loading="lazy" decoding="async" alt=""><span class="cru443-info"><b>${escapeHTML(label)}</b><small>${escapeHTML(meta||'Producto digital')}</small></span><strong class="cru443-price">${escapeHTML(price)}</strong></button>`;
+   }).join(''):`<div class="cru443-empty">${q?'No hay coincidencias. Prueba con otro nombre, categoría o palabra similar.':'Todavía no hay productos disponibles.'}</div>`;
+ }
+ function open(){
+   if(active||document.querySelector('#cru435Welcome.cru435-open,#adminOverlay.open'))return;
+   active=true;previousFocus=document.activeElement;
+   input.value=head.value||'';
+   modal.classList.add('cru443-open');modal.setAttribute('aria-hidden','false');document.body.classList.add('cru443-search-active');
+   head.setAttribute('aria-expanded','true');display();
+   try{input.focus({preventScroll:true});input.setSelectionRange(input.value.length,input.value.length)}catch(_){}
+ }
+ function close(){
+   if(!active)return;
+   active=false;modal.classList.remove('cru443-open');modal.setAttribute('aria-hidden','true');document.body.classList.remove('cru443-search-active');head.setAttribute('aria-expanded','false');
+   head.value=input.value.trim();$('searchClear')?.classList.toggle('show',!!head.value);
+   if(previousFocus instanceof HTMLElement&&previousFocus.isConnected){
+     suppressHeaderFocus=true;previousFocus.focus({preventScroll:true});setTimeout(()=>{suppressHeaderFocus=false},0);
+   }
+ }
+ function product(id){
+   const selected=found.find(p=>String(p.id)===String(id));if(!selected)return;
+   close();try{if(typeof openDetail==='function')openDetail(selected.id)}catch(e){console.warn('CruLox búsqueda: detalles',e)}
+ }
+ function showAll(){
+   if(!found.length)return;
+   const q=input.value.trim();close();
+   try{
+     state.category='all';state.query=q;
+     if(typeof renderCategories==='function')renderCategories();
+     if(typeof renderProducts==='function')renderProducts();
+     document.getElementById('catalog')?.scrollIntoView({behavior:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth',block:'start'});
+   }catch(e){console.warn('CruLox búsqueda: catálogo',e)}
+ }
+ head.readOnly=true;
+ head.setAttribute('aria-label','Abrir búsqueda de productos');head.setAttribute('aria-haspopup','dialog');head.setAttribute('aria-controls','cru443Search');
+ head.onfocus=()=>{if(!suppressHeaderFocus)open()};head.onclick=open;head.oninput=null;head.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}};
+ // El desplegable anterior se desactiva solamente en la barra de la tienda.
+ if($('suggestions'))$('suggestions').classList.remove('open');
+ input.addEventListener('input',()=>{head.value=input.value;$('searchClear')?.classList.toggle('show',!!input.value);display()});
+ input.addEventListener('keydown',e=>{
+   const buttons=Array.from(results.querySelectorAll('[data-cru443-id]'));
+   if(e.key==='ArrowDown'||e.key==='ArrowUp'){e.preventDefault();current=(current+(e.key==='ArrowDown'?1:-1)+buttons.length)%Math.max(1,buttons.length);buttons.forEach((b,i)=>b.classList.toggle('cru443-selected',i===current));buttons[current]?.scrollIntoView({block:'nearest'});return}
+   if(e.key==='Enter'){e.preventDefault();if(current>=0&&buttons[current])buttons[current].click();else showAll()}
+ });
+ results.addEventListener('click',e=>{const b=e.target.closest('[data-cru443-id]');if(b)product(b.dataset.cru443Id)});
+ $('cru443Close').onclick=close;all.onclick=showAll;
+ modal.addEventListener('click',e=>{if(e.target===modal)close()});
+ document.addEventListener('keydown',e=>{
+   if(!active)return;
+   if(e.key==='Escape'){e.preventDefault();e.stopImmediatePropagation();close();return}
+   if(e.key==='Tab'){
+     const focusables=[...modal.querySelectorAll('input,button:not([disabled])')].filter(x=>x.offsetParent!==null);
+     if(!focusables.length)return;
+     if(e.shiftKey&&document.activeElement===focusables[0]){e.preventDefault();focusables[focusables.length-1].focus()}
+     else if(!e.shiftKey&&document.activeElement===focusables[focusables.length-1]){e.preventDefault();focusables[0].focus()}
+   }
+ },true);
+ const clear=$('searchClear');if(clear)clear.onclick=e=>{
+   e.preventDefault();head.value='';input.value='';state.query='';
+   clear.classList.remove('show');
+   if(typeof renderProducts==='function')renderProducts();
+   if(active)display();else open();
+ };
+ window.CruLoxSearchV443={search,open,close};
+})();
+</script>
+
+<script id="cru448-policy-controller">
+(()=>{
+  'use strict';
+  const cfg=window.CRULOX_POLICY_CONFIG;
+  const root=document.documentElement;
+  const gate=document.getElementById('cru448PolicyGate');
+  if(!cfg||!gate)return;
+  const byId=id=>document.getElementById(id);
+  const checkbox=byId('cru448Check'),accept=byId('cru448Accept'),decline=byId('cru448Decline'),back=byId('cru448Back'),notice=byId('cru448Notice');
+  function setState(status){root.setAttribute('data-cru-policy',status);}
+  checkbox.addEventListener('change',()=>{accept.disabled=!checkbox.checked;notice.textContent='';});
+  accept.addEventListener('click',()=>{
+    if(!checkbox.checked){notice.textContent='Debes marcar la aceptación expresa para ingresar.';return;}
+    let saved=false;
+    try{
+      localStorage.setItem(cfg.key,JSON.stringify({version:cfg.version,terms:true,privacy:true,acceptedAt:new Date().toISOString()}));
+      saved=true;
+    }catch(_error){}
+    setState('accepted');
+    checkbox.checked=false;accept.disabled=true;
+    notice.textContent=saved?'':'La aceptación se aplicó a esta visita; tu navegador no permitió guardarla para próximos accesos.';
+    try{document.getElementById('menuBtn')?.focus({preventScroll:true});}catch(_error){}
+  });
+  decline.addEventListener('click',()=>{
+    try{localStorage.removeItem(cfg.key)}catch(_error){}
+    setState('pending');checkbox.checked=false;accept.disabled=true;
+    notice.textContent='No aceptaste las políticas. El acceso permanecerá bloqueado.';
+  });
+  function review(){
+    setState('review');checkbox.checked=false;accept.disabled=true;
+    notice.textContent='Puedes revisar las condiciones. Tu aceptación previa se mantiene hasta que elijas no aceptar.';
+    gate.scrollTo({top:0,behavior:'auto'});
+    byId('cru448Title')?.focus({preventScroll:true});
+  }
+  back.addEventListener('click',()=>setState('accepted'));
+  const footer=byId('cru448ReviewBtn');if(footer)footer.addEventListener('click',review);
+  document.addEventListener('keydown',event=>{
+    if(root.getAttribute('data-cru-policy')==='accepted')return;
+    // No se permite cerrar la aceptación obligatoria mediante Escape.
+    if(event.key==='Escape'){event.preventDefault();event.stopImmediatePropagation();return;}
+    if(event.key!=='Tab')return;
+    const items=[...gate.querySelectorAll('input:not(:disabled),button:not(:disabled)')].filter(el=>el.offsetParent!==null);
+    if(!items.length)return;
+    const first=items[0],last=items[items.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  },true);
+  document.addEventListener('focusin',event=>{
+    if(root.getAttribute('data-cru-policy')==='accepted'||gate.contains(event.target))return;
+    checkbox.focus({preventScroll:true});
+  },true);
+  if(root.getAttribute('data-cru-policy')!=='accepted'){
+    // En el arranque puede abrirse el anuncio detrás del consentimiento; no se permite el acceso a él.
+    requestAnimationFrame(()=>byId('cru448Title')?.focus({preventScroll:true}));
+  }
+  window.CRULOX_POLICY_V448=Object.freeze({version:cfg.version,reopen:review,get accepted(){return root.getAttribute('data-cru-policy')==='accepted'}});
+})();
+</script>
+<style id="crulox-footer-depurado-v451-styles">
+/* CRULOX V4.5.1 — Solo pie de página; ningún acceso duplicado, ninguna flecha. */
+#cruloxFooter{position:relative;isolation:isolate;margin:20px 0 0!important;padding:0!important;overflow:hidden;background:linear-gradient(155deg,#061827 0%,#04111e 48%,#030a13 100%)!important;border-top:1px solid rgba(70,201,237,.19)!important}
+#cruloxFooter::before{content:"";position:absolute;inset:0 0 auto;height:240px;pointer-events:none;z-index:-1;background:radial-gradient(ellipse 50% 90% at 14% 0,rgba(0,196,236,.105),transparent 83%)}
+#cruloxFooter .cru451-footer-container{width:min(1180px,100%);max-width:1180px;padding:clamp(30px,4.5vw,58px) 20px max(20px,env(safe-area-inset-bottom))}
+#cruloxFooter .cru451-footer-grid{display:grid;grid-template-columns:minmax(0,1.23fr) minmax(260px,.77fr);gap:clamp(24px,5vw,100px);align-items:center;width:100%;margin:0;padding:0 0 clamp(25px,3vw,38px);text-align:left}
+#cruloxFooter .cru451-footer-grid>div:first-child{grid-column:auto;text-align:left}
+#cruloxFooter .cru451-brand-block,#cruloxFooter .cru451-service-block{min-width:0}
+#cruloxFooter .cru451-brand-block .footer-logo{display:block;width:200px!important;max-width:100%!important;height:auto!important;max-height:125px;object-fit:contain!important;margin:0 0 12px!important}
+#cruloxFooter .cru451-brand-block #footerSubtitle{max-width:460px;margin:0!important;color:#acc5d7;font-size:.8rem;line-height:1.68;white-space:pre-line;text-align:left}
+#cruloxFooter .cru451-service-block{position:relative;padding:15px 0 15px 24px;border-left:1px solid rgba(59,202,231,.32)}
+#cruloxFooter .cru451-service-label{display:inline-flex;align-items:center;gap:9px;color:#73dce8;font-size:.66rem;font-weight:900;letter-spacing:.12em;line-height:1.4}
+#cruloxFooter .cru451-service-dot{width:7px;height:7px;flex:none;background:#2cdeca;border-radius:50%;box-shadow:0 0 0 4px rgba(44,222,202,.10)}
+#cruloxFooter .cru451-service-block p{margin:12px 0 6px;max-width:355px;color:#e2f3fb;font-size:.88rem;font-weight:680;line-height:1.55}
+#cruloxFooter .cru451-service-block small{display:block;color:#89a8ba;font-size:.69rem;line-height:1.55}
+#cruloxFooter .cru451-social-row{display:flex;align-items:center;justify-content:space-between;gap:16px 26px;flex-wrap:wrap;padding:23px 0;border-top:1px solid rgba(110,185,214,.13);border-bottom:1px solid rgba(110,185,214,.13)}
+#cruloxFooter .cru451-social-heading{display:flex;align-items:baseline;gap:11px;color:#e5f5fc;font-size:.74rem;font-weight:850;line-height:1.5}
+#cruloxFooter .cru451-social-heading small{font-size:.66rem;font-weight:450;color:#7f9fb4}
+#cruloxFooter .footer-social{display:flex;justify-content:flex-end;align-items:center;flex-wrap:wrap;gap:9px;max-width:100%;margin:0!important}
+#cruloxFooter .social-pill{display:inline-flex;align-items:center;justify-content:center;min-height:35px;padding:8px 15px;border:1px solid rgba(107,180,207,.25);border-radius:999px;background:rgba(13,43,60,.32);color:#c9e7f5;font-size:.72rem;font-weight:600;line-height:1.2;transition:border-color .16s ease,background .16s ease}
+#cruloxFooter .social-pill:hover{border-color:rgba(61,216,245,.48);background:rgba(14,129,155,.16);color:#fff}
+#cruloxFooter .social-pill:focus-visible{outline:2px solid #9cefff;outline-offset:3px}
+#cruloxFooter .cru451-copyright{display:flex;align-items:center;justify-content:space-between;gap:8px 16px;flex-wrap:wrap;border:0!important;margin:0!important;padding:18px 0 0!important;color:#7998ad;font-size:.61rem;line-height:1.6;text-align:left}
+#cruloxFooter .cru451-legacy-hooks{display:none!important}
+@media(max-width:700px){
+ #cruloxFooter{margin-top:15px!important}
+ #cruloxFooter .cru451-footer-container{padding:30px 18px max(23px,env(safe-area-inset-bottom))}
+ #cruloxFooter .cru451-footer-grid{grid-template-columns:minmax(0,1fr);gap:23px;padding-bottom:25px}
+ #cruloxFooter .cru451-footer-grid>div:first-child{grid-column:auto!important;text-align:left!important}
+ #cruloxFooter .cru451-brand-block .footer-logo{width:175px!important;margin-inline:0!important}
+ #cruloxFooter .cru451-brand-block #footerSubtitle{font-size:.76rem;margin-inline:0!important;text-align:left!important}
+ #cruloxFooter .cru451-service-block{padding:2px 0 2px 15px}
+ #cruloxFooter .cru451-service-block p{font-size:.79rem;margin:9px 0 5px}
+ #cruloxFooter .cru451-service-block small{font-size:.66rem}
+ #cruloxFooter .cru451-social-row{align-items:flex-start;justify-content:flex-start;flex-direction:column;gap:13px;padding:19px 0 22px}
+ #cruloxFooter .footer-social{justify-content:flex-start!important}
+ #cruloxFooter .cru451-copyright{display:grid;gap:4px;justify-content:start;font-size:.59rem}
+}
+@media(max-width:360px){
+ #cruloxFooter .cru451-footer-container{padding-inline:13px}
+ #cruloxFooter .cru451-social-heading{flex-wrap:wrap;gap:1px 9px}
+ #cruloxFooter .social-pill{padding:8px 11px;font-size:.68rem}
+}
+@media(prefers-reduced-motion:reduce){#cruloxFooter .social-pill{transition:none}}
+</style>
+</body>
+</html>

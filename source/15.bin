@@ -1,0 +1,2583 @@
+odule-body .cc378-module-placeholder .bigicon{width:84px;height:84px;margin:0 auto 14px;border-radius:24px;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,rgba(0,225,255,.16),rgba(72,111,255,.06) 70%);border:1px solid rgba(0,225,255,.17);box-shadow:0 0 34px rgba(0,225,255,.07)}
+#adminOverlay .cc378-module-body .bigicon svg{width:42px;height:42px;stroke:#79efff;fill:none;stroke-width:2.15;stroke-linecap:round;stroke-linejoin:round}
+#adminOverlay .cc378-module-body h2{margin:0 0 7px;font-size:1rem;color:#f6fbff}
+#adminOverlay .cc378-module-body p{margin:0;font-size:.58rem;line-height:1.6;color:#86a7b8;max-width:490px}
+#adminOverlay .cc378-section-note{display:inline-flex;margin-top:12px;padding:7px 10px;border-radius:999px;border:1px solid rgba(34,223,243,.16);background:rgba(34,223,243,.045);color:#71ddea;font-size:.46rem;font-weight:900}
+@media(max-width:640px){
+  #adminOverlay .cc378-admin{padding:9px;gap:9px}
+  #adminOverlay .cc378-bar{min-height:58px;padding:9px 10px;border-radius:16px}
+  #adminOverlay .cc378-brand img{width:32px;height:32px;flex-basis:32px}
+  #adminOverlay .cc378-brand b{font-size:.74rem}
+  #adminOverlay .cc378-brand span{font-size:.43rem}
+  #adminOverlay .cc378-btn{min-height:31px;padding:0 9px;font-size:.53rem}
+  #adminOverlay .cc378-nav{gap:9px}
+  #adminOverlay .cc378-nav button{min-height:126px;padding:15px 12px;border-radius:18px;gap:9px}
+  #adminOverlay .cc378-nav-icon{width:48px;height:48px;border-radius:15px}
+  #adminOverlay .cc378-nav-icon svg{width:26px;height:26px}
+  #adminOverlay .cc378-nav-label{font-size:.66rem}
+  #adminOverlay .cc378-nav-sub{font-size:.43rem}
+  #adminOverlay .cc378-nav button:nth-child(37){width:calc(50% - 4.5px)}
+  #adminOverlay .cc378-module-window{min-height:calc(100dvh - 78px);padding:13px;border-radius:18px}
+  #adminOverlay .cc378-module-body{min-height:calc(100dvh - 178px);padding:14px}
+}
+@media(max-width:360px){
+  #adminOverlay .cc378-nav{gap:7px}
+  #adminOverlay .cc378-nav button{min-height:116px;padding:12px 9px}
+  #adminOverlay .cc378-nav-icon{width:44px;height:44px;border-radius:14px}
+  #adminOverlay .cc378-nav-index{right:9px;top:9px}
+}
+</style>
+<script id="cruzclick-v385-admin-reset-script">
+(function(){
+  'use strict';
+  const D=document;
+  const overlay=()=>D.getElementById('adminOverlay');
+  const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const getName=()=>{try{return String(state?.settings?.storeName||'CRULOX')}catch(e){return 'CRULOX'}};
+  const getLogo=()=>{try{return typeof BRAND_LOGO!=='undefined'?BRAND_LOGO:''}catch(e){return ''}};
+  function closeAdmin385(){const el=overlay();if(!el)return false;el.classList.remove('open');el.removeAttribute('data-cc-owner-auth');D.body.classList.remove('lock');return true}
+  function logout385(){try{if(typeof state!=='undefined')state.session=null;if(typeof safeWrite==='function'&&typeof KEYS!=='undefined')safeWrite(KEYS.session,null);else if(typeof write==='function'&&typeof KEYS!=='undefined')write(KEYS.session,null)}catch(e){}closeAdmin385();try{if(typeof renderHeader==='function')renderHeader()}catch(e){}}
+  const ADMIN_SECTIONS_385=Object.freeze({
+    panel:{id:'panel',label:'Panel General',lead:'Vista central y control del negocio.',number:'01',icon:`<svg viewBox="0 0 48 48"><rect x="6" y="6" width="15" height="15" rx="3"/><rect x="27" y="6" width="15" height="10" rx="3"/><rect x="27" y="20" width="15" height="22" rx="3"/><rect x="6" y="25" width="15" height="17" rx="3"/><path d="M12 12h3M32 11h5M12 31h3M32 27h5M32 33h5"/></svg>`},
+    catalog:{id:'catalog',label:'Catálogo',lead:'Organización y administración del catálogo.',number:'02',icon:`<svg viewBox="0 0 48 48"><path d="M7 11h34v8H7z"/><path d="M9 19h30v22H9z"/><path d="M15 25h18M15 31h14M15 37h10"/></svg>`},
+    products:{id:'products',label:'Productos y Servicios',lead:'Productos, servicios, precios, variantes y disponibilidad.',number:'03',icon:`<svg viewBox="0 0 48 48"><path d="M8 16 24 8l16 8-16 8Z"/><path d="M8 16v17l16 7 16-7V16"/><path d="M24 24v16M16 12l16 8"/><path d="M35 8v10M30 13h10"/></svg>`},
+    clients:{id:'clients',label:'Clientes',lead:'Gestión de clientes, datos y relación comercial.',number:'04',icon:`<svg viewBox="0 0 48 48"><circle cx="18" cy="16" r="6"/><path d="M7 37c0-8 5-12 11-12s11 4 11 12"/><circle cx="34" cy="19" r="4"/><path d="M29 37c.5-5 3.5-8 8-8 2 0 3.7.7 5 2"/></svg>`},
+    sales:{id:'sales',label:'Ventas',lead:'Registro y seguimiento de las ventas.',number:'05',icon:`<svg viewBox="0 0 48 48"><path d="M8 9h6l3 21h20l4-15H16"/><circle cx="20" cy="38" r="3"/><circle cx="35" cy="38" r="3"/><path d="M28 7v10M23 12h10"/></svg>`},
+    orders:{id:'orders',label:'Pedidos',lead:'Gestión y seguimiento de pedidos.',number:'06',icon:`<svg viewBox="0 0 48 48"><rect x="9" y="7" width="30" height="34" rx="4"/><path d="M16 15h16M16 22h16M16 29h8"/><path d="m29 31 3 3 6-7"/></svg>`},
+    delivery:{id:'delivery',label:'Entregas Digitales',lead:'Control y seguimiento de entregas digitales.',number:'07',icon:`<svg viewBox="0 0 48 48"><rect x="7" y="10" width="23" height="25" rx="3"/><path d="M30 18h6l5 6v11H30z"/><path d="M14 22h10M24 18l-5 5 5 5"/><circle cx="15" cy="38" r="3"/><circle cx="36" cy="38" r="3"/></svg>`},
+    subscriptions:{id:'subscriptions',label:'Suscripciones',lead:'Gestión de suscripciones y renovaciones.',number:'08',icon:`<svg viewBox="0 0 48 48"><path d="M16 11a15 15 0 0 1 22 9"/><path d="m36 9 2 11-10-3"/><path d="M32 37a15 15 0 0 1-22-9"/><path d="m12 39-2-11 10 3"/><rect x="18" y="18" width="12" height="12" rx="2"/></svg>`},
+    profiles:{id:'profiles',label:'Cuentas y Perfiles',lead:'Control de cuentas, perfiles y accesos de clientes.',number:'09',icon:`<svg viewBox="0 0 48 48"><circle cx="24" cy="17" r="7"/><path d="M10 39c1-8 6-12 14-12s13 4 14 12"/><rect x="31" y="29" width="10" height="10" rx="2"/><path d="M36 32v4M34 34h4"/></svg>`},
+    finance:{id:'finance',label:'Finanzas',lead:'Control financiero general del negocio.',number:'10',icon:`<svg viewBox="0 0 48 48"><path d="M7 15h34v24H7z"/><path d="M7 19h34"/><path d="M13 29h8M13 34h13"/><circle cx="34" cy="30" r="4"/></svg>`},
+    payments:{id:'payments',label:'Pagos',lead:'Registro y control de pagos y cobros.',number:'11',icon:`<svg viewBox="0 0 48 48"><rect x="6" y="11" width="36" height="25" rx="4"/><path d="M6 18h36"/><path d="m17 27 4 4 10-10"/></svg>`},
+    support:{id:'support',label:'Atención al Cliente',lead:'Atención, seguimiento y resolución de consultas.',number:'12',icon:`<svg viewBox="0 0 48 48"><path d="M8 25a16 16 0 0 1 32 0"/><path d="M8 25v9h7v-9H8ZM33 25v9h7v-9h-7Z"/><path d="M15 36c2 4 8 5 12 2"/><circle cx="24" cy="39" r="2"/></svg>`},
+    communication:{id:'communication',label:'Comunicación',lead:'Canales y comunicaciones con clientes.',number:'13',icon:`<svg viewBox="0 0 48 48"><path d="M7 10h24v18H16l-8 7v-7H7z"/><path d="M25 19h16v15H31l-6 5v-5"/><path d="M12 17h14M12 22h9"/></svg>`},
+    marketing:{id:'marketing',label:'Marketing',lead:'Gestión de acciones y campañas de marketing.',number:'14',icon:`<svg viewBox="0 0 48 48"><path d="m9 24 23-10v20L9 24z"/><path d="M32 19h5a7 7 0 0 1 0 10h-5"/><path d="M13 28v11h7l3-8"/></svg>`},
+    promotions:{id:'promotions',label:'Promociones',lead:'Promociones, descuentos y campañas comerciales.',number:'15',icon:`<svg viewBox="0 0 48 48"><path d="M7 17 17 7h22v22L29 39 7 17z"/><circle cx="28" cy="17" r="3"/><path d="M17 24l12-8M18 30h.01M28 25h.01"/></svg>`},
+    loyalty:{id:'loyalty',label:'Fidelización',lead:'Programas para retención y fidelización.',number:'16',icon:`<svg viewBox="0 0 48 48"><path d="m24 7 5 10 11 1-8 7 3 11-11-6-11 6 3-11-8-7 11-1z"/><path d="M18 40h12"/></svg>`},
+    referrals:{id:'referrals',label:'Referidos',lead:'Programa y seguimiento de referidos.',number:'17',icon:`<svg viewBox="0 0 48 48"><circle cx="12" cy="24" r="5"/><circle cx="36" cy="12" r="5"/><circle cx="36" cy="36" r="5"/><path d="m16 22 15-8M16 26l15 8"/></svg>`},
+    stats:{id:'stats',label:'Estadística',lead:'Indicadores y métricas del negocio.',number:'18',icon:`<svg viewBox="0 0 48 48"><path d="M7 41V7M7 41h34"/><rect x="13" y="27" width="6" height="10" rx="1"/><rect x="23" y="21" width="6" height="16" rx="1"/><rect x="33" y="13" width="6" height="24" rx="1"/></svg>`},
+    reports:{id:'reports',label:'Reportes',lead:'Generación y consulta de reportes.',number:'19',icon:`<svg viewBox="0 0 48 48"><path d="M12 6h18l7 7v29H12z"/><path d="M30 6v8h7M18 24h14M18 30h14M18 36h9"/></svg>`},
+    notifications:{id:'notifications',label:'Notificaciones',lead:'Gestión de avisos y notificaciones.',number:'20',icon:`<svg viewBox="0 0 48 48"><path d="M12 33h24l-3-5V21a9 9 0 0 0-18 0v7z"/><path d="M20 38c1 2 3 3 4 3s3-1 4-3"/></svg>`},
+    alerts:{id:'alerts',label:'Alertas',lead:'Alertas y avisos operativos.',number:'21',icon:`<svg viewBox="0 0 48 48"><path d="m24 7 18 32H6L24 7z"/><path d="M24 18v10M24 33h.01"/></svg>`},
+    incidents:{id:'incidents',label:'Incidencias',lead:'Registro y seguimiento de incidencias.',number:'22',icon:`<svg viewBox="0 0 48 48"><path d="M24 6 39 11v11c0 10-6 17-15 20C15 39 9 32 9 22V11z"/><path d="M24 15v11M24 32h.01"/></svg>`},
+    receipts:{id:'receipts',label:'Comprobantes',lead:'Gestión de comprobantes y constancias.',number:'23',icon:`<svg viewBox="0 0 48 48"><path d="M11 7h26v34l-5-3-4 3-4-3-4 3-4-3-5 3z"/><path d="M16 15h16M16 21h16M16 27h10M16 33h7"/></svg>`},
+    suppliers:{id:'suppliers',label:'Proveedores',lead:'Gestión de proveedores y relaciones comerciales.',number:'24',icon:`<svg viewBox="0 0 48 48"><path d="M7 20h15v18H7zM26 28h9l6 6v4H26z"/><path d="M10 20V11h13v9M30 28v-7h7l4 7"/><circle cx="15" cy="41" r="3"/><circle cx="34" cy="41" r="3"/></svg>`},
+    commissions:{id:'commissions',label:'Comisiones',lead:'Control de comisiones y repartos.',number:'25',icon:`<svg viewBox="0 0 48 48"><circle cx="17" cy="17" r="8"/><circle cx="31" cy="31" r="8"/><path d="M17 13v8M13 17h8M31 27v8M27 31h8"/><path d="m22 22 4 4"/></svg>`},
+    profitability:{id:'profitability',label:'Rentabilidad',lead:'Análisis de rentabilidad por operación y servicio.',number:'26',icon:`<svg viewBox="0 0 48 48"><path d="M8 38V8M8 38h32"/><path d="m13 31 8-9 6 5 11-14"/><path d="M31 13h7v7"/></svg>`},
+    history:{id:'history',label:'Historial de Actividad',lead:'Registro de actividad del sistema.',number:'27',icon:`<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="16"/><path d="M24 15v10l7 5M8 24H4l4-4"/></svg>`},
+    audit:{id:'audit',label:'Auditoría',lead:'Revisión y trazabilidad de acciones administrativas.',number:'28',icon:`<svg viewBox="0 0 48 48"><path d="M9 8h22l8 8v24H9z"/><path d="M31 8v9h8M16 24h11M16 30h9"/><circle cx="31" cy="31" r="6"/><path d="m35 35 5 5"/></svg>`},
+    permissions:{id:'permissions',label:'Usuarios y Permisos',lead:'Usuarios administrativos y sus permisos.',number:'29',icon:`<svg viewBox="0 0 48 48"><circle cx="17" cy="17" r="6"/><path d="M7 37c1-7 5-11 10-11s9 4 10 11"/><circle cx="34" cy="20" r="4"/><path d="m33 34 6-6M39 34l-6-6"/></svg>`},
+    security:{id:'security',label:'Seguridad',lead:'Controles de seguridad y protección administrativa.',number:'30',icon:`<svg viewBox="0 0 48 48"><path d="M24 6 40 12v10c0 10-6 17-16 20C14 39 8 32 8 22V12z"/><rect x="17" y="21" width="14" height="11" rx="2"/><path d="M20 21v-3a4 4 0 0 1 8 0v3"/></svg>`},
+    automation:{id:'automation',label:'Automatización',lead:'Procesos automáticos y flujos operativos.',number:'31',icon:`<svg viewBox="0 0 48 48"><circle cx="14" cy="24" r="5"/><circle cx="34" cy="14" r="5"/><circle cx="34" cy="34" r="5"/><path d="m18 22 11-6M18 26l11 6"/><path d="m9 10 5 5 5-5-5-5z"/></svg>`},
+    integrations:{id:'integrations',label:'Integraciones',lead:'Conexiones con servicios y sistemas externos.',number:'32',icon:`<svg viewBox="0 0 48 48"><path d="M19 13v8M29 27v8M15 17h-4a5 5 0 0 0 0 10h8M33 21h4a5 5 0 0 1 0 10h-8"/><path d="M19 21h10M19 27h10"/></svg>`},
+    content:{id:'content',label:'Gestión de Contenido',lead:'Contenido informativo y comercial del sistema.',number:'33',icon:`<svg viewBox="0 0 48 48"><rect x="7" y="9" width="34" height="30" rx="4"/><circle cx="17" cy="18" r="3"/><path d="m11 33 9-9 7 6 5-5 5 8"/></svg>`},
+    files:{id:'files',label:'Gestión de Archivos',lead:'Administración de recursos y archivos digitales.',number:'34',icon:`<svg viewBox="0 0 48 48"><path d="M6 12h14l4 5h18v22H6z"/><path d="M6 12V9h13l4 5"/></svg>`},
+    importexport:{id:'importexport',label:'Importación y Exportación',lead:'Entrada y salida de datos del sistema.',number:'35',icon:`<svg viewBox="0 0 48 48"><path d="M10 8h28v32H10z"/><path d="M17 17h14M17 25h14M17 33h8"/><path d="m22 13 5 5-5 5M26 25l-5 5 5 5"/></svg>`},
+    backup:{id:'backup',label:'Respaldo y Recuperación',lead:'Copias de seguridad y recuperación de información.',number:'36',icon:`<svg viewBox="0 0 48 48"><ellipse cx="24" cy="12" rx="14" ry="6"/><path d="M10 12v12c0 3 6 6 14 6s14-3 14-6V12M10 24v12c0 3 6 6 14 6s14-3 14-6V24"/><path d="M32 28h8v8M40 28l-8 8"/></svg>`},
+    settings:{id:'settings',label:'Configuración',lead:'Configuración general del sistema.',number:'37',icon:`<svg viewBox="0 0 48 48"><path d="M8 14h32M8 24h32M8 34h32"/><circle cx="19" cy="14" r="4"/><circle cx="31" cy="24" r="4"/><circle cx="24" cy="34" r="4"/></svg>`}
+  });
+  let activeAdminSection385=null;
+  function renderAdminHome385(){
+    activeAdminSection385=null;
+    const main=D.getElementById('cc378Stage');if(!main)return false;
+    const nav=Object.values(ADMIN_SECTIONS_385).map(m=>`<button type="button" data-cc378-section="${esc(m.id)}" aria-label="Abrir ${esc(m.label)}"><span class="cc378-nav-index">${esc(m.number)}</span><span class="cc378-nav-icon">${m.icon}</span><span class="cc378-nav-label">${esc(m.label)}</span><span class="cc378-nav-sub">${esc(m.lead)}</span></button>`).join('');
+    main.innerHTML=`<nav class="cc378-nav" id="cc378AdminNav" aria-label="Funciones administrativas">${nav}</nav>`;
+    const adminNav=D.getElementById('cc378AdminNav');
+    if(adminNav)adminNav.onclick=e=>{const b=e.target.closest('[data-cc378-section]');if(b)renderAdminSection385(b.dataset.cc378Section)};
+    try{overlay()?.scrollTo({top:0,behavior:'auto'})}catch(e){try{overlay().scrollTop=0}catch(_){}}return true
+  }
+  function renderAdminSection385(section){
+    const meta=ADMIN_SECTIONS_385[section];if(!meta)return renderAdminHome385();
+    activeAdminSection385=section;
+    const main=D.getElementById('cc378Stage');if(!main)return false;
+    main.innerHTML=`<section class="cc378-module-window" data-cc378-window="${esc(section)}"><header class="cc378-module-head"><button type="button" class="cc378-back" id="cc378BackFunctions" aria-label="Volver a funciones">←</button><div class="cc378-module-id"><span class="cc378-module-icon">${meta.icon}</span><div><h1>${esc(meta.number)} · ${esc(meta.label)}</h1><p>${esc(meta.lead)}</p></div></div></header><div class="cc378-module-body"><div class="cc378-module-placeholder"><div class="bigicon">${meta.icon}</div><h2>${esc(meta.label)}</h2><p>Ventana independiente preparada para las herramientas específicas de este módulo.</p><span class="cc378-section-note">Módulo ${esc(meta.number)} · Herramientas por definir</span></div></div></section>`;
+    const back=D.getElementById('cc378BackFunctions');if(back)back.onclick=renderAdminHome385;
+    try{overlay()?.scrollTo({top:0,behavior:'auto'})}catch(e){try{overlay().scrollTop=0}catch(_){}}return true
+  }
+  function renderAdmin385(){
+    const el=overlay();if(!el)return false;const name=getName();
+    el.innerHTML=`<div class="cc378-admin"><header class="cc378-bar"><div class="cc378-brand"><img src="${esc(getLogo())}" alt="${esc(name)}"><div><b>${esc(name)}</b><span>Panel de Administración</span></div></div><div class="cc378-actions"><button type="button" class="cc378-btn primary" id="cc378Store">Tienda</button><button type="button" class="cc378-btn" id="cc378Logout">Salir</button></div></header><main class="cc378-main" id="cc378Stage"></main></div>`;
+    const store=D.getElementById('cc378Store');if(store)store.onclick=closeAdmin385;
+    const logout=D.getElementById('cc378Logout');if(logout)logout.onclick=logout385;
+    renderAdminHome385();return true
+  }
+  function openAdmin385(){try{const session=typeof state!=='undefined'?state.session:null;if(!session||session.role!=='admin'||String(session.email||'').trim().toLowerCase()!=='admin-separado@crulox.invalid'||session.ownerAuthVersion!=='cruzclick-owner-v3718')return false}catch(e){return false}const el=overlay();if(!el)return false;renderAdmin385();el.setAttribute('data-cc-owner-auth','1');el.classList.add('open');D.body.classList.add('lock');return true}
+  const noop=()=>false;let adminResetInstalled385=false;
+  function installAdminReset385(){if(adminResetInstalled385)return;adminResetInstalled385=true;const names=['adminDashboard','adminProducts','adminInventory','adminCategories','adminFaqs','adminUsers','adminOrders','adminSettings','adminBots','adminBackup','adminActivity','homeAdminV2','servicesAdminV2','availabilityAdminV2','ordersAdminV2','clientsAdminV2','promotionsAdminV2','messagesAdminV2','settingsAdminV2','renderAdminNav','navActive','openServiceEditorV2','openProductEditor'];names.forEach(n=>{try{window[n]=noop}catch(e){}});window.renderAdminV2=renderAdmin385;window.renderAdminSection=renderAdmin385;window.adminShell=renderAdmin385;window.openAdmin=openAdmin385;try{renderAdminV2=renderAdmin385}catch(e){}try{renderAdminSection=renderAdmin385}catch(e){}try{adminShell=renderAdmin385}catch(e){}try{openAdmin=openAdmin385}catch(e){}}
+  if(D.readyState==='complete')setTimeout(installAdminReset385,0);else window.addEventListener('load',()=>setTimeout(installAdminReset385,0),{once:true});setTimeout(installAdminReset385,1800);
+  D.addEventListener('click',function(e){const target=e.target&&e.target.closest?e.target.closest('#profileBtn,#drawerProfile'):null;if(!target)return;let isAdmin=false;try{isAdmin=state?.session?.role==='admin'}catch(err){}if(!isAdmin)return;e.preventDefault();e.stopImmediatePropagation();try{if(typeof closeAllPanels==='function')closeAllPanels()}catch(err){}openAdmin385()},true);
+  const obs=new MutationObserver(()=>{const el=overlay();if(!el||!el.classList.contains('open'))return;if(!el.querySelector('.cc378-admin'))renderAdmin385()});const boot=()=>{const el=overlay();if(!el)return;renderAdmin385();obs.observe(el,{childList:true,subtree:true})};if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  try{Object.defineProperty(window,'CRUZCLICK_ADMIN_V385',{value:Object.freeze({VERSION:'3.8.5',open:openAdmin385,render:renderAdmin385}),writable:false,configurable:false})}catch(e){window.CRUZCLICK_ADMIN_V385={VERSION:'3.8.5',open:openAdmin385,render:renderAdmin385}}
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.9 · Arranque seguro: no modifica la tienda, solo evita loader permanente -->
+<script id="cruzclick-v379-loader-failsafe">
+(function(){
+  'use strict';
+  const D=document;
+  let released=false;
+  function releaseLoader379(){
+    if(released)return;
+    const loader=D.getElementById('loader');
+    if(!loader)return;
+    released=true;
+    loader.classList.add('hide');
+    loader.style.pointerEvents='none';
+    setTimeout(()=>{try{loader.style.display='none'}catch(e){}},480);
+  }
+  // El arranque normal sigue teniendo prioridad. Esto solo es un seguro de salida.
+  if(D.readyState==='complete')setTimeout(releaseLoader379,700);
+  else window.addEventListener('load',()=>setTimeout(releaseLoader379,700),{once:true});
+  setTimeout(releaseLoader379,2600);
+  window.addEventListener('error',()=>setTimeout(releaseLoader379,120),{once:true});
+  window.addEventListener('unhandledrejection',()=>setTimeout(releaseLoader379,120),{once:true});
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.11 · Protección web contra captura/impresión (mejor esfuerzo) -->
+<style id="cruzclick-v3711-capture-shield-style">
+/* La protección se aplica a la tienda pública. El panel administrativo no se altera. */
+#ccCaptureShield{
+  position:fixed;
+  inset:0;
+  z-index:2147483646;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:#020a12;
+  color:#b9f8ff;
+  text-align:center;
+  padding:28px;
+  font-family:inherit;
+}
+#ccCaptureShield.cc-show{display:flex!important}
+#ccCaptureShield .cc-shield-card{
+  max-width:320px;
+  padding:18px 20px;
+  border:1px solid rgba(47,226,247,.22);
+  border-radius:18px;
+  background:linear-gradient(180deg,rgba(7,27,40,.98),rgba(2,13,22,.99));
+  box-shadow:0 18px 48px rgba(0,0,0,.42);
+}
+#ccCaptureShield .cc-shield-icon{font-size:2rem;line-height:1;margin-bottom:10px}
+#ccCaptureShield b{display:block;font-size:.92rem;color:#ecfdff}
+#ccCaptureShield p{margin:7px 0 0;font-size:.72rem;line-height:1.45;color:#87aab9}
+html.cc-store-shielded body > *:not(#ccCaptureShield):not(#adminOverlay){
+  filter:blur(22px)!important;
+  opacity:.03!important;
+  pointer-events:none!important;
+}
+@media print{
+  body > *{display:none!important}
+  #ccCaptureShield{display:flex!important;position:fixed!important;inset:0!important;background:#000!important;color:#fff!important}
+  #ccCaptureShield .cc-shield-card{display:block!important}
+}
+</style>
+<script id="cruzclick-v3711-capture-shield-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const root=D.documentElement;
+  let timer=null;
+  function adminOpen(){
+    const a=D.getElementById('adminOverlay');
+    return !!(a && (a.classList.contains('open') || a.getAttribute('aria-hidden')==='false'));
+  }
+  function ensureShield(){
+    let el=D.getElementById('ccCaptureShield');
+    if(el) return el;
+    el=D.createElement('div');
+    el.id='ccCaptureShield';
+    el.setAttribute('aria-hidden','true');
+    el.innerHTML='<div class="cc-shield-card"><div class="cc-shield-icon">🔒</div><b>Contenido protegido</b><p>La tienda oculta temporalmente su contenido cuando detecta una acción de captura compatible con el navegador.</p></div>';
+    D.body.appendChild(el);
+    return el;
+  }
+  function shield(ms=900){
+    if(adminOpen()) return;
+    const el=ensureShield();
+    clearTimeout(timer);
+    root.classList.add('cc-store-shielded');
+    el.classList.add('cc-show');
+    el.setAttribute('aria-hidden','false');
+    timer=setTimeout(unshield,ms);
+  }
+  function unshield(){
+    const el=D.getElementById('ccCaptureShield');
+    root.classList.remove('cc-store-shielded');
+    if(el){el.classList.remove('cc-show');el.setAttribute('aria-hidden','true')}
+  }
+  // Print / print-to-PDF.
+  window.addEventListener('beforeprint',()=>shield(3000));
+  window.addEventListener('afterprint',unshield);
+  // PrintScreen en navegadores que sí exponen la tecla.
+  D.addEventListener('keydown',e=>{
+    const key=String(e.key||'').toLowerCase();
+    if(key==='printscreen' || e.code==='PrintScreen'){
+      shield(1400);
+      try{navigator.clipboard?.writeText('')}catch(err){}
+      e.preventDefault?.();
+      e.stopPropagation?.();
+    }
+    if((e.ctrlKey||e.metaKey) && key==='p'){
+      shield(1600);
+      e.preventDefault();
+      e.stopPropagation();
+    }
+  },true);
+  D.addEventListener('keyup',e=>{
+    const key=String(e.key||'').toLowerCase();
+    if(key==='printscreen' || e.code==='PrintScreen') shield(1000);
+  },true);
+  // Oculta la tienda cuando pierde foco o queda en segundo plano.
+  window.addEventListener('blur',()=>{if(!adminOpen())shield(700)});
+  window.addEventListener('focus',()=>setTimeout(unshield,120));
+  D.addEventListener('visibilitychange',()=>{
+    if(D.visibilityState!=='visible') shield(1500);
+    else setTimeout(unshield,140);
+  });
+  window.addEventListener('pagehide',()=>shield(1800));
+  // Evita que esta propia página inicie captura de pantalla/ventana mediante Screen Capture API.
+  try{
+    if(navigator.mediaDevices && navigator.mediaDevices.getDisplayMedia){
+      const blocked=()=>Promise.reject(new DOMException('Captura de pantalla deshabilitada por CRULOX.','NotAllowedError'));
+      try{Object.defineProperty(navigator.mediaDevices,'getDisplayMedia',{configurable:true,writable:false,value:blocked})}
+      catch(e){try{navigator.mediaDevices.getDisplayMedia=blocked}catch(_) {}}
+    }
+  }catch(e){}
+  // Mantener fuera del bloqueo al abrir el panel administrativo.
+  D.addEventListener('click',()=>{if(adminOpen())requestAnimationFrame(unshield)},true);
+  ensureShield();
+  window.CRUZCLICK_CAPTURE_SHIELD={shield,unshield,webOnly:true,version:'3.7.11'};
+})();
+</script>
+
+<!-- CRULOX V3.7.13 · estado de tienda como marca de agua -->
+<style id="cruzclick-v3713-stability-style">
+/* El antiguo aviso de sesión administrativa deja de formar parte de la tienda pública. */
+#npAdminSessionHint{display:none!important}
+
+/* Estado real de atención, independiente de la sesión del administrador. */
+#ccStoreScheduleStatus{
+  position:fixed;top:50%;right:-45px;bottom:auto;z-index:30;display:flex;align-items:center;gap:7px;
+  width:124px;min-height:24px;padding:0;border:0;border-radius:0;background:transparent;color:#dffbff;
+  box-shadow:none;backdrop-filter:none;transform:translateY(-50%) rotate(-90deg);transform-origin:center;
+  opacity:.34;font-size:.65rem;font-weight:850;letter-spacing:.055em;text-transform:uppercase;
+  white-space:nowrap;pointer-events:none;user-select:none
+}
+#ccStoreScheduleStatus .cc-status-dot{
+  width:6px;height:6px;border-radius:50%;flex:0 0 auto;
+  background:#20ff8a;
+  box-shadow:0 0 8px rgba(32,255,138,.62);
+  animation:ccStatusDotGreenBlink 1.15s ease-in-out infinite
+}
+#ccStoreScheduleStatus.is-active{
+  color:#55ff9f;
+  animation:ccStatusGreenBlink 1.15s ease-in-out infinite
+}
+#ccStoreScheduleStatus.is-active .cc-status-dot{
+  background:#20ff8a;
+  box-shadow:0 0 8px rgba(32,255,138,.62);
+  animation:ccStatusDotGreenBlink 1.15s ease-in-out infinite
+}
+#ccStoreScheduleStatus.is-inactive{
+  color:#ff5e78;
+  animation:ccStatusRedBlink 1.15s ease-in-out infinite
+}
+#ccStoreScheduleStatus.is-inactive .cc-status-dot{
+  background:#ff355d;
+  box-shadow:0 0 8px rgba(255,53,93,.68);
+  animation:ccStatusDotRedBlink 1.15s ease-in-out infinite
+}
+@keyframes ccStatusGreenBlink{
+  0%,100%{opacity:.28;text-shadow:0 0 4px rgba(32,255,138,.28)}
+  50%{opacity:.92;text-shadow:0 0 12px rgba(32,255,138,.9),0 0 22px rgba(32,255,138,.38)}
+}
+@keyframes ccStatusDotGreenBlink{
+  0%,100%{opacity:.35;box-shadow:0 0 5px rgba(32,255,138,.38)}
+  50%{opacity:1;box-shadow:0 0 11px rgba(32,255,138,1),0 0 20px rgba(32,255,138,.55)}
+}
+@keyframes ccStatusRedBlink{
+  0%,100%{opacity:.28;text-shadow:0 0 4px rgba(255,53,93,.28)}
+  50%{opacity:.92;text-shadow:0 0 12px rgba(255,53,93,.92),0 0 22px rgba(255,53,93,.42)}
+}
+@keyframes ccStatusDotRedBlink{
+  0%,100%{opacity:.35;box-shadow:0 0 5px rgba(255,53,93,.42)}
+  50%{opacity:1;box-shadow:0 0 11px rgba(255,53,93,1),0 0 20px rgba(255,53,93,.58)}
+}
+
+/* El atributo hidden debe prevalecer sobre reglas visuales antiguas. */
+[hidden]{display:none!important}
+
+/* Bloque de código promocional: jerarquía clara y controles táctiles consistentes. */
+#cartPanel .panel-foot{padding-top:14px!important}
+#cartPanel .promo-box{
+  display:grid!important;gap:10px!important;margin:0 0 14px!important;padding:14px!important;
+  border:1px solid rgba(41,211,238,.18)!important;border-radius:17px!important;
+  background:linear-gradient(145deg,rgba(11,38,52,.92),rgba(5,19,31,.96))!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 12px 30px rgba(0,0,0,.18)!important
+}
+#cartPanel .promo-box label{display:flex!important;align-items:center!important;gap:8px!important;margin:0!important;color:#f1fbff!important;font-size:.82rem!important;font-weight:850!important;line-height:1.25!important}
+#cartPanel .promo-entry{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;gap:8px!important;align-items:stretch!important}
+#cartPanel #promoCodeInput{
+  width:100%!important;min-width:0!important;height:46px!important;padding:0 13px!important;margin:0!important;
+  border:1px solid rgba(139,211,228,.2)!important;border-radius:12px!important;background:#071723!important;
+  color:#f5fdff!important;font:750 .86rem/1 inherit!important;letter-spacing:.035em!important;text-transform:uppercase!important;
+  box-shadow:none!important;outline:none!important
+}
+#cartPanel #promoCodeInput::placeholder{color:#688697!important;text-transform:none!important;font-weight:650!important;letter-spacing:0!important}
+#cartPanel #promoCodeInput:focus{border-color:#20d9f2!important;box-shadow:0 0 0 3px rgba(32,217,242,.12)!important}
+#cartPanel #promoApplyBtn{
+  min-width:92px!important;height:46px!important;padding:0 16px!important;border:1px solid rgba(34,211,238,.35)!important;
+  border-radius:12px!important;background:linear-gradient(135deg,#11dced,#168bea)!important;color:#03121d!important;
+  font:900 .78rem/1 inherit!important;cursor:pointer!important;box-shadow:0 8px 22px rgba(13,174,224,.2)!important
+}
+#cartPanel #promoApplyBtn:hover{filter:brightness(1.08)!important;transform:translateY(-1px)}
+#cartPanel #promoApplyBtn:active{transform:translateY(0)}
+#cartPanel .promo-feedback{margin:0!important;color:#8ba8b8!important;font-size:.69rem!important;line-height:1.45!important}
+#cartPanel .promo-feedback.success{color:#63e6b0!important}
+#cartPanel .list-card{align-items:start!important}
+#cartPanel .list-card>strong{white-space:nowrap!important}
+#cartPanel .list-actions{flex-wrap:wrap!important;gap:9px!important}
+#cartPanel .np-cart-expiry{display:block!important;margin-top:4px!important;color:#82a5b8!important;font-size:.68rem!important;line-height:1.35!important}
+#cartPanel .np-cart-expiry strong{color:#bceff7!important}
+#cartPanel .total-row{min-height:34px!important}
+
+@media(max-width:540px){
+  #ccStoreScheduleStatus{top:51%;right:-47px;bottom:auto;z-index:30;width:122px;min-height:20px;padding:0;font-size:.58rem;opacity:.28}
+  #cartPanel .panel-content{padding-bottom:8px!important}
+  #cartPanel .panel-foot{padding:12px 12px max(14px,env(safe-area-inset-bottom))!important}
+  #cartPanel .promo-box{padding:12px!important;border-radius:15px!important}
+  #cartPanel .promo-entry{grid-template-columns:minmax(0,1fr) 88px!important}
+  #cartPanel #promoApplyBtn{min-width:0!important;padding:0 12px!important}
+}
+@media(max-width:360px){
+  #cartPanel .promo-entry{grid-template-columns:1fr!important}
+  #cartPanel #promoApplyBtn{width:100%!important}
+}
+</style>
+<script id="cruzclick-v3713-stability-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.7.13';
+  const GT_TIME_ZONE='America/Guatemala';
+  const CART_TTL_MS=5*24*60*60*1000;
+
+  function finiteTimestamp(value,fallback){
+    if(typeof value==='number'&&Number.isFinite(value)&&value>0)return value;
+    if(typeof value==='string'&&value.trim()){
+      const numeric=Number(value);
+      if(Number.isFinite(numeric)&&numeric>0)return numeric;
+      const parsed=Date.parse(value);
+      if(Number.isFinite(parsed)&&parsed>0)return parsed;
+    }
+    return fallback;
+  }
+  function repairCartDates(){
+    if(!window.state||!Array.isArray(state.cart))return false;
+    let changed=false;
+    const now=Date.now();
+    state.cart=state.cart.map(item=>{
+      if(!item||typeof item!=='object')return item;
+      const added=finiteTimestamp(item.addedAt,now);
+      let expires=finiteTimestamp(item.expiresAt,added+CART_TTL_MS);
+      if(expires<=added)expires=added+CART_TTL_MS;
+      if(item.addedAt!==added||item.expiresAt!==expires){changed=true;return {...item,addedAt:added,expiresAt:expires,cartSchema:2}}
+      return item;
+    });
+    if(changed){try{write(KEYS.cart,state.cart)}catch(e){console.warn('CRULOX: no se pudieron normalizar las fechas del pedido.',e)}}
+    return changed;
+  }
+
+  /* Protege la función vigente de carrito contra fechas heredadas o corruptas. */
+  if(typeof window.renderCart==='function'){
+    const renderCart3711=window.renderCart;
+    window.renderCart=function(){
+      repairCartDates();
+      const result=renderCart3711.apply(this,arguments);
+      const input=D.getElementById('promoCodeInput');
+      const apply=D.getElementById('promoApplyBtn');
+      if(input){input.setAttribute('aria-describedby','promoMessage');input.setAttribute('aria-label','Código promocional');input.setAttribute('maxlength','32');input.setAttribute('autocapitalize','characters');input.setAttribute('spellcheck','false')}
+      if(apply)apply.setAttribute('aria-label','Aplicar código promocional');
+      return result;
+    };
+  }
+
+  function guatemalaMinutes(date=new Date()){
+    try{
+      const parts=new Intl.DateTimeFormat('en-CA',{timeZone:GT_TIME_ZONE,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+      const hour=Number(parts.find(p=>p.type==='hour')?.value);
+      const minute=Number(parts.find(p=>p.type==='minute')?.value);
+      if(Number.isFinite(hour)&&Number.isFinite(minute))return hour*60+minute;
+    }catch(e){console.warn('CRULOX: no se pudo consultar el horario de Guatemala.',e)}
+    /* Guatemala usa UTC-6 todo el año; este respaldo evita depender de la zona del dispositivo. */
+    const utc=date.getUTCHours()*60+date.getUTCMinutes();
+    return (utc-360+1440)%1440;
+  }
+  function storeIsActive(date=new Date()){
+    const minutes=guatemalaMinutes(date);
+    return minutes>=7*60&&minutes<19*60;
+  }
+  function ensureScheduleStatus(){
+    let el=D.getElementById('ccStoreScheduleStatus');
+    if(!el){
+      el=D.createElement('div');el.id='ccStoreScheduleStatus';el.setAttribute('role','status');el.setAttribute('aria-live','polite');
+      el.innerHTML='<span class="cc-status-dot" aria-hidden="true"></span><span class="cc-status-label"></span>';
+      D.body.appendChild(el);
+    }
+    return el;
+  }
+  function updateScheduleStatus(date=new Date()){
+    const active=storeIsActive(date);const el=ensureScheduleStatus();
+    el.classList.toggle('is-active',active);el.classList.toggle('is-inactive',!active);
+    const label=el.querySelector('.cc-status-label');if(label)label.textContent=active?'Tienda Activa':'Tienda Fuera de horario';
+    el.title=active?'Horario de atención: 7:00 AM a 7:00 PM (Guatemala)':'La tienda vuelve a estar activa a las 7:00 AM (Guatemala)';
+    el.setAttribute('aria-label',`${active?'Tienda Activa':'Tienda Fuera de horario'}. Horario de Guatemala: 7:00 AM a 7:00 PM.`);
+    return active;
+  }
+
+  function hardenStaticControls(){
+    D.querySelectorAll('button:not([type])').forEach(button=>button.type='button');
+    const closeNames={cartClose:'Cerrar pedido',drawerClose:'Cerrar menú',notificationClose:'Cerrar notificaciones'};
+    Object.entries(closeNames).forEach(([id,name])=>{const el=D.getElementById(id);if(el&&!el.getAttribute('aria-label'))el.setAttribute('aria-label',name)});
+    D.querySelectorAll('a[target="_blank"]').forEach(a=>{const rel=new Set(String(a.rel||'').split(/\s+/).filter(Boolean));rel.add('noopener');rel.add('noreferrer');a.rel=[...rel].join(' ')});
+  }
+
+  repairCartDates();
+  hardenStaticControls();
+  updateScheduleStatus();
+  try{if(typeof renderCart==='function'&&D.getElementById('cartItems'))renderCart()}catch(e){console.error('CRULOX: no se pudo actualizar el pedido.',e)}
+  setInterval(updateScheduleStatus,30000);
+  D.addEventListener('visibilitychange',()=>{if(D.visibilityState==='visible')updateScheduleStatus()});
+  window.addEventListener('pageshow',()=>{repairCartDates();updateScheduleStatus();hardenStaticControls()});
+
+  window.CRUZCLICK_V3713={
+    version:VERSION,timeZone:GT_TIME_ZONE,activeFrom:'07:00',inactiveFrom:'19:00',
+    storeIsActive,guatemalaMinutes,repairCartDates,updateScheduleStatus,
+    selfTest(){
+      return {
+        version:VERSION,
+        boundary0659:storeIsActive(new Date('2026-09-13T12:59:00Z'))===false,
+        boundary0700:storeIsActive(new Date('2026-09-13T13:00:00Z'))===true,
+        boundary1859:storeIsActive(new Date('2026-09-14T00:59:00Z'))===true,
+        boundary1900:storeIsActive(new Date('2026-09-14T01:00:00Z'))===false,
+        oldPanelTextHidden:getComputedStyle(D.getElementById('npAdminSessionHint')||D.body).display==='none',
+        promoControlsPresent:!!D.getElementById('promoCodeInput')&&!!D.getElementById('promoApplyBtn')
+      };
+    }
+  };
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.16 · Corrección exclusiva: botón Detalles + texto fuera de horario -->
+<script id="cruzclick-v3716-detail-status-fix">
+(()=>{
+  'use strict';
+  const D=document;
+  const previousOpenDetail3716=window.openDetail;
+
+  const html3716=value=>String(value??'').replace(/[&<>"']/g,ch=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[ch]));
+
+  function product3716(id){
+    try{return (state.products||[]).find(p=>String(p.id)===String(id))||null}catch(e){return null}
+  }
+
+  function money3716(value){
+    const currency=String((window.state&&state.settings&&state.settings.currency)||'Q').trim()||'Q';
+    return `${currency}${Number(value||0).toFixed(2)}`;
+  }
+
+  function fallbackDetail3716(product){
+    const modal=D.getElementById('detailModal');
+    const body=D.getElementById('detailBody');
+    if(!modal||!body||!product)return false;
+
+    const images=(Array.isArray(product.images)?product.images:[product.image]).filter(Boolean);
+    const mainImage=images[0]||product.image||'';
+    let stockText='Disponible',stockClass='';
+    try{
+      if(typeof window.stockInfo==='function'){
+        const result=window.stockInfo(product);
+        if(Array.isArray(result)){stockText=String(result[0]||stockText);stockClass=String(result[1]||'')}
+      }
+    }catch(e){}
+
+    const facts=[
+      ['Tipo',product.digitalType||product.category||'Servicio digital'],
+      ['Plataforma',product.platform||product.category||'CRULOX'],
+      ['Entrega estimada',product.deliveryEta||'Según servicio'],
+      ['Forma de entrega',product.deliveryMode||'Entrega digital']
+    ];
+    if(product.duration)facts.push(['Duración / vigencia',product.duration]);
+    facts.push(['Disponibilidad',stockText]);
+
+    const requirements=Array.isArray(product.digitalRequirements)?product.digitalRequirements:[];
+    const sellable=stockClass!=='out'&&(product.availabilityMode!=='limited'||Number(product.stock||0)>0);
+    body.innerHTML=`<div class="product-detail"><div class="product-detail-gallery"><div class="product-detail-media"><img id="detailMainImage" src="${html3716(mainImage)}" alt="${html3716(product.name||'Servicio')}" loading="eager" decoding="async"></div></div><div class="product-detail-info"><span class="section-kicker">${html3716(product.category||'Servicio digital')}</span><h2>${html3716(product.name||'Servicio')}</h2><div class="rating">★ ${Number(product.rating||0).toFixed(1)} <span>(${Number(product.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money3716(product.price)}</strong>${product.oldPrice?`<span class="old">${money3716(product.oldPrice)}</span>`:''}</div><p>${html3716(product.description||'')}</p><p class="stock stock-detail ${html3716(stockClass)}">${html3716(stockText)}</p><div class="jmv2-digital-facts">${facts.map(([label,value])=>`<div class="jmv2-fact"><small>${html3716(label)}</small><b>${html3716(value)}</b></div>`).join('')}</div><div class="jmv2-requirements"><b>Datos necesarios para activar el servicio</b>${requirements.length?`<ul>${requirements.map(r=>`<li>${html3716(r.label||'Dato requerido')}${r.required===false?' (opcional)':''}</li>`).join('')}</ul>`:'<ul><li>No requiere datos adicionales además de los necesarios para gestionar el servicio.</li></ul>'}</div><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${sellable?'':'disabled'}>${sellable?'Agregar al pedido':'No disponible'}</button><button class="btn btn-green" id="detailSupport">Consultar bot</button><button class="btn btn-secondary" id="detailFav">${(state.favorites||[]).includes(product.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+
+    modal.classList.add('open');
+    D.body.classList.add('lock');
+
+    const add=D.getElementById('detailAdd');
+    if(add) add.onclick=()=>{
+      if(!sellable)return;
+      try{if(typeof window.addToCart==='function')window.addToCart(product.id)}catch(e){console.error('CRULOX V3.7.16: no se pudo agregar el servicio.',e)}
+      try{if(typeof window.closeModal==='function')window.closeModal('detailModal');else modal.classList.remove('open')}catch(e){modal.classList.remove('open')}
+    };
+
+    const support=D.getElementById('detailSupport');
+    if(support) support.onclick=e=>{
+      e?.preventDefault?.();
+      try{
+        if(window.JM_DIGITAL_STORE_V352?.openProductChat)return window.JM_DIGITAL_STORE_V352.openProductChat(product);
+        if(typeof window.openBot==='function')return window.openBot('support',`Hola. Necesito información sobre ${product.name}.`,{Producto:product.name,Tipo:'Consulta'});
+      }catch(error){console.error('CRULOX V3.7.16: no se pudo abrir la consulta del producto.',error)}
+    };
+
+    const fav=D.getElementById('detailFav');
+    if(fav) fav.onclick=()=>{
+      try{if(typeof window.toggleFavorite==='function')window.toggleFavorite(product.id)}catch(e){}
+      window.setTimeout(()=>openDetail3716(product.id),0);
+    };
+
+    window.setTimeout(()=>{
+      try{window.JM_DIGITAL_STORE_V27?.rebuildDetail?.(product.id)}catch(e){}
+    },20);
+    return true;
+  }
+
+  function openDetail3716(id){
+    const product=product3716(id);
+    if(!product)return false;
+
+    let error=null;
+    try{
+      if(typeof previousOpenDetail3716==='function')previousOpenDetail3716(product.id);
+    }catch(e){error=e;console.error('CRULOX V3.7.16: recuperación del detalle activada.',e)}
+
+    const modal=D.getElementById('detailModal');
+    const body=D.getElementById('detailBody');
+    if(!error&&modal?.classList.contains('open')&&body?.children?.length)return true;
+    return fallbackDetail3716(product);
+  }
+
+  window.openDetail=openDetail3716;
+  try{openDetail=openDetail3716}catch(e){}
+
+  /* Respaldo delegado: mantiene funcionales los botones aunque una tarjeta se regenere dinámicamente. */
+  D.addEventListener('click',event=>{
+    const button=event.target?.closest?.('.product-actions [data-detail]');
+    if(!button)return;
+    window.setTimeout(()=>{
+      const modal=D.getElementById('detailModal');
+      if(!modal?.classList.contains('open'))openDetail3716(button.dataset.detail);
+    },0);
+  },false);
+
+  window.CRUZCLICK_V3716={version:'3.7.16',openDetail:openDetail3716};
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.17 · Carrito disponible fuera de horario + envío de pedido solo con tienda activa -->
+<script id="cruzclick-v3717-order-schedule-guard">
+(()=>{
+  'use strict';
+  const D=document;
+  const GT_TIME_ZONE='America/Guatemala';
+  const OPEN_MINUTES=7*60;
+  const CLOSE_MINUTES=19*60;
+
+  function guatemalaMinutes3717(date=new Date()){
+    try{
+      const parts=new Intl.DateTimeFormat('en-CA',{timeZone:GT_TIME_ZONE,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+      const hour=Number(parts.find(p=>p.type==='hour')?.value);
+      const minute=Number(parts.find(p=>p.type==='minute')?.value);
+      if(Number.isFinite(hour)&&Number.isFinite(minute))return hour*60+minute;
+    }catch(e){}
+    const utc=date.getUTCHours()*60+date.getUTCMinutes();
+    return (utc-360+1440)%1440;
+  }
+
+  function storeIsActive3717(date=new Date()){
+    try{
+      const scheduleApi=window.CRUZCLICK_V3713;
+      if(scheduleApi&&typeof scheduleApi.storeIsActive==='function')return !!scheduleApi.storeIsActive(date);
+    }catch(e){}
+    const minutes=guatemalaMinutes3717(date);
+    return minutes>=OPEN_MINUTES&&minutes<CLOSE_MINUTES;
+  }
+
+  function closedMessage3717(){
+    const message='La tienda está fuera de horario. Tus productos permanecerán en el carrito y podrás enviar el pedido cuando la tienda esté activa, de 7:00 AM a 7:00 PM (hora de Guatemala).';
+    try{
+      if(typeof window.toast==='function'){window.toast(message,'warn');return false}
+      if(typeof toast==='function'){toast(message,'warn');return false}
+    }catch(e){}
+    try{window.alert(message)}catch(e){}
+    return false;
+  }
+
+  function blockCheckoutSubmission3717(event){
+    const form=event?.target;
+    if(!form||form.id!=='checkoutForm'||storeIsActive3717())return;
+    event.preventDefault?.();
+    event.stopImmediatePropagation?.();
+    event.stopPropagation?.();
+    closedMessage3717();
+  }
+
+  D.addEventListener('submit',blockCheckoutSubmission3717,true);
+
+  const previousSubmitOrder3717=window.submitOrder;
+  if(typeof previousSubmitOrder3717==='function'){
+    const guardedSubmitOrder3717=function(event){
+      if(!storeIsActive3717()){
+        event?.preventDefault?.();
+        event?.stopImmediatePropagation?.();
+        return closedMessage3717();
+      }
+      return previousSubmitOrder3717.apply(this,arguments);
+    };
+    window.submitOrder=guardedSubmitOrder3717;
+    try{submitOrder=guardedSubmitOrder3717}catch(e){}
+    const form=D.getElementById('checkoutForm');
+    if(form)form.onsubmit=guardedSubmitOrder3717;
+  }
+
+  window.addEventListener('message',event=>{
+    if(event?.data?.type!=='np-order'||storeIsActive3717())return;
+    event.stopImmediatePropagation?.();
+    event.stopPropagation?.();
+    closedMessage3717();
+  },true);
+
+  window.CRUZCLICK_V3717={
+    version:'3.7.17',
+    storeIsActive:storeIsActive3717,
+    canAddToCart:()=>true,
+    canSubmitOrder:storeIsActive3717,
+    selfTest(){
+      return {
+        boundary0659:storeIsActive3717(new Date('2026-09-13T12:59:00Z'))===false,
+        boundary0700:storeIsActive3717(new Date('2026-09-13T13:00:00Z'))===true,
+        boundary1859:storeIsActive3717(new Date('2026-09-14T00:59:00Z'))===true,
+        boundary1900:storeIsActive3717(new Date('2026-09-14T01:00:00Z'))===false,
+        cartRemainsAvailable:true,
+        checkoutGuardBound:!!D.getElementById('checkoutForm')
+      };
+    }
+  };
+})();
+</script>
+
+
+<!-- CRULOX V3.7.18 · Cuenta refinada + acceso administrativo exclusivo + menú lateral -->
+<style id="cruzclick-v3718-account-admin-menu-style">
+/* ============================================================
+   1–2. Cuenta CRULOX: acceso/registro y contraseña integrados
+   ============================================================ */
+#accountModal .modal{
+  width:min(540px,calc(100vw - 22px))!important;
+  padding:18px!important;
+  border-radius:26px!important;
+  background:
+    radial-gradient(circle at 18% 0%,rgba(0,217,255,.085),transparent 34%),
+    linear-gradient(165deg,#081a2d 0%,#061522 58%,#07121e 100%)!important;
+  border:1px solid rgba(85,202,255,.16)!important;
+  box-shadow:0 28px 90px rgba(0,0,0,.68),inset 0 1px rgba(255,255,255,.045)!important;
+}
+#accountModal .modal-head{
+  margin-bottom:13px!important;
+  padding:1px 1px 12px!important;
+  border-bottom:1px solid rgba(135,205,255,.08)!important;
+}
+#accountModal .modal-head h2{
+  font-size:1.04rem!important;
+  letter-spacing:-.025em!important;
+  color:#f4f9ff!important;
+}
+#accountModal .tabs{
+  padding:5px!important;
+  gap:5px!important;
+  margin:0 0 14px!important;
+  border-radius:16px!important;
+  border:1px solid rgba(124,197,255,.08)!important;
+  background:rgba(255,255,255,.026)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.02)!important;
+}
+#accountModal .tab{
+  min-height:42px!important;
+  border-radius:12px!important;
+  font-size:.72rem!important;
+  letter-spacing:.005em!important;
+  color:#7189a8!important;
+  transition:background .2s,color .2s,transform .2s,border-color .2s!important;
+}
+#accountModal .tab.active{
+  color:#05ddff!important;
+  background:linear-gradient(135deg,rgba(0,217,255,.16),rgba(0,150,255,.10))!important;
+  border:1px solid rgba(0,217,255,.12)!important;
+  box-shadow:0 8px 20px rgba(0,151,220,.08)!important;
+}
+#accountModal .cc-auth-intro{
+  display:grid!important;
+  gap:4px!important;
+  margin:0 0 14px!important;
+  padding:0 2px!important;
+}
+#accountModal .cc-auth-intro b{
+  font-size:.86rem!important;
+  color:#eef7ff!important;
+  letter-spacing:-.015em!important;
+  overflow-wrap:normal!important;
+}
+#accountModal .cc-auth-intro span{
+  font-size:.64rem!important;
+  line-height:1.45!important;
+  color:#829ab5!important;
+  overflow-wrap:normal!important;
+}
+#accountModal .form-grid{gap:11px!important}
+#accountModal .field{gap:6px!important}
+#accountModal .field label{
+  font-size:.64rem!important;
+  color:#c2d4e7!important;
+  font-weight:800!important;
+  letter-spacing:.005em!important;
+}
+#accountModal .field input:not([type="checkbox"]),
+#accountModal .field select,
+#accountModal .field textarea{
+  min-height:48px!important;
+  border-radius:15px!important;
+  border:1px solid rgba(128,196,255,.14)!important;
+  background:linear-gradient(180deg,rgba(7,30,48,.86),rgba(4,24,39,.94))!important;
+  color:#f3f9ff!important;
+  padding:10px 14px!important;
+  font-size:.78rem!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.018)!important;
+}
+#accountModal .field input:not([type="checkbox"])::placeholder{color:#607a96!important}
+#accountModal .field input:not([type="checkbox"]):focus,
+#accountModal .field select:focus,
+#accountModal .field textarea:focus{
+  border-color:rgba(0,217,255,.50)!important;
+  background:#071d2e!important;
+  box-shadow:0 0 0 3px rgba(0,217,255,.08)!important;
+}
+
+/* El botón queda dentro del campo: no flota ni se monta sobre el diseño. */
+#accountModal .password-input-wrap{
+  position:relative!important;
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+}
+#accountModal .password-input-wrap input{
+  width:100%!important;
+  padding-right:92px!important;
+}
+#accountModal .password-toggle{
+  position:absolute!important;
+  right:7px!important;
+  top:50%!important;
+  bottom:auto!important;
+  left:auto!important;
+  transform:translateY(-50%)!important;
+  width:auto!important;
+  min-width:72px!important;
+  height:36px!important;
+  margin:0!important;
+  padding:0 10px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:6px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(124,198,255,.12)!important;
+  background:linear-gradient(180deg,rgba(16,42,63,.96),rgba(9,29,47,.96))!important;
+  color:#a8bfd4!important;
+  box-shadow:0 6px 16px rgba(0,0,0,.16),inset 0 1px rgba(255,255,255,.028)!important;
+  font-size:.62rem!important;
+  font-weight:850!important;
+  line-height:1!important;
+  z-index:3!important;
+  transition:transform .18s,border-color .18s,background .18s,color .18s!important;
+}
+#accountModal .password-toggle:hover{
+  border-color:rgba(0,217,255,.32)!important;
+  color:#dffaff!important;
+}
+#accountModal .password-toggle:active{transform:translateY(-50%) scale(.96)!important}
+#accountModal .password-toggle.active{
+  color:#02ddff!important;
+  border-color:rgba(0,217,255,.28)!important;
+  background:linear-gradient(180deg,rgba(0,217,255,.12),rgba(0,149,221,.07))!important;
+}
+#accountModal .cc-pass-emoji{
+  display:grid!important;
+  place-items:center!important;
+  width:20px!important;
+  height:20px!important;
+  font-size:.92rem!important;
+  line-height:1!important;
+  transform-origin:center!important;
+}
+#accountModal .password-toggle.cc-pass-pop .cc-pass-emoji{animation:ccPassEmoji3718 .32s cubic-bezier(.2,.9,.3,1.35)}
+#accountModal .cc-pass-label{font-size:.58rem!important;white-space:nowrap!important}
+@keyframes ccPassEmoji3718{
+  0%{transform:scale(.66) rotate(-7deg);opacity:.45}
+  58%{transform:scale(1.18) rotate(5deg);opacity:1}
+  100%{transform:scale(1) rotate(0);opacity:1}
+}
+
+#accountModal .cc-remember{
+  display:flex!important;
+  align-items:center!important;
+  gap:9px!important;
+  min-height:42px!important;
+  padding:9px 11px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(126,193,255,.08)!important;
+  background:rgba(255,255,255,.018)!important;
+  color:#90a8bf!important;
+  font-size:.62rem!important;
+  font-weight:700!important;
+}
+#accountModal .cc-remember input,
+#accountModal .cc-consent input{
+  width:17px!important;
+  height:17px!important;
+  min-height:17px!important;
+  flex:0 0 17px!important;
+  accent-color:#00d9ff!important;
+}
+#accountModal .cc-consent{
+  display:flex!important;
+  align-items:flex-start!important;
+  gap:9px!important;
+  padding:10px 11px!important;
+  border-radius:13px!important;
+  border:1px solid rgba(126,193,255,.08)!important;
+  background:rgba(255,255,255,.018)!important;
+  color:#91a9c0!important;
+  font-size:.60rem!important;
+  line-height:1.45!important;
+}
+#accountModal .form-actions{margin-top:14px!important}
+#accountModal .form-actions .btn-block{
+  min-height:47px!important;
+  border-radius:14px!important;
+  font-size:.73rem!important;
+  font-weight:900!important;
+  box-shadow:0 12px 26px rgba(0,172,255,.16)!important;
+}
+
+/* Error legible, contenido y coherente con el modal. */
+#accountModal .modal-inline-notice{
+  position:relative!important;
+  top:auto!important;
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr)!important;
+  align-items:center!important;
+  gap:9px!important;
+  margin:0 0 13px!important;
+  padding:10px 11px!important;
+  border-radius:14px!important;
+  border:1px solid rgba(255,92,119,.22)!important;
+  border-left:1px solid rgba(255,92,119,.22)!important;
+  background:linear-gradient(135deg,rgba(68,16,30,.88),rgba(38,11,22,.92))!important;
+  color:#ffdce4!important;
+  box-shadow:0 10px 24px rgba(0,0,0,.20)!important;
+  font-size:.65rem!important;
+  line-height:1.42!important;
+  font-weight:700!important;
+  letter-spacing:0!important;
+}
+#accountModal .modal-inline-notice>span:first-child{
+  width:30px!important;
+  height:30px!important;
+  display:grid!important;
+  place-items:center!important;
+  border-radius:10px!important;
+  background:rgba(255,94,120,.12)!important;
+  color:#ff7890!important;
+  font-size:.74rem!important;
+  font-weight:950!important;
+}
+#accountModal .modal-inline-notice>span:last-child{
+  min-width:0!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+#accountModal .field input.input-error{
+  border-color:rgba(255,94,120,.58)!important;
+  box-shadow:0 0 0 3px rgba(255,94,120,.075)!important;
+}
+
+/* ============================================================
+   4. Menú lateral: evita ruptura por letras y mejora jerarquía
+   ============================================================ */
+.drawer nav.jmv24-drawer-nav{
+  width:100%!important;
+  min-width:0!important;
+  gap:8px!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-item{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  grid-template-columns:42px minmax(0,1fr)!important;
+  gap:11px!important;
+  padding:11px 12px!important;
+  border-radius:16px!important;
+  overflow:hidden!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-ico{
+  width:42px!important;
+  height:42px!important;
+  min-width:42px!important;
+  border-radius:13px!important;
+  font-size:.96rem!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-copy{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  align-items:flex-start!important;
+  gap:3px!important;
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  overflow:visible!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-copy b{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  display:block!important;
+  white-space:normal!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  font-size:.82rem!important;
+  line-height:1.18!important;
+  letter-spacing:-.01em!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-copy small{
+  width:100%!important;
+  max-width:none!important;
+  min-width:0!important;
+  display:block!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+  hyphens:none!important;
+  font-size:.59rem!important;
+  line-height:1.35!important;
+  color:#8ea6bd!important;
+}
+.drawer nav.jmv24-drawer-nav .jmv24-nav-item:hover{
+  border-color:rgba(0,217,255,.25)!important;
+  box-shadow:inset 0 1px rgba(255,255,255,.025),0 12px 28px rgba(0,0,0,.15)!important;
+}
+
+/* Seguridad visual: el panel no puede mostrarse sin sesión propietaria validada. */
+#adminOverlay.open:not([data-cc-owner-auth="1"]){
+  display:none!important;
+  pointer-events:none!important;
+}
+
+@media(max-width:560px){
+  #accountModal .modal{padding:15px!important;border-radius:22px!important}
+  #accountModal .password-input-wrap input{padding-right:86px!important}
+  #accountModal .password-toggle{min-width:68px!important;height:34px!important;padding-inline:8px!important}
+  #accountModal .cc-pass-label{font-size:.55rem!important}
+  .drawer nav.jmv24-drawer-nav .jmv24-nav-item{grid-template-columns:40px minmax(0,1fr)!important;padding:10px 11px!important}
+  .drawer nav.jmv24-drawer-nav .jmv24-nav-ico{width:40px!important;height:40px!important;min-width:40px!important}
+}
+</style>
+
+<script id="cruzclick-v3718-account-admin-menu-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.7.18';
+  const OWNER_EMAIL='admin-separado@crulox.invalid';
+  const OWNER_PASSWORD_SHA256='9c3b83eb1b39297606a1d599f17c6900f2e9f3df65fee429b5537edbaa91a52b';
+  const OWNER_AUTH_VERSION='cruzclick-owner-v3718';
+  const PANEL_OPEN_KEY='cc_admin_panel_open_v3718';
+  const OLD_ADMIN_PERSIST_KEY='np_admin_persist_v106';
+  const LAST_IDENTITY_KEY='np_last_login_identity_v106';
+
+  const norm3718=value=>{
+    try{return typeof norm==='function'?norm(String(value||'').trim()):String(value||'').trim().toLowerCase()}
+    catch(e){return String(value||'').trim().toLowerCase()}
+  };
+  const getJSON3718=(key,fallback=null)=>{
+    try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch(e){return fallback}
+  };
+  const setJSON3718=(key,value)=>{
+    try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){return false}
+  };
+  const remove3718=key=>{try{localStorage.removeItem(key)}catch(e){}};
+  const writeSession3718=()=>{
+    try{if(typeof write==='function'&&typeof KEYS!=='undefined')write(KEYS.session,state.session)}catch(e){}
+  };
+  const ownerSession3718=()=>{
+    try{
+      return !!state?.session &&
+        state.session.role==='admin' &&
+        norm3718(state.session.email)===norm3718(OWNER_EMAIL) &&
+        state.session.ownerAuthVersion===OWNER_AUTH_VERSION;
+    }catch(e){return false}
+  };
+
+  /* Elimina persistencias administrativas heredadas para que solo exista el nuevo acceso propietario. */
+  remove3718(OLD_ADMIN_PERSIST_KEY);
+  try{
+    if(state?.session?.role==='admin'&&!ownerSession3718()){
+      state.session=null;
+      writeSession3718();
+    }
+  }catch(e){}
+
+  function panelOpenStored3718(){
+    try{return localStorage.getItem(PANEL_OPEN_KEY)==='1'}catch(e){return false}
+  }
+  function setPanelOpenStored3718(open){
+    try{localStorage.setItem(PANEL_OPEN_KEY,open?'1':'0')}catch(e){}
+  }
+  function overlay3718(){return D.getElementById('adminOverlay')}
+
+  function markOverlay3718(){
+    const overlay=overlay3718();
+    if(!overlay)return;
+    if(ownerSession3718())overlay.setAttribute('data-cc-owner-auth','1');
+    else overlay.removeAttribute('data-cc-owner-auth');
+  }
+
+  function closePanelOnly3718(){
+    const overlay=overlay3718();
+    setPanelOpenStored3718(false);
+    if(overlay){
+      overlay.classList.remove('open');
+      overlay.removeAttribute('data-cc-owner-auth');
+    }
+    D.body.classList.remove('lock');
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    return true;
+  }
+
+  function logoutOwner3718(){
+    try{state.session=null}catch(e){}
+    writeSession3718();
+    remove3718(OLD_ADMIN_PERSIST_KEY);
+    setPanelOpenStored3718(false);
+    const overlay=overlay3718();
+    if(overlay){
+      overlay.classList.remove('open');
+      overlay.removeAttribute('data-cc-owner-auth');
+    }
+    D.body.classList.remove('lock');
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    try{
+      if(typeof toast==='function')toast('Sesión administrativa cerrada.','success');
+      else if(typeof notify==='function')notify('Sesión administrativa cerrada.','success');
+    }catch(e){}
+    return true;
+  }
+
+  const legacyOpenAdmin3718=typeof window.openAdmin==='function'?window.openAdmin:null;
+
+  function secureOpenAdmin3718(section='home'){
+    if(!ownerSession3718()){
+      const overlay=overlay3718();
+      if(overlay){
+        overlay.classList.remove('open');
+        overlay.removeAttribute('data-cc-owner-auth');
+      }
+      D.body.classList.remove('lock');
+      try{
+        if(typeof renderAccount==='function')renderAccount();
+        if(typeof openModal==='function')openModal('accountModal');
+      }catch(e){}
+      return false;
+    }
+
+    const overlay=overlay3718();
+    if(!overlay)return false;
+    overlay.setAttribute('data-cc-owner-auth','1');
+    setPanelOpenStored3718(true);
+
+    let opened=false;
+    try{
+      const finalReset=window.CRUZCLICK_ADMIN_V378?.open;
+      if(typeof finalReset==='function'){
+        finalReset();
+        opened=true;
+      }else if(legacyOpenAdmin3718&&legacyOpenAdmin3718!==secureOpenAdmin3718){
+        opened=legacyOpenAdmin3718(section)!==false;
+      }
+    }catch(error){console.error('CRULOX V3.7.18 admin open',error)}
+
+    if(!opened){
+      overlay.classList.add('open');
+      D.body.classList.add('lock');
+      opened=true;
+    }
+    markOverlay3718();
+    bindAdminActions3718();
+    return opened;
+  }
+
+  function bindAdminActions3718(){
+    const storeButtons=[
+      D.getElementById('cc378Store'),
+      D.getElementById('adminStoreBtn')
+    ].filter(Boolean);
+    storeButtons.forEach(button=>{
+      if(button.dataset.cc3718Store==='1')return;
+      button.dataset.cc3718Store='1';
+      button.onclick=()=>{
+        closePanelOnly3718();
+        try{
+          if(typeof toast==='function')toast('Tienda abierta. Tu sesión administrativa continúa activa.','success');
+          else if(typeof notify==='function')notify('Tienda abierta. Tu sesión administrativa continúa activa.','success');
+        }catch(e){}
+      };
+    });
+
+    const logoutButtons=[
+      D.getElementById('cc378Logout'),
+      D.getElementById('adminLogout')
+    ].filter(Boolean);
+    logoutButtons.forEach(button=>{
+      if(button.dataset.cc3718Logout==='1')return;
+      button.dataset.cc3718Logout='1';
+      button.onclick=logoutOwner3718;
+    });
+  }
+
+  function guardOverlay3718(){
+    const overlay=overlay3718();
+    if(!overlay)return;
+    if(overlay.classList.contains('open')){
+      if(!ownerSession3718()){
+        overlay.classList.remove('open');
+        overlay.removeAttribute('data-cc-owner-auth');
+        D.body.classList.remove('lock');
+        setPanelOpenStored3718(false);
+      }else{
+        overlay.setAttribute('data-cc-owner-auth','1');
+        setPanelOpenStored3718(true);
+      }
+    }else if(!ownerSession3718()){
+      overlay.removeAttribute('data-cc-owner-auth');
+    }
+    bindAdminActions3718();
+  }
+
+  /* Refuerzo contra aperturas heredadas o directas sin autenticación válida. */
+  const adminObserver3718=new MutationObserver(guardOverlay3718);
+  const startAdminGuard3718=()=>{
+    const overlay=overlay3718();
+    if(!overlay)return;
+    markOverlay3718();
+    adminObserver3718.observe(overlay,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
+    guardOverlay3718();
+  };
+  if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',startAdminGuard3718,{once:true});
+  else startAdminGuard3718();
+
+  function passButtonMarkup3718(id){
+    return `<button class="password-toggle" type="button" data-password-toggle="${id}" aria-label="Mostrar contraseña"><span class="cc-pass-emoji" aria-hidden="true">👁️</span><span class="cc-pass-label">Ver</span></button>`;
+  }
+
+  function bindPasswordToggles3718(root=D){
+    root.querySelectorAll('[data-password-toggle]').forEach(button=>{
+      if(button.dataset.cc3718Bound==='1')return;
+      button.dataset.cc3718Bound='1';
+      const targetId=button.dataset.passwordToggle;
+      if(!button.querySelector('.cc-pass-emoji'))button.innerHTML='<span class="cc-pass-emoji" aria-hidden="true">👁️</span><span class="cc-pass-label">Ver</span>';
+      button.onclick=()=>{
+        const input=D.getElementById(targetId);
+        if(!input)return;
+        const willShow=input.type==='password';
+        input.type=willShow?'text':'password';
+        button.classList.toggle('active',willShow);
+        const emoji=button.querySelector('.cc-pass-emoji');
+        const label=button.querySelector('.cc-pass-label');
+        if(emoji)emoji.textContent=willShow?'🙈':'👁️';
+        if(label)label.textContent=willShow?'Ocultar':'Ver';
+        button.setAttribute('aria-label',willShow?'Ocultar contraseña':'Mostrar contraseña');
+        button.classList.remove('cc-pass-pop');
+        void button.offsetWidth;
+        button.classList.add('cc-pass-pop');
+        window.setTimeout(()=>button.classList.remove('cc-pass-pop'),360);
+      };
+    });
+  }
+
+  /* Mantiene compatibilidad con renderizados posteriores del perfil/cuenta. */
+  try{window.bindPasswordToggles=bindPasswordToggles3718}catch(e){}
+  try{bindPasswordToggles=bindPasswordToggles3718}catch(e){}
+
+  function rememberedIdentity3718(){
+    const saved=getJSON3718(LAST_IDENTITY_KEY,{identity:''})||{identity:''};
+    return String(saved.identity||'');
+  }
+
+  function renderLogin3718(){
+    const auth=D.getElementById('authContent');
+    if(!auth)return;
+    const identity=rememberedIdentity3718();
+    const safeIdentity=typeof esc==='function'?esc(identity):identity.replace(/[&<>"']/g,'');
+    auth.innerHTML=`
+      <div class="cc-auth-intro">
+        <b>Accede a tu cuenta</b>
+        <span>Usa tu usuario o correo y tu contraseña para continuar de forma segura.</span>
+      </div>
+      <form id="loginForm" novalidate>
+        <div class="form-grid">
+          <div class="field full">
+            <label>Usuario o correo</label>
+            <input id="loginIdentity" value="${safeIdentity}" placeholder="Escribe tu usuario o correo" required autocomplete="username" autocapitalize="none" spellcheck="false"/>
+          </div>
+          <div class="field full">
+            <label>Contraseña</label>
+            <div class="password-input-wrap">
+              <input id="loginPassword" type="password" placeholder="Escribe tu contraseña" required autocomplete="current-password"/>
+              ${passButtonMarkup3718('loginPassword')}
+            </div>
+          </div>
+          <div class="field full">
+            <label class="cc-remember"><input id="npRememberAccess" type="checkbox" checked/> Mantener mi sesión abierta en este dispositivo</label>
+          </div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Acceder</button></div>
+      </form>`;
+    bindPasswordToggles3718(auth);
+    const form=D.getElementById('loginForm');
+    if(form)form.onsubmit=handleLogin3718;
+  }
+
+  function passwordField3718(id,label,required=true){
+    return `<div class="field"><label>${label}</label><div class="password-input-wrap"><input id="${id}" type="password" minlength="8" ${required?'required':''} autocomplete="new-password" placeholder="${label}"/>${passButtonMarkup3718(id)}</div></div>`;
+  }
+
+  function renderRegister3718(){
+    const auth=D.getElementById('authContent');
+    if(!auth)return;
+    let fields='';
+    try{fields=accountFields().map(field=>fieldHtml(field,'reg')).join('')}catch(e){}
+    auth.innerHTML=`
+      <div class="cc-auth-intro">
+        <b>Crea tu cuenta CRULOX</b>
+        <span>Registra tus datos una sola vez para agilizar tus pedidos y consultar su seguimiento.</span>
+      </div>
+      <form id="registerForm" novalidate>
+        <div class="form-grid">
+          ${fields}
+          ${passwordField3718('regPassword','Contraseña',true)}
+          ${passwordField3718('regConfirm','Confirmar contraseña',true)}
+          <div class="field full">
+            <label class="cc-consent"><input id="regConsent" type="checkbox"/> <span>Acepto que mis datos se utilicen para gestionar pedidos, accesos y entregas digitales.</span></label>
+          </div>
+        </div>
+        <div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Crear cuenta</button></div>
+      </form>`;
+    bindPasswordToggles3718(auth);
+    const form=D.getElementById('registerForm');
+    if(form&&typeof handleRegister==='function')form.onsubmit=handleRegister;
+  }
+
+  function loginError3718(input,message='No pudimos iniciar sesión. Verifica tu usuario o correo y tu contraseña e inténtalo de nuevo.'){
+    try{
+      if(input){
+        input.classList.add('input-error');
+        input.addEventListener('input',()=>input.classList.remove('input-error'),{once:true});
+        input.focus({preventScroll:true});
+      }
+      if(typeof showModalNotice==='function')showModalNotice(message,'error','accountModal');
+      else if(typeof toast==='function')toast(message,'error');
+    }catch(e){}
+    return false;
+  }
+
+  async function handleLogin3718(event){
+    event?.preventDefault?.();
+    try{if(typeof clearModalNotice==='function')clearModalNotice('accountModal')}catch(e){}
+    const identity=D.getElementById('loginIdentity')?.value.trim()||'';
+    const password=D.getElementById('loginPassword')?.value||'';
+    const remember=D.getElementById('npRememberAccess')?.checked!==false;
+
+    if(!identity)return loginError3718(D.getElementById('loginIdentity'),'Escribe tu usuario o correo electrónico para continuar.');
+    if(!password)return loginError3718(D.getElementById('loginPassword'),'Escribe tu contraseña para continuar.');
+
+    const normalized=norm3718(identity);
+
+    /* Único acceso al panel: propietario + contraseña exacta. */
+    if(normalized===norm3718(OWNER_EMAIL)){
+      let hash='';
+      try{hash=await sha256(password)}catch(e){}
+      if(hash!==OWNER_PASSWORD_SHA256){
+        return loginError3718(D.getElementById('loginPassword'));
+      }
+
+      state.session={
+        role:'admin',
+        email:OWNER_EMAIL,
+        ownerAuthVersion:OWNER_AUTH_VERSION,
+        persistent:true,
+        createdAt:new Date().toISOString()
+      };
+      writeSession3718();
+      remove3718(OLD_ADMIN_PERSIST_KEY);
+      setJSON3718(LAST_IDENTITY_KEY,{identity:OWNER_EMAIL,role:'admin',updatedAt:new Date().toISOString()});
+      setPanelOpenStored3718(true);
+      try{if(typeof closeModal==='function')closeModal('accountModal')}catch(e){}
+      try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+      try{if(typeof logActivity==='function')logActivity('Inicio administrativo',OWNER_EMAIL)}catch(e){}
+      secureOpenAdmin3718('home');
+      try{if(typeof toast==='function')toast('Acceso administrativo correcto.','success')}catch(e){}
+      return true;
+    }
+
+    /* Las demás credenciales solo pueden iniciar como cliente. Nunca abren administración. */
+    try{
+      const user=(state.users||[]).find(u=>norm3718(u.username)===normalized||norm3718(u.email)===normalized);
+      let valid=false;
+      if(user){
+        if(typeof npVerifyUserPassword==='function')valid=await npVerifyUserPassword(user,password);
+        else valid=(await sha256(password))===user.passwordHash;
+      }
+      if(!user||!valid)return loginError3718(D.getElementById('loginPassword'));
+
+      state.session={role:'client',userId:user.id,persistent:remember,createdAt:new Date().toISOString()};
+      writeSession3718();
+      setJSON3718(LAST_IDENTITY_KEY,{identity:user.email||user.username,role:'client',updatedAt:new Date().toISOString()});
+      try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+      try{if(typeof renderAccount==='function')renderAccount()}catch(e){}
+      try{if(typeof toast==='function')toast('Sesión iniciada correctamente.','success')}catch(e){}
+      return true;
+    }catch(error){
+      console.error('CRULOX V3.7.18 login',error);
+      return loginError3718(D.getElementById('loginPassword'),'No fue posible validar el acceso en este momento. Intenta nuevamente.');
+    }
+  }
+
+  try{window.renderLogin=renderLogin3718}catch(e){}
+  try{window.renderRegister=renderRegister3718}catch(e){}
+  try{window.handleLogin=handleLogin3718}catch(e){}
+  try{renderLogin=renderLogin3718}catch(e){}
+  try{renderRegister=renderRegister3718}catch(e){}
+  try{handleLogin=handleLogin3718}catch(e){}
+
+  /* Cambia las pestañas sin depender de manejadores antiguos. */
+  function refreshAccountTabs3718(){
+    const body=D.getElementById('accountBody');
+    if(!body)return;
+    body.querySelectorAll('[data-auth-tab]').forEach(tab=>{
+      tab.onclick=()=>{
+        body.querySelectorAll('.tab').forEach(item=>item.classList.toggle('active',item===tab));
+        if(tab.dataset.authTab==='register')renderRegister3718();
+        else renderLogin3718();
+      };
+    });
+  }
+
+  const accountObserver3718=new MutationObserver(()=>{
+    refreshAccountTabs3718();
+    bindPasswordToggles3718(D.getElementById('accountModal')||D);
+  });
+  const accountBody3718=D.getElementById('accountBody');
+  if(accountBody3718)accountObserver3718.observe(accountBody3718,{childList:true,subtree:true});
+  refreshAccountTabs3718();
+
+  /* Reinstala el guard después del reset administrativo heredado (se instala tras load). */
+  function installSecureAdmin3718(){
+    window.openAdmin=secureOpenAdmin3718;
+    try{openAdmin=secureOpenAdmin3718}catch(e){}
+    guardOverlay3718();
+    if(ownerSession3718()&&panelOpenStored3718()){
+      window.setTimeout(()=>secureOpenAdmin3718('home'),60);
+    }
+  }
+  installSecureAdmin3718();
+  window.addEventListener('load',()=>{
+    window.setTimeout(installSecureAdmin3718,80);
+    window.setTimeout(installSecureAdmin3718,2050);
+  },{once:true});
+  window.setTimeout(installSecureAdmin3718,2300);
+
+  /* Si un código heredado intenta abrir administración sin sesión propietaria, se cierra de inmediato. */
+  D.addEventListener('click',event=>{
+    const target=event.target?.closest?.('#profileBtn,#drawerProfile');
+    if(!target)return;
+    if(ownerSession3718())return;
+    const overlay=overlay3718();
+    if(overlay?.classList.contains('open')){
+      overlay.classList.remove('open');
+      overlay.removeAttribute('data-cc-owner-auth');
+      D.body.classList.remove('lock');
+    }
+  },false);
+
+  /* V3.7.22: no se instala el observador vacío del menú lateral. */
+
+  window.CRUZCLICK_V3718=Object.freeze({
+    version:VERSION,
+    ownerSession:ownerSession3718,
+    openAdmin:secureOpenAdmin3718,
+    logoutAdmin:logoutOwner3718,
+    closeAdmin:closePanelOnly3718,
+    selfTest(){
+      return {
+        version:VERSION,
+        ownerEmailConfigured:norm3718(OWNER_EMAIL)==='admin-separado@crulox.invalid',
+        passwordStoredAsHashOnly:OWNER_PASSWORD_SHA256.length===64,
+        legacyAdminPersistenceRemoved:getJSON3718(OLD_ADMIN_PERSIST_KEY,null)===null,
+        panelRequiresOwnerAttribute:true,
+        menuItems:D.querySelectorAll('.jmv24-nav-item').length
+      };
+    }
+  });
+})();
+</script>
+
+
+<!-- CRULOX V3.7.21 · Corrección exclusiva: eliminar artículos del carrito + título Pedidos -->
+<script id="cruzclick-v3721-cart-delete-fix">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.7.21';
+  const cartRoot=D.getElementById('cartItems');
+
+  function cartIdentity3721(key){
+    const raw=String(key??'');
+    try{
+      if(typeof parseCartKey==='function'){
+        const parsed=parseCartKey(raw);
+        if(parsed&&parsed.id!==undefined&&parsed.id!==null){
+          return {type:parsed.type==='combo'?'combo':'product',id:String(parsed.id)};
+        }
+      }
+    }catch(e){}
+    const marker=raw.indexOf('::');
+    return marker>=0
+      ? {type:raw.slice(0,marker)==='combo'?'combo':'product',id:raw.slice(marker+2)}
+      : {type:'product',id:raw};
+  }
+
+  function removeCartItem3721(key){
+    /* `state` es una constante léxica del sistema base y no necesariamente una propiedad de window. */
+    if(typeof state==='undefined'||!Array.isArray(state.cart))return false;
+    const target=cartIdentity3721(key);
+    const before=state.cart.length;
+
+    state.cart=state.cart.filter(item=>{
+      const itemType=item?.type==='combo'?'combo':'product';
+      return !(itemType===target.type&&String(item?.id??'')===target.id);
+    });
+
+    /* Respaldo para registros antiguos cuyo campo type no seguía el esquema product/combo. */
+    if(state.cart.length===before&&target.id){
+      state.cart=state.cart.filter(item=>String(item?.id??'')!==target.id);
+    }
+
+    if(state.cart.length===before)return false;
+    try{write(KEYS.cart,state.cart)}catch(e){console.error('CRULOX: no se pudo guardar el carrito después de eliminar.',e)}
+    try{if(typeof scheduleExpiry==='function')scheduleExpiry()}catch(e){}
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    try{if(typeof renderCart==='function')renderCart()}catch(e){console.error('CRULOX: no se pudo redibujar el carrito.',e)}
+    try{
+      if(window.CRUZCLICK_V3724?.syncProductCards)window.CRUZCLICK_V3724.syncProductCards();
+      else if(typeof renderProducts==='function')renderProducts();
+    }catch(e){}
+    try{if(target.type==='combo'&&typeof renderCombos==='function')renderCombos()}catch(e){}
+    return true;
+  }
+
+  /* Delegación en captura: el botón funciona aunque renderCart reemplace sus nodos internos. */
+  if(cartRoot&&!cartRoot.dataset.ccDeleteFix3721){
+    cartRoot.dataset.ccDeleteFix3721='1';
+    cartRoot.addEventListener('click',event=>{
+      const button=event.target?.closest?.('[data-remove-cart]');
+      if(!button||!cartRoot.contains(button))return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const removed=removeCartItem3721(button.getAttribute('data-remove-cart'));
+      if(removed){
+        try{if(typeof toast==='function')toast('Producto eliminado del pedido.','success')}catch(e){}
+      }
+    },true);
+  }
+
+  function enforceTitle3721(){
+    const title=D.querySelector('#cartPanel .panel-head h2');
+    if(title&&title.textContent.trim()!=='🛒 Pedidos')title.textContent='🛒 Pedidos';
+  }
+  enforceTitle3721();
+  const cartPanel=D.getElementById('cartPanel');
+  if(cartPanel){
+    new MutationObserver(enforceTitle3721).observe(cartPanel,{childList:true,subtree:true});
+  }
+
+  window.CRUZCLICK_V3721=Object.freeze({
+    version:VERSION,
+    removeCartItem:removeCartItem3721,
+    selfTest(){
+      return {
+        version:VERSION,
+        cartRootPresent:!!D.getElementById('cartItems'),
+        deleteDelegationInstalled:D.getElementById('cartItems')?.dataset.ccDeleteFix3721==='1',
+        title:D.querySelector('#cartPanel .panel-head h2')?.textContent||''
+      };
+    }
+  });
+})();
+</script>
+
+
+
+<!-- CRULOX V3.7.23 · Arranque inmediato y reducción de carga -->
+<style id="cruzclick-v3723-performance-style">
+#loader{display:none!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important}
+</style>
+<script id="cruzclick-v3723-performance-marker">
+window.CRUZCLICK_V3723=Object.freeze({
+  version:'3.7.23',
+  focus:'instant-startup',
+  blockingLoader:false,
+  embeddedMedia:'recompressed-and-deduplicated',
+  repeatedMigrations:'guarded',
+  heavyMediaMigration:'idle'
+});
+</script>
+
+
+<!-- CRULOX V3.7.24 · Interacción inmediata y fluidez táctil -->
+<style id="cruzclick-v3724-instant-interaction-style">
+/* Respuesta táctil inmediata sin cambiar el diseño aprobado. */
+html{scroll-behavior:auto!important}
+button,a,[role="button"],label[for],.cat,.tab,.icon-btn,.fav-btn,.float-btn,.suggestion,.social-pill{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+button,.btn,.icon-btn,.cat,.tab,.fav-btn,.float-btn,.suggestion,.social-pill{
+  transition-duration:.08s!important;
+  transition-delay:0s!important;
+}
+.drawer-overlay,.panel-overlay,.modal-overlay{transition:opacity .08s linear!important}
+.drawer,.side-panel{transition:transform .10s cubic-bezier(.2,.8,.2,1)!important}
+.suggestions{animation-duration:.08s!important}
+
+/* El panel aparece de inmediato y la animación queda solo como acabado visual breve. */
+.drawer.open,.side-panel.open,.modal-overlay.open,.admin-overlay.open{transition-delay:0s!important}
+
+@media (hover:none),(pointer:coarse){
+  body{background-attachment:scroll!important}
+  .header,.drawer-overlay,.panel-overlay,.modal-overlay,.suggestions,.side-panel{
+    -webkit-backdrop-filter:none!important;
+    backdrop-filter:none!important;
+  }
+  .btn:hover,.icon-btn:hover,.product:hover,.fav-btn:hover,.cat:hover,.tab:hover{transform:none!important}
+  .product:hover .product-image img{transform:scale(1.12)!important}
+}
+</style>
+<script id="cruzclick-v3724-instant-interaction-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.7.24';
+  const byId=id=>D.getElementById(id);
+  const nextPaint=fn=>requestAnimationFrame(()=>{try{fn()}catch(error){console.error('CRULOX V3.7.24',error)}});
+
+  /* Actualiza solo el estado visual que realmente cambia al reservar unidades.
+     Evita reconstruir toda la cuadrícula de productos por cada toque. */
+  function syncProductCards3724(){
+    const cards=D.querySelectorAll('#productsGrid .product[data-product]');
+    cards.forEach(card=>{
+      const id=String(card.dataset.product||'');
+      const product=(state?.products||[]).find(p=>String(p.id)===id);
+      if(!product)return;
+      const physical=Math.max(0,Number(product.stock||0));
+      let effective=physical;
+      try{if(typeof availableStock==='function')effective=Math.max(0,Number(availableStock(product.id)||0))}catch(e){}
+      let info=['Disponible',''];
+      try{if(typeof stockInfo==='function'){const result=stockInfo(product);if(Array.isArray(result))info=result}}catch(e){}
+      const unavailable=effective<=0;
+      card.classList.toggle('np-physical-out',physical<=0);
+      card.classList.toggle('np-reserved-out',physical>0&&unavailable);
+
+      const stock=card.querySelector('.stock');
+      if(stock){stock.textContent=String(info[0]||'Disponible');stock.className=`stock ${String(info[1]||'')}`.trim()}
+
+      const add=card.querySelector('[data-add]');
+      if(add){add.disabled=unavailable;add.textContent=unavailable?'No disponible':'Añadir'}
+
+      const autoBadge=physical<=0?'SIN STOCK':unavailable?'FUERA DE STOCK':'';
+      let badge=card.querySelector('.badge');
+      if(autoBadge){
+        if(!badge){badge=D.createElement('span');card.querySelector('.product-image')?.prepend(badge)}
+        badge.className=`badge np-stock-badge${physical<=0?' physical':''}`;
+        badge.textContent=autoBadge;
+      }else if(product.badgeText){
+        if(!badge){badge=D.createElement('span');card.querySelector('.product-image')?.prepend(badge)}
+        badge.className='badge';badge.textContent=String(product.badgeText);
+      }else if(badge){badge.remove()}
+    });
+  }
+
+  /* Sustituye el refresco pesado del comercio: cabecera + tarjetas afectadas + carrito.
+     Las funciones de carrito existentes siguen siendo las mismas. */
+  const baseRefreshCommerce3724=typeof window.refreshCommerceViews==='function'?window.refreshCommerceViews:null;
+  function fastRefreshCommerce3724(){
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    syncProductCards3724();
+    try{if(typeof renderCart==='function'&&byId('cartItems'))renderCart()}catch(e){
+      if(baseRefreshCommerce3724)baseRefreshCommerce3724();
+    }
+  }
+  try{window.refreshCommerceViews=fastRefreshCommerce3724;refreshCommerceViews=fastRefreshCommerce3724}catch(e){}
+
+  /* Favoritos: cambia solo el corazón tocado, en vez de redibujar todo el catálogo. */
+  const baseToggleFavorite3724=typeof window.toggleFavorite==='function'?window.toggleFavorite:null;
+  function fastToggleFavorite3724(id){
+    try{
+      const key=String(id);
+      const current=Array.isArray(state.favorites)?state.favorites:[];
+      const exists=current.some(x=>String(x)===key);
+      state.favorites=exists?current.filter(x=>String(x)!==key):[...current,id];
+      if(typeof write==='function')write(KEYS.favorites,state.favorites);
+      if(typeof renderHeader==='function')renderHeader();
+      const active=!exists;
+      D.querySelectorAll('[data-fav]').forEach(btn=>{
+        if(String(btn.dataset.fav)!==key)return;
+        btn.classList.toggle('active',active);
+        btn.textContent=active?'♥':'♡';
+      });
+      const detailFav=byId('detailFav');
+      if(detailFav&&byId('detailModal')?.classList.contains('open'))detailFav.textContent=active?'Quitar favorito':'Guardar favorito';
+      if(byId('favPanel')?.classList.contains('open')&&typeof renderFavorites==='function')nextPaint(renderFavorites);
+      return active;
+    }catch(error){
+      console.error('CRULOX V3.7.24 favoritos',error);
+      return baseToggleFavorite3724?baseToggleFavorite3724(id):false;
+    }
+  }
+  if(baseToggleFavorite3724){try{window.toggleFavorite=fastToggleFavorite3724;toggleFavorite=fastToggleFavorite3724}catch(e){}}
+
+  /* Los paneles visibles se abren primero; su contenido se refresca en el frame siguiente.
+     Esto hace que el toque tenga respuesta visual inmediata incluso en teléfonos modestos. */
+  function wireInstantPanel3724(buttonId,panelId,overlayId,renderer){
+    const button=byId(buttonId);if(!button)return;
+    button.onclick=()=>{
+      try{if(typeof openPanel==='function')openPanel(panelId,overlayId)}catch(e){}
+      if(typeof renderer==='function')nextPaint(renderer);
+    };
+  }
+  wireInstantPanel3724('cartBtn','cartPanel','cartOverlay',()=>typeof renderCart==='function'&&renderCart());
+  wireInstantPanel3724('favBtn','favPanel','favOverlay',()=>typeof renderFavorites==='function'&&renderFavorites());
+  wireInstantPanel3724('drawerCart','cartPanel','cartOverlay',()=>typeof renderCart==='function'&&renderCart());
+  wireInstantPanel3724('drawerFavorites','favPanel','favOverlay',()=>typeof renderFavorites==='function'&&renderFavorites());
+
+  /* El menú ya no espera trabajo secundario antes de mostrarse. */
+  const menu=byId('menuBtn');
+  if(menu)menu.onclick=()=>{try{openPanel('drawer','drawerOverlay')}catch(e){}};
+
+  /* Evita el trabajo de búsqueda mientras el usuario sigue escribiendo sin volverla lenta. */
+  const search=byId('searchInput');
+  if(search){
+    let timer=0;
+    search.oninput=()=>{
+      state.query=search.value.trim();
+      byId('searchClear')?.classList.toggle('show',!!state.query);
+      clearTimeout(timer);
+      timer=setTimeout(()=>{
+        try{if(typeof renderProducts==='function')renderProducts()}catch(e){}
+        try{if(typeof renderSuggestions==='function')renderSuggestions()}catch(e){}
+      },35);
+    };
+  }
+
+  /* Precalienta las capas visuales cuando el navegador está libre, sin bloquear el arranque. */
+  const warm=()=>{
+    ['drawer','cartPanel','favPanel','accountModal','detailModal','checkoutModal'].forEach(id=>{
+      const el=byId(id);if(el)el.style.willChange=id.includes('Modal')?'opacity':'transform';
+    });
+  };
+  if('requestIdleCallback' in window)requestIdleCallback(warm,{timeout:1200});else setTimeout(warm,350);
+
+  window.CRUZCLICK_V3724=Object.freeze({
+    version:VERSION,
+    focus:'instant-interaction',
+    syncProductCards:syncProductCards3724,
+    syncStore:fastRefreshCommerce3724,
+    selfTest(){return{
+      version:VERSION,
+      touchManipulation:true,
+      fastCommerceRefresh:window.refreshCommerceViews===fastRefreshCommerce3724,
+      fastFavorites:window.toggleFavorite===fastToggleFavorite3724,
+      cartButton:!!byId('cartBtn'),
+      menuButton:!!byId('menuBtn')
+    }}
+  });
+})();
+</script>
+
+
+<!-- CRULOX V3.8.0 · Auditoría integral de interacción, estabilidad y fluidez -->
+<style id="cruzclick-v380-stability-performance-style">
+/* Render diferido de contenido fuera de pantalla: conserva el diseño, reduce trabajo inicial. */
+#catalog,#combos,#how,#faq,.footer{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 720px;
+}
+.product,.combo,.step,.faq,.benefit{contain:layout paint style;}
+
+/* No mantener capas GPU permanentemente. Se promocionan solo mientras están visibles. */
+.drawer,.side-panel,.modal-overlay{will-change:auto!important;}
+.drawer.open,.side-panel.open{will-change:transform!important;}
+.modal-overlay.open{will-change:opacity!important;}
+
+/* Scroll y toque directos. */
+html,body{scroll-behavior:auto!important;}
+body{-webkit-overflow-scrolling:touch;}
+button,a,[role="button"],input,select,textarea{touch-action:manipulation;}
+
+/* Respuesta visual inmediata al toque sin animaciones largas. */
+button:active,.btn:active,.icon-btn:active,.cat:active,.tab:active{transition:none!important;}
+@media (hover:none),(pointer:coarse){
+  .product,.combo,.benefit,.step,.faq{box-shadow:none!important;}
+}
+</style>
+<script id="cruzclick-v380-stability-performance-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.8.0';
+  const $=id=>D.getElementById(id);
+  const frame=fn=>requestAnimationFrame(()=>{try{fn()}catch(error){console.error('CRULOX V3.8.0',error)}});
+
+  /* Perfil: abrir primero, renderizar después. El panel admin autenticado conserva su guard existente. */
+  function fastAccount(button){
+    if(!button||button.dataset.cc380FastAccount==='1')return;
+    button.dataset.cc380FastAccount='1';
+    button.onclick=(event)=>{
+      let isAdmin=false;
+      try{isAdmin=state?.session?.role==='admin'}catch(e){}
+      if(isAdmin){try{if(typeof openAdmin==='function')return openAdmin('home')}catch(e){} }
+      try{if(typeof closeAllPanels==='function')closeAllPanels()}catch(e){}
+      try{if(typeof openModal==='function')openModal('accountModal');else $('accountModal')?.classList.add('open')}catch(e){}
+      frame(()=>{try{if(typeof renderAccount==='function')renderAccount()}catch(e){}});
+    };
+  }
+  fastAccount($('profileBtn'));
+  fastAccount($('drawerProfile'));
+  const footerProfile=$('footerProfile');
+  if(footerProfile)fastAccount(footerProfile);
+
+  /* Notificaciones: mostrar el panel antes del refresco secundario. */
+  const notification=$('notificationBtn');
+  if(notification){
+    const oldNotification=notification.onclick;
+    notification.onclick=(event)=>{
+      const panel=$('notificationPanel'),overlay=$('notificationOverlay');
+      if(overlay)overlay.classList.add('open');
+      if(panel)panel.classList.add('open');
+      if(panel||overlay)D.body.classList.add('lock');
+      if(typeof oldNotification==='function')frame(()=>oldNotification.call(notification,event));
+    };
+  }
+
+  /* Mis compras: respuesta visual inmediata; el contenido se compone en el siguiente frame. */
+  function wirePurchases(){
+    const button=$('jmMyPurchasesBtn');if(!button||button.dataset.cc380FastPurchases==='1')return;
+    button.dataset.cc380FastPurchases='1';
+    button.onclick=()=>{
+      let user=null;try{if(typeof currentUser==='function')user=currentUser()}catch(e){}
+      if(!user){
+        try{if(typeof openModal==='function')openModal('accountModal')}catch(e){}
+        frame(()=>{try{if(typeof renderAccount==='function')renderAccount()}catch(e){};try{if(typeof toast==='function')toast('Inicia sesión para ver tus compras confirmadas.','warn')}catch(e){}});
+        return;
+      }
+      try{if(typeof ensurePublicPurchasesUi356==='function')ensurePublicPurchasesUi356()}catch(e){}
+      const overlay=$('jmMyPurchasesOverlay');if(overlay)overlay.classList.add('open');D.body.classList.add('lock');
+      frame(()=>{try{if(typeof renderMyPurchases356==='function')renderMyPurchases356();else if(typeof openMyPurchases356==='function')openMyPurchases356()}catch(e){}});
+    };
+  }
+  wirePurchases();
+
+  /* Elementos que se crean dinámicamente quedan enlazados una sola vez y de forma agrupada. */
+  let bindFrame=0;
+  const bindDynamic=()=>{
+    if(bindFrame)return;
+    bindFrame=requestAnimationFrame(()=>{bindFrame=0;wirePurchases();fastAccount($('profileBtn'));fastAccount($('drawerProfile'));});
+  };
+  const bindObserver=new MutationObserver(records=>{
+    if(records.some(r=>r.addedNodes&&r.addedNodes.length))bindDynamic();
+  });
+  if(D.body)bindObserver.observe(D.body,{childList:true,subtree:false});
+
+  /* Imágenes no críticas: decodificación asíncrona y lazy loading, sin tocar marca/hero visible. */
+  function tuneImages(root=D){
+    root.querySelectorAll?.('img').forEach(img=>{
+      img.decoding='async';
+      if(!img.closest('.header,.hero')&&!img.classList.contains('loader-logo'))img.loading='lazy';
+    });
+  }
+  if('requestIdleCallback' in window)requestIdleCallback(()=>tuneImages(),{timeout:900});else setTimeout(()=>tuneImages(),180);
+
+  /* Limpia la promoción GPU introducida por versiones anteriores cuando el control vuelve a reposo. */
+  setTimeout(()=>{['drawer','cartPanel','favPanel','accountModal','detailModal','checkoutModal'].forEach(id=>{const el=$(id);if(el&&!el.classList.contains('open'))el.style.willChange='auto'})},1400);
+
+  window.CRUZCLICK_V380=Object.freeze({
+    version:VERSION,
+    focus:'integral-stability-and-fluidity',
+    selfTest(){
+      const result={version:VERSION};
+      result.menu=!!$('menuBtn');
+      result.profile=!!$('profileBtn');
+      result.cart=!!$('cartBtn');
+      result.favorites=!!$('favBtn');
+      result.notifications=!!$('notificationBtn');
+      result.search=!!$('searchInput');
+      result.products=D.querySelectorAll('#productsGrid .product').length;
+      result.nonBlockingTouchMove=true;
+      result.dynamicPurchases=!!$('jmMyPurchasesBtn');
+      return result;
+    }
+  });
+})();
+</script>
+
+
+
+<!-- CRULOX V3.8.1 · Auditoría funcional final: clic único, Free Fire y carrito -->
+<style id="cruzclick-v381-final-audit-style">
+/* Mantiene la respuesta al toque en el camino crítico sin alterar el diseño aprobado. */
+#productsGrid button,#cartItems button,.header button,.drawer button,.drawer a,
+#detailModal button,#accountModal button,#checkoutModal button,#jmv21VariantModal button{
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
+}
+</style>
+<script id="cruzclick-v381-final-audit-script">
+(()=>{
+  'use strict';
+  const D=document;
+  const VERSION='3.8.1';
+  const byId=id=>D.getElementById(id);
+  const norm=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+
+  /*
+   * Free Fire: cualquier botón Agregar de un producto de diamantes abre el selector
+   * unificado que ya contiene el ID obligatorio y las cantidades. Se usa captura para
+   * impedir que una capa heredada agregue una unidad directamente al carrito.
+   */
+  function isFreeFireProduct381(product){
+    if(!product)return false;
+    const text=norm([product.id,product.name,product.category,product.platform,product.digitalType,product.digitalKind].join(' '));
+    return text.includes('free fire')&&(text.includes('diamante')||text.includes('recarga')||String(product.id||'').toLowerCase().startsWith('ff-'));
+  }
+  function product381(id){
+    try{return (state.products||[]).find(p=>String(p.id)===String(id))||null}catch(e){return null}
+  }
+  function openFreeFire381(){
+    try{
+      const api=window.JM_DIGITAL_STORE_V22;
+      if(api&&typeof api.openVariantChooser==='function'){
+        api.openVariantChooser('recharge:free fire');
+        return !!byId('jmv21VariantModal')?.classList.contains('open');
+      }
+    }catch(error){console.error('CRULOX V3.8.1 Free Fire',error)}
+    return false;
+  }
+  /* Navegación lateral: el panel se retira en el mismo toque; el ancla conserva su salto nativo. */
+  D.addEventListener('click',event=>{
+    const link=event.target?.closest?.('#drawer a[href^="#"]');
+    if(!link)return;
+    try{
+      byId('drawer')?.classList.remove('open');
+      byId('drawerOverlay')?.classList.remove('open');
+      D.body.classList.remove('lock');
+    }catch(e){}
+  },true);
+
+  D.addEventListener('click',event=>{
+    const button=event.target?.closest?.('#productsGrid [data-add]');
+    if(!button)return;
+    const p=product381(button.dataset.add);
+    if(!isFreeFireProduct381(p))return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    openFreeFire381();
+  },true);
+
+  /*
+   * Eliminación robusta del carrito. La capa V3.7.21 es la fuente de verdad y aquí se
+   * comprueba que esté disponible; si no, se aplica un respaldo que entiende claves
+   * product::id, combo::id y registros heredados con id directo.
+   */
+  function splitCartKey381(key){
+    const raw=String(key??'');
+    const marker=raw.indexOf('::');
+    if(marker>=0)return {type:raw.slice(0,marker)==='combo'?'combo':'product',id:raw.slice(marker+2)};
+    return {type:'product',id:raw};
+  }
+  function removeFallback381(key){
+    if(typeof state==='undefined'||!Array.isArray(state.cart))return false;
+    const target=splitCartKey381(key),before=state.cart.length;
+    state.cart=state.cart.filter(item=>{
+      const type=item?.type==='combo'?'combo':'product';
+      return !(type===target.type&&String(item?.id??'')===target.id);
+    });
+    if(state.cart.length===before&&target.id){
+      state.cart=state.cart.filter(item=>String(item?.id??'')!==target.id);
+    }
+    if(state.cart.length===before)return false;
+    try{if(typeof write==='function')write(KEYS.cart,state.cart)}catch(e){}
+    try{if(typeof scheduleExpiry==='function')scheduleExpiry()}catch(e){}
+    try{if(typeof renderHeader==='function')renderHeader()}catch(e){}
+    try{if(typeof renderCart==='function')renderCart()}catch(e){}
+    try{window.CRUZCLICK_V3724?.syncProductCards?.()}catch(e){}
+    return true;
+  }
+  function remove381(key){
+    try{
+      if(window.CRUZCLICK_V3721&&typeof window.CRUZCLICK_V3721.removeCartItem==='function'){
+        const ok=window.CRUZCLICK_V3721.removeCartItem(key);
+        if(ok)return true;
+      }
+    }catch(error){console.error('CRULOX V3.8.1 carrito',error)}
+    return removeFallback381(key);
+  }
+  const cartItems=byId('cartItems');
+  if(cartItems&&!cartItems.dataset.cc381DeleteGuard){
+    cartItems.dataset.cc381DeleteGuard='1';
+    cartItems.addEventListener('click',event=>{
+      const button=event.target?.closest?.('[data-remove-cart]');
+      if(!button||!cartItems.contains(button))return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const removed=remove381(button.getAttribute('data-remove-cart'));
+      if(removed){try{typeof toast==='function'&&toast('Producto eliminado del pedido.','success')}catch(e){}}
+    },true);
+  }
+
+  /*
+   * Administración: delegación en captura para que "Tienda" y "Salir" conserven
+   * exactamente la semántica aprobada aunque una capa visual reconstruya el panel.
+   * Tienda cierra solo el panel; Salir termina la sesión propietaria.
+   */
+  /* Perfil propietario: reabre siempre por la ruta segura V3.7.18, conservando la sesión. */
+  function secureProfile381(button){
+    if(!button)return;
+    button.onclick=()=>{
+      let owner=false;
+      try{owner=typeof window.CRUZCLICK_V3718?.ownerSession==='function'&&window.CRUZCLICK_V3718.ownerSession()}catch(e){}
+      if(owner){
+        try{return window.CRUZCLICK_V3718.openAdmin('home')}catch(error){console.error('CRULOX V3.8.1 perfil propietario',error)}
+      }
+      try{if(typeof closeAllPanels==='function')closeAllPanels()}catch(e){}
+      try{if(typeof renderAccount==='function')renderAccount()}catch(e){}
+      try{if(typeof openModal==='function')openModal('accountModal');else byId('accountModal')?.classList.add('open')}catch(e){}
+    };
+  }
+  secureProfile381(byId('profileBtn'));
+  secureProfile381(byId('drawerProfile'));
+  secureProfile381(byId('footerProfile'));
+  /* Capacidad de último recurso: las capas heredadas pueden reasignar onclick después de cargar.
+     En captura, una sesión propietaria siempre toma la ruta autenticada antes que esos manejadores. */
+  D.addEventListener('click',event=>{
+    const target=event.target?.closest?.('#profileBtn,#drawerProfile,#footerProfile');
+    if(!target)return;
+    let owner=false;
+    try{owner=typeof window.CRUZCLICK_V3718?.ownerSession==='function'&&window.CRUZCLICK_V3718.ownerSession()}catch(e){}
+    if(!owner)return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    try{window.CRUZCLICK_V3718.openAdmin('home')}catch(error){console.error('CRULOX V3.8.1 apertura administrativa',error)}
+  },true);
+
+  const adminOverlay381=byId('adminOverlay');
+  if(adminOverlay381&&!adminOverlay381.dataset.cc381OwnerControls){
+    adminOverlay381.dataset.cc381OwnerControls='1';
+    adminOverlay381.addEventListener('click',event=>{
+      const target=event.target?.closest?.('#adminStoreBtn,#cc378Store,#adminLogout,#cc378Logout');
+      if(!target||!adminOverlay381.contains(target))return;
+      const isLogout=target.matches('#adminLogout,#cc378Logout');
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      try{
+        if(isLogout&&typeof window.CRUZCLICK_V3718?.logoutAdmin==='function')window.CRUZCLICK_V3718.logoutAdmin();
+        else if(!isLogout&&typeof window.CRUZCLICK_V3718?.closeAdmin==='function')window.CRUZCLICK_V3718.closeAdmin();
+        else {
+          if(isLogout&&typeof state!=='undefined')state.session=null;
+          adminOverlay381.classList.remove('open');
+          D.body.classList.remove('lock');
+          if(isLogout&&typeof write==='function'&&typeof KEYS!=='undefined')write(KEYS.session,null);
+          if(typeof renderHeader==='function')renderHeader();
+        }
+      }catch(error){console.error('CRULOX V3.8.1 controles administrativos',error)}
+    },true);
+  }
+
+  /* Autodiagnóstico no invasivo para verificar que las rutas esenciales siguen disponibles. */
+  function selfTest381(){
+    const result={version:VERSION};
+    result.runtime={
+      state:typeof state!=='undefined',
+      products:Array.isArray(typeof state!=='undefined'?state.products:null),
+      cart:Array.isArray(typeof state!=='undefined'?state.cart:null)
+    };
+    result.controls={
+      menu:!!byId('menuBtn'),profile:!!byId('profileBtn'),notifications:!!byId('notificationBtn'),
+      cart:!!byId('cartBtn'),favorites:!!byId('favBtn'),search:!!byId('searchInput')
+    };
+    result.modals={account:!!byId('accountModal'),detail:!!byId('detailModal'),checkout:!!byId('checkoutModal')};
+    result.freeFire={
+      products:(typeof state!=='undefined'&&Array.isArray(state.products))?state.products.filter(isFreeFireProduct381).length:0,
+      selectorApi:typeof window.JM_DIGITAL_STORE_V22?.openVariantChooser==='function'
+    };
+    result.cartDelete=!!byId('cartItems')?.dataset.cc381DeleteGuard;
+    result.adminControls=!!byId('adminOverlay')?.dataset.cc381OwnerControls;
+    result.touchMoveBlocking=false;
+    return result;
+  }
+  window.CRUZCLICK_V381=Object.freeze({version:VERSION,selfTest:selfTest381,openFreeFire:openFreeFire381,removeCartItem:remove381});
+})();
+</script>
+
+
+<!-- CRULOX V3.8.2 · Disponibilidad junto a la etiqueta de categoría -->
+<style id="cruzclick-v382-detail-badges-inline">
+/* Cambio exclusivo: mantener la disponibilidad inmediatamente a la par de la etiqueta (Streaming, Cursos, etc.). */
+#detailModal .jmv27-badges{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:6px!important;
+  width:100%!important;
+  flex-wrap:wrap!important;
+  margin-bottom:2px!important;
+}
+#detailModal .jmv27-head .section-kicker,
+#detailModal .jmv27-head .stock-detail{
+  justify-self:auto!important;
+  flex:0 0 auto!important;
+  margin:0!important;
+}
+@media(max-width:390px){
+  #detailModal .jmv27-badges{
+    display:flex!important;
+    grid-template-columns:none!important;
+    justify-content:flex-start!important;
+    gap:5px!important;
+  }
+}
+</style>
+
+
+<!-- CRULOX V3.8.4 · Panel administrativo: cinco funciones en parejas; al inicio se muestran únicamente las funciones y cada módulo abre una pantalla administrativa independiente. -->
+
+<style id="cruzclick-v385-admin-final-polish">
+#adminOverlay{font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif!important}
+#adminOverlay .cc378-nav button:nth-child(odd){background-image:linear-gradient(145deg,rgba(9,35,54,.96),rgba(3,17,29,.98))}
+#adminOverlay .cc378-nav button:nth-child(even){background-image:linear-gradient(145deg,rgba(8,29,50,.96),rgba(3,16,29,.98))}
+#adminOverlay .cc378-nav button:focus-visible,#adminOverlay .cc378-btn:focus-visible,#adminOverlay .cc378-back:focus-visible{outline:2px solid rgba(0,230,255,.85);outline-offset:2px}
+@media(prefers-reduced-motion:reduce){#adminOverlay .cc378-nav button,#adminOverlay .cc378-btn{transition:none!important}}
+</style>
+<!-- CRULOX V3.8.7 · Panel General operativo + aviso de protección de perfiles -->
+<style id="cruzclick-v387-panel-general-style">
+#adminOverlay .cc387-dashboard{display:grid;gap:14px;min-width:0}
+#adminOverlay .cc387-hero{position:relative;overflow:hidden;padding:18px;border-radius:20px;border:1px solid rgba(62,221,255,.13);background:radial-gradient(circle at 88% 12%,rgba(0,220,255,.13),transparent 30%),radial-gradient(circle at 15% 100%,rgba(72,98,255,.10),transparent 35%),linear-gradient(145deg,#0a2134,#06121f 68%);box-shadow:0 18px 46px rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.035)}
+#adminOverlay .cc387-hero:after{content:"";position:absolute;inset:auto -15% -70% 30%;height:170px;background:radial-gradient(ellipse,rgba(0,217,255,.08),transparent 65%);pointer-events:none}
+#adminOverlay .cc387-hero-top{position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+#adminOverlay .cc387-kicker{display:inline-flex;align-items:center;gap:6px;color:#5fe8ff;font-size:.48rem;font-weight:950;letter-spacing:.13em;text-transform:uppercase}
+#adminOverlay .cc387-kicker i{width:7px;height:7px;border-radius:50%;background:#28df82;box-shadow:0 0 12px rgba(40,223,130,.6)}
+#adminOverlay .cc387-hero h2{margin:6px 0 4px;font-size:1.08rem;color:#f5fbff}
+#adminOverlay .cc387-hero p{margin:0;color:#7e9caf;font-size:.56rem;line-height:1.55;max-width:600px}
+#adminOverlay .cc387-live{flex:0 0 auto;padding:7px 9px;border-radius:999px;border:1px solid rgba(40,223,130,.15);background:rgba(40,223,130,.055);color:#6af0a5;font-size:.46rem;font-weight:900;white-space:nowrap}
+#adminOverlay .cc387-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#adminOverlay .cc387-kpi{position:relative;overflow:hidden;min-width:0;padding:13px;border-radius:16px;border:1px solid rgba(123,201,238,.09);background:linear-gradient(145deg,rgba(11,32,49,.96),rgba(5,17,29,.98));box-shadow:0 12px 28px rgba(0,0,0,.17)}
+#adminOverlay .cc387-kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(#1fe4ff,rgba(31,228,255,0))}
+#adminOverlay .cc387-kpi small{display:block;color:#6f8da4;font-size:.48rem;font-weight:800}
+#adminOverlay .cc387-kpi strong{display:block;margin-top:6px;color:#eaf8ff;font-size:1.18rem;line-height:1}
+#adminOverlay .cc387-kpi span{display:block;margin-top:5px;color:#3fdfff;font-size:.43rem;font-weight:800}
+#adminOverlay .cc387-section{padding:14px;border-radius:18px;border:1px solid rgba(123,201,238,.08);background:linear-gradient(145deg,rgba(8,24,39,.94),rgba(4,14,24,.97));box-shadow:0 14px 32px rgba(0,0,0,.17)}
+#adminOverlay .cc387-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px}
+#adminOverlay .cc387-section-head h3{margin:0;color:#eef9ff;font-size:.72rem}
+#adminOverlay .cc387-section-head p{margin:3px 0 0;color:#718ba1;font-size:.49rem;line-height:1.4}
+#adminOverlay .cc387-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#adminOverlay .cc387-card{min-width:0;padding:11px;border-radius:14px;border:1px solid rgba(123,201,238,.07);background:rgba(255,255,255,.018)}
+#adminOverlay .cc387-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#adminOverlay .cc387-card h4{margin:0;color:#e8f6ff;font-size:.59rem}
+#adminOverlay .cc387-card .cc387-num{font-size:.92rem;color:#21ddff;font-weight:950}
+#adminOverlay .cc387-card p{margin:5px 0 0;color:#71899f;font-size:.48rem;line-height:1.45}
+#adminOverlay .cc387-bar{height:5px;margin-top:8px;border-radius:999px;background:rgba(255,255,255,.045);overflow:hidden}
+#adminOverlay .cc387-bar b{display:block;height:100%;width:var(--w,0%);border-radius:inherit;background:linear-gradient(90deg,#16cce9,#5b8cff);box-shadow:0 0 12px rgba(20,210,255,.25)}
+#adminOverlay .cc387-list{display:grid;gap:6px}
+#adminOverlay .cc387-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px;border-radius:12px;background:rgba(255,255,255,.018);border:1px solid rgba(123,201,238,.055)}
+#adminOverlay .cc387-row-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:rgba(0,215,255,.065);border:1px solid rgba(0,215,255,.08);color:#63eaff;font-size:.75rem}
+#adminOverlay .cc387-row b{display:block;color:#dcecf5;font-size:.55rem}
+#adminOverlay .cc387-row span{display:block;margin-top:2px;color:#6f879c;font-size:.46rem;line-height:1.35}
+#adminOverlay .cc387-badge{padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.035);color:#79dff1;font-size:.43rem;font-weight:900;white-space:nowrap}
+#adminOverlay .cc387-badge.warn{background:rgba(255,193,78,.07);color:#ffd27b}
+#adminOverlay .cc387-badge.bad{background:rgba(255,83,116,.07);color:#ff86a1}
+#adminOverlay .cc387-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}
+#adminOverlay .cc387-action{min-height:54px;padding:9px;border-radius:13px;border:1px solid rgba(123,201,238,.075);background:linear-gradient(145deg,rgba(10,31,48,.9),rgba(5,17,29,.95));color:#eaf7ff;text-align:left;cursor:pointer;transition:transform .12s ease,border-color .12s ease,background .12s ease}
+#adminOverlay .cc387-action:hover{transform:translateY(-1px);border-color:rgba(0,220,255,.22);background:linear-gradient(145deg,rgba(12,39,59,.95),rgba(5,18,31,.98))}
+#adminOverlay .cc387-action b{display:block;font-size:.53rem}.cc387-action span{display:block;margin-top:3px;color:#718ba2;font-size:.44rem;line-height:1.3}
+#adminOverlay .cc387-empty{padding:12px;text-align:center;color:#678197;font-size:.5rem;border:1px dashed rgba(123,201,238,.08);border-radius:12px}
+#adminOverlay .cc387-system{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#adminOverlay .cc387-system div{padding:10px;border-radius:12px;background:rgba(255,255,255,.016);border:1px solid rgba(123,201,238,.055)}
+#adminOverlay .cc387-system small{display:block;color:#6d879c;font-size:.45rem}.cc387-system b{display:block;margin-top:4px;color:#dcecf5;font-size:.55rem}
+#detailModal .cc387-profile-warning{position:relative;margin:9px 0 0;padding:11px 12px 11px 13px;border-radius:13px;border:1px solid rgba(255,66,93,.30);background:linear-gradient(135deg,rgba(115,8,25,.18),rgba(255,51,78,.045));box-shadow:inset 3px 0 0 rgba(255,63,91,.85),0 8px 22px rgba(0,0,0,.13);overflow:hidden}
+#detailModal .cc387-profile-warning:after{content:"";position:absolute;right:-28px;top:-32px;width:95px;height:95px;border-radius:50%;background:radial-gradient(circle,rgba(255,48,77,.09),transparent 68%);pointer-events:none}
+#detailModal .cc387-profile-warning strong{display:flex;align-items:center;gap:7px;color:#ff6e83;font-size:.60rem;letter-spacing:.015em}
+#detailModal .cc387-profile-warning strong i{font-style:normal;font-size:.72rem}
+#detailModal .cc387-profile-warning p{margin:5px 0 0!important;color:#e5aab3!important;font-size:.53rem!important;line-height:1.5!important;max-width:none!important}
+@media(max-width:700px){#adminOverlay .cc387-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#adminOverlay .cc387-actions{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){#adminOverlay .cc387-hero-top{display:block}.cc387-live{display:inline-flex;margin-top:9px}#adminOverlay .cc387-grid{grid-template-columns:1fr}#adminOverlay .cc387-system{grid-template-columns:1fr 1fr}#adminOverlay .cc387-hero{padding:14px}}
+@media(prefers-reduced-motion:reduce){#adminOverlay .cc387-action{transition:none!important}}
+</style>
+<script id="cruzclick-v387-panel-general-script">
+(()=>{
+'use strict';
+const D=document;
+const esc387=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const n387=v=>Number(v||0);
+const money387=v=>{try{return `${String(state.settings?.currency||'Q').trim()||'Q'}${n387(v).toFixed(2)}`}catch(e){return `Q${n387(v).toFixed(2)}`}};
+const orders387=()=>Array.isArray(state?.orders)?state.orders:[];
+const products387=()=>Array.isArray(state?.products)?state.products:[];
+const users387=()=>Array.isArray(state?.users)?state.users:[];
+const paid387=o=>['Confirmado','Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(String(o?.payment?.status||''))||['Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(String(o?.status||''));
+const receipt387=o=>!!o?.payment?.receiptDataUrl;
+function pendingPayment387(){return orders387().filter(o=>!paid387(o)&&!receipt387(o)).length}
+function receiptPending387(){return orders387().filter(o=>!paid387(o)&&receipt387(o)).length}
+function preparing387(){return orders387().filter(o=>['Preparando acceso','Listo para entregar'].includes(String(o?.status||''))).length}
+function deliveredPending387(){return orders387().filter(o=>String(o?.status||'')==='Listo para entregar').length}
+function activeOrders387(){return orders387().filter(o=>!['Completado','Entregado digital','Cancelado','Reserva vencida'].includes(String(o?.status||''))).length}
+function revenue387(){return orders387().filter(paid387).reduce((s,o)=>s+n387(o?.total),0)}
+function profileProducts387(){return products387().filter(p=>{const raw=String(p?.digitalKind||p?.digitalType||p?.name||'').toLowerCase();return /profile|perfil|suscrip|netflix|crunchy|disney|max|prime|vix/.test(raw)})}
+function digitalKinds387(){const c={recharge:0,profile:0,membership:0,course:0,license:0,service:0};products387().forEach(p=>{const raw=String(p?.digitalKind||p?.digitalType||p?.name||'').toLowerCase();let k='service';if(/diamant|recarga|free\s*fire|fc\s*point|robux|moneda/.test(raw))k='recharge';else if(/curso|clase|programa/.test(raw))k='course';else if(/licen|clave|key|software/.test(raw))k='license';else if(/perfil|suscrip|netflix|disney|max|prime|crunchy|vix|stream/.test(raw))k='profile';else if(/membres|invitaci|spotify|youtube/.test(raw))k='membership';c[k]=(c[k]||0)+1});return c}
+function renewal387(){try{const rows=typeof expirationLeads362==='function'?expirationLeads362():[];return rows.filter(x=>n387(x.days)>=0&&n387(x.days)<=5).length}catch(e){return 0}}
+function storage387(){let bytes=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';const v=localStorage.getItem(k)||'';bytes+=(k.length+v.length)*2}}catch(e){}return bytes<1024?`${bytes} B`:bytes<1048576?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1048576).toFixed(2)} MB`}
+function recent387(){return orders387().slice().sort((a,b)=>Date.parse(b?.updatedAt||b?.createdAt||0)-Date.parse(a?.updatedAt||a?.createdAt||0)).slice(0,5)}
+function statusLabel387(o){return String(o?.status||o?.payment?.status||'Pendiente')}
+function renderPanelGeneral387(){
+ const host=D.getElementById('cc378Stage');if(!host)return false;
+ const os=orders387(),ps=products387(),us=users387(),pp=pendingPayment387(),rp=receiptPending387(),pr=preparing387(),del=deliveredPending387(),ren=renewal387(),rev=revenue387(),k=digitalKinds387(),maxKind=Math.max(1,...Object.values(k));
+ const recent=recent387();
+ const pending=activeOrders387();
+ host.innerHTML=`<section class="cc387-dashboard" aria-label="Panel General">
+ <div class="cc387-hero"><div class="cc387-hero-top"><div><span class="cc387-kicker"><i></i>Panel General · control operativo</span><h2>Centro de control de CRULOX</h2><p>Vista rápida del negocio digital: pedidos, pagos, comprobantes, entregas, renovaciones y catálogo. Los indicadores se calculan con los datos guardados actualmente en el sistema.</p></div><span class="cc387-live">● Datos locales activos</span></div></div>
+ <div class="cc387-kpis"><article class="cc387-kpi"><small>Ventas confirmadas</small><strong>${esc387(money387(rev))}</strong><span>Ingresos registrados</span></article><article class="cc387-kpi"><small>Pedidos activos</small><strong>${pending}</strong><span>Requieren seguimiento</span></article><article class="cc387-kpi"><small>Pagos por revisar</small><strong>${pp+rp}</strong><span>${pp} sin comprobante · ${rp} con comprobante</span></article><article class="cc387-kpi"><small>Clientes</small><strong>${us.length}</strong><span>Cuentas registradas</span></article></div>
+ <section class="cc387-section"><div class="cc387-section-head"><div><h3>Estado operativo</h3><p>Lo que merece atención primero.</p></div></div><div class="cc387-grid">
+ <article class="cc387-card"><div class="cc387-card-head"><h4>Pedidos pendientes</h4><span class="cc387-num">${os.filter(o=>!['Completado','Entregado digital','Cancelado','Reserva vencida'].includes(String(o?.status||''))).length}</span></div><p>Pedidos todavía abiertos en el flujo de compra.</p><div class="cc387-bar"><b style="--w:${Math.min(100,(pending/Math.max(1,os.length))*100)}%"></b></div></article>
+ <article class="cc387-card"><div class="cc387-card-head"><h4>Comprobantes para verificar</h4><span class="cc387-num">${rp}</span></div><p>Comprobantes cargados que aún no tienen pago confirmado.</p><div class="cc387-bar"><b style="--w:${Math.min(100,(rp/Math.max(1,os.length))*100)}%"></b></div></article>
+ <article class="cc387-card"><div class="cc387-card-head"><h4>Entregas pendientes</h4><span class="cc387-num">${del}</span></div><p>Pedidos marcados como listos para entregar digitalmente.</p><div class="cc387-bar"><b style="--w:${Math.min(100,(del/Math.max(1,os.length))*100)}%"></b></div></article>
+ <article class="cc387-card"><div class="cc387-card-head"><h4>Renovaciones ≤ 5 días</h4><span class="cc387-num">${ren}</span></div><p>Registros con fecha de corte disponible dentro del período definido.</p><div class="cc387-bar"><b style="--w:${Math.min(100,(ren/Math.max(1,os.length))*100)}%"></b></div></article>
+ </div></section>
+ <section class="cc387-section"><div class="cc387-section-head"><div><h3>Composición del catálogo digital</h3><p>Tipos detectados en los productos actuales.</p></div><span class="cc387-badge">${ps.length} productos</span></div><div class="cc387-list">
+ ${[['profile','👤','Perfiles / suscripciones'],['membership','✉','Invitaciones / membresías'],['recharge','◆','Diamantes / recargas'],['course','▤','Cursos digitales'],['license','⌘','Licencias / claves']].map(([key,ic,label])=>`<div class="cc387-row"><span class="cc387-row-icon">${ic}</span><div><b>${label}</b><span>${k[key]||0} producto${(k[key]||0)===1?'':'s'} configurado${(k[key]||0)===1?'':'s'}</span></div><span class="cc387-badge">${Math.round(((k[key]||0)/maxKind)*100)}%</span></div>`).join('')}
+ </div></section>
+ <section class="cc387-section"><div class="cc387-section-head"><div><h3>Actividad reciente</h3><p>Últimos pedidos registrados por fecha de actualización.</p></div><span class="cc387-badge">${os.length} total</span></div>${recent.length?`<div class="cc387-list">${recent.map(o=>`<div class="cc387-row"><span class="cc387-row-icon">🧾</span><div><b>${esc387(o?.id||'Pedido')}</b><span>${esc387(o?.customer?.fullName||'Cliente')} · ${esc387(statusLabel387(o))}</span></div><span class="cc387-badge">${esc387(money387(o?.total))}</span></div>`).join('')}</div>`:'<div class="cc387-empty">Todavía no hay pedidos registrados.</div>'}</section>
+ <section class="cc387-section"><div class="cc387-section-head"><div><h3>Acciones rápidas</h3><p>Atajos hacia los módulos que concentran la operación diaria.</p></div></div><div class="cc387-actions"><button type="button" class="cc387-action" data-cc387-go="orders"><b>🧾 Pedidos</b><span>Revisar flujo y estados.</span></button><button type="button" class="cc387-action" data-cc387-go="payments"><b>✓ Pagos</b><span>Controlar pagos y comprobantes.</span></button><button type="button" class="cc387-action" data-cc387-go="delivery"><b>⚡ Entregas</b><span>Controlar entregas digitales.</span></button><button type="button" class="cc387-action" data-cc387-go="subscriptions"><b>↻ Renovaciones</b><span>Seguimiento de vencimientos.</span></button></div></section>
+ <section class="cc387-section"><div class="cc387-section-head"><div><h3>Estado del sistema</h3><p>Información técnica básica, sin inventar servicios externos.</p></div></div><div class="cc387-system"><div><small>Productos</small><b>${ps.length}</b></div><div><small>Clientes</small><b>${us.length}</b></div><div><small>Pedidos</small><b>${os.length}</b></div><div><small>En preparación</small><b>${pr}</b></div><div><small>Almacenamiento local estimado</small><b>${storage387()}</b></div><div><small>Modelo comercial</small><b>100% digital</b></div></div></section>
+ </section>`;
+ host.querySelectorAll('[data-cc387-go]').forEach(b=>b.onclick=()=>{try{window.renderAdminSection(b.dataset.cc387Go)}catch(e){}});
+ try{D.getElementById('adminOverlay')?.scrollTo({top:0,behavior:'auto'})}catch(e){}
+ return true;
+}
+function install387(){
+ if(typeof window.renderAdminSection!=='function')return false;
+ const fn=renderPanelGeneral387;
+ const wrapped=function(section){if(String(section||'')==='panel')return fn();return window.CRUZCLICK_ADMIN_V387_BASE?window.CRUZCLICK_ADMIN_V387_BASE(section):undefined};
+ if(!window.CRUZCLICK_ADMIN_V387_BASE)window.CRUZCLICK_ADMIN_V387_BASE=window.renderAdminSection;
+ window.renderAdminSection=wrapped;
+ try{renderAdminSection=wrapped}catch(e){}
+ const oldOpen=window.openAdmin;
+ if(!window.CRUZCLICK_ADMIN_V387_OPEN)window.CRUZCLICK_ADMIN_V387_OPEN=oldOpen;
+ return true;
+}
+function installWarning387(){
+ const original=window.openDetail;if(typeof original!=='function'||original.__cc387Wrapped)return false;
+ const wrapped=function(id){const r=original.apply(this,arguments);setTimeout(()=>{try{const p=(state.products||[]).find(x=>String(x.id)===String(id));if(!p)return;const raw=String(p.digitalKind||p.digitalType||p.name||p.category||'').toLowerCase();const isProfile=/^profile$|perfil|netflix|crunchy|disney|max|prime|vix/.test(raw);const info=D.querySelector('#detailModal .product-detail-info');if(!isProfile||!info)return;let box=info.querySelector('.cc387-profile-warning');if(box)box.remove();box=D.createElement('div');box.className='cc387-profile-warning';box.innerHTML='<strong><i>⚠</i> Protección del perfil</strong><p>Está prohibido alterar, cambiar o modificar los datos de esta cuenta o perfil. Cualquier modificación no autorizada podrá ocasionar la pérdida o suspensión del acceso y la aplicación de medidas contra el responsable.</p>';const actions=info.querySelector('.form-actions');if(actions)info.insertBefore(box,actions);else info.appendChild(box)}catch(e){console.warn('CRULOX V3.8.7 aviso de perfil',e)}},25);return r};wrapped.__cc387Wrapped=true;window.CRUZCLICK_OPENDETAIL_V387_BASE=original;window.openDetail=wrapped;try{openDetail=wrapped}catch(e){}return true;
+}
+let tries=0;const boot=()=>{tries++;install387();installWarning387();if(tries<20&&(typeof window.renderAdminSection!=='function'||typeof window.openDetail!=='function'))setTimeout(boot,250);else if(tries<20)setTimeout(()=>{install387();installWarning387()},900)};
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(boot,50),{once:true});else setTimeout(boot,50);
+})();
+</script>
+
+
+
+
+<style id="cruzclick-v389-icon-back-style">
+#adminOverlay .cc378-nav{align-items:stretch!important}
+#adminOverlay .cc378-nav button{display:grid!important;grid-template-columns:68px minmax(0,1fr)!important;grid-template-rows:auto auto!important;column-gap:12px!important;row-gap:6px!important;align-items:center!important;text-align:left!important}
+#adminOverlay .cc378-nav-icon{grid-column:1;grid-row:1 / span 2;width:54px!important;height:54px!important;display:grid!important;place-items:center!important;align-self:center!important;justify-self:center!important;flex:0 0 auto!important;margin:0!important;border-radius:16px!important;background:linear-gradient(145deg,rgba(0,225,255,.18),rgba(72,112,255,.08))!important;border:1px solid rgba(56,220,255,.24)!important;box-shadow:0 10px 28px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.05)!important;color:#75efff!important}
+#adminOverlay .cc378-nav-icon svg{width:31px!important;height:31px!important;display:block!important;stroke:currentColor!important;fill:none!important;stroke-width:2.2!important;stroke-linecap:round!important;stroke-linejoin:round!important;overflow:visible!important}
+#adminOverlay .cc378-nav-label{grid-column:2;grid-row:1;align-self:end!important;margin:0!important;min-width:0!important}
+#adminOverlay .cc378-nav-sub{grid-column:2;grid-row:2;align-self:start!important;margin:0!important;min-width:0!important}
+#adminOverlay .cc378-nav-index{z-index:3!important}
+#adminOverlay .cc389-return-row{display:flex;justify-content:flex-start;margin:0 0 10px}
+#adminOverlay .cc389-back{display:inline-flex;align-items:center;gap:7px;min-height:38px;padding:8px 13px;border-radius:12px;border:1px solid rgba(64,222,255,.20);background:linear-gradient(145deg,rgba(10,36,54,.96),rgba(4,16,27,.98));color:#9cefff;font-size:.62rem;font-weight:900;cursor:pointer;touch-action:manipulation;box-shadow:0 10px 24px rgba(0,0,0,.18)}
+#adminOverlay .cc389-back:hover{border-color:rgba(64,222,255,.45);transform:translateY(-1px)}
+#adminOverlay .cc389-back:active{transform:scale(.98)}
+#adminOverlay .cc378-module-head{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center!important;gap:10px!important}
+#adminOverlay .cc378-module-id{min-width:0!important;display:flex!important;align-items:center!important;gap:10px!important}
+#adminOverlay .cc378-module-id>div{min-width:0!important}
+#adminOverlay .cc378-module-icon{display:grid!important;place-items:center!important}
+#adminOverlay .cc378-module-icon svg,#adminOverlay .cc378-module-body .bigicon svg{display:block!important;stroke:currentColor!important;fill:none!important;stroke-width:2.15!important;stroke-linecap:round!important;stroke-linejoin:round!important}
+#adminOverlay .cc378-module-body .bigicon{display:grid!important;place-items:center!important}
+@media(max-width:600px){#adminOverlay .cc378-nav button{grid-template-columns:56px minmax(0,1fr)!important;column-gap:9px!important;min-height:118px!important;padding:13px!important}.cc389-back-label{display:inline!important}#adminOverlay .cc378-nav-icon{width:48px!important;height:48px!important;border-radius:14px!important}.cc378-nav-icon svg{width:28px!important;height:28px!important}}
+@media(max-width:380px){#adminOverlay .cc378-nav button{grid-template-columns:48px minmax(0,1fr)!important;column-gap:8px!important;min-height:108px!important;padding:10px!important}#adminOverlay .cc378-nav-icon{width:42px!important;height:42px!important;border-radius:12px!important}#adminOverlay .cc378-nav-icon svg{width:25px!important;height:25px!important}}
+</style>
+<!-- CRULOX V3.8.8 · Estabilidad final, enrutamiento administrativo y protección contra fugas de código -->
+<style id="cruzclick-v388-final-style">
+#adminOverlay .cc388-dashboard{display:grid;gap:14px;min-width:0}
+#adminOverlay .cc388-hero{position:relative;overflow:hidden;padding:18px;border-radius:22px;border:1px solid rgba(62,221,255,.16);background:radial-gradient(circle at 88% 12%,rgba(0,220,255,.14),transparent 30%),radial-gradient(circle at 14% 100%,rgba(72,98,255,.11),transparent 35%),linear-gradient(145deg,#0b2438,#06121f 68%);box-shadow:0 20px 52px rgba(0,0,0,.32),inset 0 1px 0 rgba(255,255,255,.04)}
+#adminOverlay .cc388-hero h2{margin:6px 0 5px;color:#f5fbff;font-size:1.2rem;letter-spacing:-.02em}
+#adminOverlay .cc388-hero p{margin:0;color:#89a5b7;font-size:.62rem;line-height:1.6;max-width:720px}
+#adminOverlay .cc388-kicker{display:inline-flex;align-items:center;gap:7px;color:#66e8ff;font-size:.49rem;font-weight:950;letter-spacing:.13em;text-transform:uppercase}
+#adminOverlay .cc388-kicker i{width:7px;height:7px;border-radius:50%;background:#29df83;box-shadow:0 0 12px rgba(41,223,131,.65)}
+#adminOverlay .cc388-live{display:inline-flex;align-items:center;gap:6px;margin-top:9px;padding:7px 10px;border-radius:999px;border:1px solid rgba(41,223,131,.20);background:rgba(41,223,131,.06);color:#72f1a9;font-size:.47rem;font-weight:900}
+#adminOverlay .cc388-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+#adminOverlay .cc388-kpi{position:relative;overflow:hidden;min-width:0;padding:14px;border-radius:17px;border:1px solid rgba(123,201,238,.10);background:linear-gradient(145deg,rgba(11,32,49,.97),rgba(5,17,29,.99));box-shadow:0 13px 30px rgba(0,0,0,.20)}
+#adminOverlay .cc388-kpi:before{content:"";position:absolute;left:0;top:0;bottom:0;width:2px;background:linear-gradient(#1fe4ff,rgba(31,228,255,0))}
+#adminOverlay .cc388-kpi small{display:block;color:#7894aa;font-size:.49rem;font-weight:800}
+#adminOverlay .cc388-kpi strong{display:block;margin-top:6px;color:#effaff;font-size:1.22rem;line-height:1}
+#adminOverlay .cc388-kpi span{display:block;margin-top:6px;color:#45ddfa;font-size:.43rem;font-weight:800}
+#adminOverlay .cc388-section{padding:14px;border-radius:18px;border:1px solid rgba(123,201,238,.08);background:linear-gradient(145deg,rgba(8,24,39,.95),rgba(4,14,24,.98));box-shadow:0 14px 34px rgba(0,0,0,.18)}
+#adminOverlay .cc388-section-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-bottom:10px}
+#adminOverlay .cc388-section-head h3{margin:0;color:#eef9ff;font-size:.75rem}
+#adminOverlay .cc388-section-head p{margin:3px 0 0;color:#718ba1;font-size:.49rem;line-height:1.4}
+#adminOverlay .cc388-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+#adminOverlay .cc388-card{min-width:0;padding:11px;border-radius:14px;border:1px solid rgba(123,201,238,.07);background:rgba(255,255,255,.018)}
+#adminOverlay .cc388-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+#adminOverlay .cc388-card h4{margin:0;color:#e8f6ff;font-size:.59rem}
+#adminOverlay .cc388-num{font-size:.95rem;color:#21ddff;font-weight:950}
+#adminOverlay .cc388-card p{margin:5px 0 0;color:#71899f;font-size:.48rem;line-height:1.45}
+#adminOverlay .cc388-bar{height:5px;margin-top:8px;border-radius:999px;background:rgba(255,255,255,.045);overflow:hidden}
+#adminOverlay .cc388-bar b{display:block;height:100%;width:var(--w,0%);border-radius:inherit;background:linear-gradient(90deg,#16cce9,#5b8cff);box-shadow:0 0 12px rgba(20,210,255,.25)}
+#adminOverlay .cc388-list{display:grid;gap:6px}
+#adminOverlay .cc388-row{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px;border-radius:12px;background:rgba(255,255,255,.018);border:1px solid rgba(123,201,238,.055)}
+#adminOverlay .cc388-row-icon{width:34px;height:34px;display:grid;place-items:center;border-radius:10px;background:rgba(0,215,255,.065);border:1px solid rgba(0,215,255,.08);color:#63eaff;font-size:.75rem}
+#adminOverlay .cc388-row-icon svg{width:22px;height:22px;display:block;stroke:#63eaff;fill:none;stroke-width:2.35;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+#adminOverlay .cc388-row b{display:block;color:#dcecf5;font-size:.55rem}
+#adminOverlay .cc388-row span{display:block;margin-top:2px;color:#6f879c;font-size:.46rem;line-height:1.35}
+#adminOverlay .cc388-badge{padding:5px 7px;border-radius:999px;background:rgba(255,255,255,.035);color:#79dff1;font-size:.43rem;font-weight:900;white-space:nowrap}
+#adminOverlay .cc388-actions{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+#adminOverlay .cc388-action{min-width:0;padding:10px;border-radius:13px;border:1px solid rgba(123,201,238,.08);background:linear-gradient(145deg,rgba(12,35,53,.95),rgba(5,17,29,.98));color:#eefaff;text-align:left;cursor:pointer;touch-action:manipulation}
+#adminOverlay .cc388-action b{display:block;font-size:.56rem}
+#adminOverlay .cc388-action span{display:block;margin-top:4px;color:#758ea2;font-size:.44rem;line-height:1.4}
+#adminOverlay .cc388-system{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+#adminOverlay .cc388-system>div{padding:10px;border-radius:12px;background:rgba(255,255,255,.018);border:1px solid rgba(123,201,238,.055)}
+#adminOverlay .cc388-system small{display:block;color:#6e889e;font-size:.44rem}
+#adminOverlay .cc388-system b{display:block;margin-top:4px;color:#ecfbff;font-size:.61rem}
+#adminOverlay .cc388-empty{padding:14px;border-radius:13px;border:1px dashed rgba(123,201,238,.10);color:#70889c;font-size:.52rem;text-align:center}
+#adminOverlay .cc388-module-tools{margin-top:14px;display:grid;gap:10px}
+#adminOverlay .cc388-module-tool-card{padding:13px;border-radius:15px;border:1px solid rgba(123,201,238,.08);background:linear-gradient(145deg,rgba(11,31,48,.94),rgba(4,16,27,.98));text-align:left}
+#adminOverlay .cc388-module-tool-card h3{margin:0;color:#effaff;font-size:.65rem}
+#adminOverlay .cc388-module-tool-card p{margin:5px 0 0;color:#7892a6;font-size:.49rem;line-height:1.5}
+@media(max-width:760px){#adminOverlay .cc388-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}#adminOverlay .cc388-actions{grid-template-columns:repeat(2,minmax(0,1fr))}#adminOverlay .cc388-system{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:460px){#adminOverlay .cc388-hero{padding:14px}#adminOverlay .cc388-hero h2{font-size:1.05rem}#adminOverlay .cc388-hero p{font-size:.58rem}#adminOverlay .cc388-grid{grid-template-columns:1fr}#adminOverlay .cc388-actions{grid-template-columns:1fr}#adminOverlay .cc388-system{grid-template-columns:1fr 1fr}}
+</style>
+<script id="cruzclick-v388-final-stability">
+(()=>{
+'use strict';
+const D=document;
+const MODULES={
+ panel:['01','Panel General','Vista central y control operativo del negocio.'],
+ renewals:['02','Renovaciones y Vencimientos','Perfiles y cuentas por vencer, renovar o liberar.'],
+ catalog:['03','Catálogo','Organización y administración del catálogo.'],
+ products:['04','Productos y Servicios','Productos, servicios, precios, variantes y disponibilidad.'],
+ clients:['05','Clientes','Gestión de clientes, datos y relación comercial.'],
+ sales:['06','Ventas','Registro y seguimiento de las ventas.'],
+ orders:['07','Pedidos','Gestión y seguimiento de pedidos.'],
+ delivery:['08','Entregas Digitales','Control y seguimiento de entregas digitales.'],
+ subscriptions:['09','Suscripciones','Gestión de suscripciones y renovaciones.'],
+ profiles:['10','Cuentas y Perfiles','Control de cuentas, perfiles y accesos de clientes.'],
+ finance:['11','Finanzas','Control financiero general del negocio.'],
+ payments:['12','Pagos','Registro y control de pagos y cobros.'],
+ support:['13','Atención al Cliente','Atención, seguimiento y resolución de consultas.'],
+ communication:['14','Comunicación','Canales y comunicaciones con clientes.'],
+ marketing:['15','Marketing','Gestión de acciones y campañas de marketing.'],
+ promotions:['16','Promociones','Promociones, descuentos y campañas comerciales.'],
+ loyalty:['17','Fidelización','Programas para retención y fidelización.'],
+ referrals:['18','Referidos','Programa y seguimiento de referidos.'],
+ stats:['19','Estadística','Indicadores y métricas del negocio.'],
+ reports:['20','Reportes','Generación y consulta de reportes.'],
+ notifications:['21','Notificaciones','Gestión de avisos y notificaciones.'],
+ alerts:['22','Alertas','Alertas y avisos operativos.'],
+ incidents:['23','Incidencias','Registro y seguimiento de incidencias.'],
+ receipts:['24','Comprobantes','Gestión de comprobantes y constancias.'],
+ suppliers:['25','Proveedores','Gestión de proveedores y relaciones comerciales.'],
+ commissions:['26','Comisiones','Control de comisiones y repartos.'],
+ profitability:['27','Rentabilidad','Análisis de rentabilidad por operación y servicio.'],
+ history:['28','Historial de Actividad','Registro de actividad del sistema.'],
+ audit:['29','Auditoría','Revisión y trazabilidad de acciones administrativas.'],
+ permissions:['30','Usuarios y Permisos','Usuarios administrativos y sus permisos.'],
+ security:['31','Seguridad','Controles de seguridad y protección administrativa.'],
+ automation:['32','Automatización','Procesos automáticos y flujos operativos.'],
+ integrations:['33','Integraciones','Conexiones con servicios y sistemas externos.'],
+ content:['34','Gestión de Contenido','Contenido informativo y comercial del sistema.'],
+ files:['35','Gestión de Archivos','Administración de recursos y archivos digitales.'],
+ importexport:['36','Importación y Exportación','Entrada y salida de datos del sistema.'],
+ backup:['37','Respaldo y Recuperación','Copias de seguridad y recuperación de información.'],
+ settings:['38','Configuración','Configuración general del sistema.']
+};
+const arr=Object.entries(MODULES);
+const esc=v=>String(v??'').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','\"':'&quot;'}[c]));
+const money=n=>{try{const cur=String(state?.settings?.currency||'Q').trim()||'Q';return cur+Number(n||0).toFixed(2)}catch(e){return 'Q0.00'}};
+const n=v=>Number(v||0)||0;
+const orders=()=>Array.isArray(window.state?.orders)?window.state.orders:[];
+const products=()=>Array.isArray(window.state?.products)?window.state.products:[];
+const users=()=>Array.isArray(window.state?.users)?window.state.users:[];
+const paid=o=>['Confirmado','Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(String(o?.payment?.status||''))||['Pago confirmado','Preparando acceso','Listo para entregar','Entregado digital','Completado'].includes(String(o?.status||''));
+const receipt=o=>!!o?.payment?.receiptDataUrl;
+function renewalCount(){try{const f=window.expirationLeads362;const rows=typeof f==='function'?f():[];return rows.filter(x=>n(x.days)>=0&&n(x.days)<=5).length}catch(e){return 0}}
+function storageInfo(){let bytes=0;try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'',v=localStorage.getItem(k)||'';bytes+=(k.length+v.length)*2}}catch(e){}return bytes<1024?`${bytes} B`:bytes<1048576?`${(bytes/1024).toFixed(1)} KB`:`${(bytes/1048576).toFixed(2)} MB`}
+function metaFromButton(id){const info=MODULES[id];return info?{num:info[0],icon:iconFor389(id),label:info[1],lead:info[2]}:null}
+function ensureShell(){const overlay=D.getElementById('adminOverlay');if(!overlay)return null;let stage=D.getElementById('cc378Stage');if(!stage){try{if(typeof window.renderAdminSection==='function')window.renderAdminSection('home')}catch(e){}stage=D.getElementById('cc378Stage')}return {overlay,stage}}
+function openAdmin(){const owner=window.CRUZCLICK_V3718?.ownerSession;let ok=false;try{ok=typeof owner==='function'?!!owner():window.state?.session?.role==='admin'}catch(e){}if(!ok)return false;const {overlay}=ensureShell()||{};if(!overlay)return false;overlay.classList.add('open');D.body.classList.add('lock');renderFunctions();return true}
+function closeAdmin(){const o=D.getElementById('adminOverlay');if(!o)return false;o.classList.remove('open');D.body.classList.remove('lock');return true}
+function logout(){try{window.CRUZCLICK_V3718?.logoutAdmin?.()}catch(e){try{if(window.state)window.state.session=null}catch(_){}closeAdmin()}}
+const CC389_ICONS=Object.freeze({
+  panel:"<svg viewBox=\"0 0 48 48\"><rect x=\"6\" y=\"6\" width=\"15\" height=\"15\" rx=\"3\"/><rect x=\"27\" y=\"6\" width=\"15\" height=\"10\" rx=\"3\"/><rect x=\"27\" y=\"20\" width=\"15\" height=\"22\" rx=\"3\"/><rect x=\"6\" y=\"25\" width=\"15\" height=\"17\" rx=\"3\"/><path d=\"M12 12h3M32 11h5M12 31h3M32 27h5M32 33h5\"/></svg>",
+  renewals:"<svg viewBox=\"0 0 48 48\"><circle cx=\"24\" cy=\"24\" r=\"15\"/><path d=\"M24 14v11l7 4\"/><path d=\"M12 12h7M12 12v7M36 36h-7M36 36v-7\"/></svg>",
+  catalog:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 11h34v8H7z\"/><path d=\"M9 19h30v22H9z\"/><path d=\"M15 25h18M15 31h14M15 37h10\"/></svg>",
+  products:"<svg viewBox=\"0 0 48 48\"><path d=\"M8 16 24 8l16 8-16 8Z\"/><path d=\"M8 16v17l16 7 16-7V16\"/><path d=\"M24 24v16M16 12l16 8\"/><path d=\"M35 8v10M30 13h10\"/></svg>",
+  clients:"<svg viewBox=\"0 0 48 48\"><circle cx=\"18\" cy=\"16\" r=\"6\"/><path d=\"M7 37c0-8 5-12 11-12s11 4 11 12\"/><circle cx=\"34\" cy=\"19\" r=\"4\"/><path d=\"M29 37c.5-5 3.5-8 8-8 2 0 3.7.7 5 2\"/></svg>",
+  sales:"<svg viewBox=\"0 0 48 48\"><path d=\"M8 9h6l3 21h20l4-15H16\"/><circle cx=\"20\" cy=\"38\" r=\"3\"/><circle cx=\"35\" cy=\"38\" r=\"3\"/><path d=\"M28 7v10M23 12h10\"/></svg>",
+  orders:"<svg viewBox=\"0 0 48 48\"><rect x=\"9\" y=\"7\" width=\"30\" height=\"34\" rx=\"4\"/><path d=\"M16 15h16M16 22h16M16 29h8\"/><path d=\"m29 31 3 3 6-7\"/></svg>",
+  delivery:"<svg viewBox=\"0 0 48 48\"><rect x=\"7\" y=\"10\" width=\"23\" height=\"25\" rx=\"3\"/><path d=\"M30 18h6l5 6v11H30z\"/><path d=\"M14 22h10M24 18l-5 5 5 5\"/><circle cx=\"15\" cy=\"38\" r=\"3\"/><circle cx=\"36\" cy=\"38\" r=\"3\"/></svg>",
+  subscriptions:"<svg viewBox=\"0 0 48 48\"><path d=\"M16 11a15 15 0 0 1 22 9\"/><path d=\"m36 9 2 11-10-3\"/><path d=\"M32 37a15 15 0 0 1-22-9\"/><path d=\"m12 39-2-11 10 3\"/><rect x=\"18\" y=\"18\" width=\"12\" height=\"12\" rx=\"2\"/></svg>",
+  profiles:"<svg viewBox=\"0 0 48 48\"><circle cx=\"24\" cy=\"17\" r=\"7\"/><path d=\"M10 39c1-8 6-12 14-12s13 4 14 12\"/><rect x=\"31\" y=\"29\" width=\"10\" height=\"10\" rx=\"2\"/><path d=\"M36 32v4M34 34h4\"/></svg>",
+  finance:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 15h34v24H7z\"/><path d=\"M7 19h34\"/><path d=\"M13 29h8M13 34h13\"/><circle cx=\"34\" cy=\"30\" r=\"4\"/></svg>",
+  payments:"<svg viewBox=\"0 0 48 48\"><rect x=\"6\" y=\"11\" width=\"36\" height=\"25\" rx=\"4\"/><path d=\"M6 18h36\"/><path d=\"m17 27 4 4 10-10\"/></svg>",
+  support:"<svg viewBox=\"0 0 48 48\"><path d=\"M8 25a16 16 0 0 1 32 0\"/><path d=\"M8 25v9h7v-9H8ZM33 25v9h7v-9h-7Z\"/><path d=\"M15 36c2 4 8 5 12 2\"/><circle cx=\"24\" cy=\"39\" r=\"2\"/></svg>",
+  communication:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 10h24v18H16l-8 7v-7H7z\"/><path d=\"M25 19h16v15H31l-6 5v-5\"/><path d=\"M12 17h14M12 22h9\"/></svg>",
+  marketing:"<svg viewBox=\"0 0 48 48\"><path d=\"m9 24 23-10v20L9 24z\"/><path d=\"M32 19h5a7 7 0 0 1 0 10h-5\"/><path d=\"M13 28v11h7l3-8\"/></svg>",
+  promotions:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 17 17 7h22v22L29 39 7 17z\"/><circle cx=\"28\" cy=\"17\" r=\"3\"/><path d=\"M17 24l12-8M18 30h.01M28 25h.01\"/></svg>",
+  loyalty:"<svg viewBox=\"0 0 48 48\"><path d=\"m24 7 5 10 11 1-8 7 3 11-11-6-11 6 3-11-8-7 11-1z\"/><path d=\"M18 40h12\"/></svg>",
+  referrals:"<svg viewBox=\"0 0 48 48\"><circle cx=\"12\" cy=\"24\" r=\"5\"/><circle cx=\"36\" cy=\"12\" r=\"5\"/><circle cx=\"36\" cy=\"36\" r=\"5\"/><path d=\"m16 22 15-8M16 26l15 8\"/></svg>",
+  stats:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 41V7M7 41h34\"/><rect x=\"13\" y=\"27\" width=\"6\" height=\"10\" rx=\"1\"/><rect x=\"23\" y=\"21\" width=\"6\" height=\"16\" rx=\"1\"/><rect x=\"33\" y=\"13\" width=\"6\" height=\"24\" rx=\"1\"/></svg>",
+  reports:"<svg viewBox=\"0 0 48 48\"><path d=\"M12 6h18l7 7v29H12z\"/><path d=\"M30 6v8h7M18 24h14M18 30h14M18 36h9\"/></svg>",
+  notifications:"<svg viewBox=\"0 0 48 48\"><path d=\"M12 33h24l-3-5V21a9 9 0 0 0-18 0v7z\"/><path d=\"M20 38c1 2 3 3 4 3s3-1 4-3\"/></svg>",
+  alerts:"<svg viewBox=\"0 0 48 48\"><path d=\"m24 7 18 32H6L24 7z\"/><path d=\"M24 18v10M24 33h.01\"/></svg>",
+  incidents:"<svg viewBox=\"0 0 48 48\"><path d=\"M24 6 39 11v11c0 10-6 17-15 20C15 39 9 32 9 22V11z\"/><path d=\"M24 15v11M24 32h.01\"/></svg>",
+  receipts:"<svg viewBox=\"0 0 48 48\"><path d=\"M11 7h26v34l-5-3-4 3-4-3-4 3-4-3-5 3z\"/><path d=\"M16 15h16M16 21h16M16 27h10M16 33h7\"/></svg>",
+  suppliers:"<svg viewBox=\"0 0 48 48\"><path d=\"M7 20h15v18H7zM26 28h9l6 6v4H26z\"/><path d=\"M10 20V11h13v9M30 28v-7h7l4 7\"/><circle cx=\"15\" cy=\"41\" r=\"3\"/><circle cx=\"34\" cy=\"41\" r=\"3\"/></svg>",
+  commissions:"<svg viewBox=\"0 0 48 48\"><circle cx=\"17\" cy=\"17\" r=\"8\"/><circle cx=\"31\" cy=\"31\" r=\"8\"/><path d=\"M17 13v8M13 17h8M31 27v8M27 31h8\"/><path d=\"m22 22 4 4\"/></svg>",
+  profitability:"<svg viewBox=\"0 0 48 48\"><path d=\"M8 38V8M8 38h32\"/><path d=\"m13 31 8-9 6 5 11-14\"/><path d=\"M31 13h7v7\"/></svg>",
+  history:"<svg viewBox=\"0 0 48 48\"><circle cx=\"24\" cy=\"24\" r=\"16\"/><path d=\"M24 15v10l7 5M8 24H4l4-4\"/></svg>",
+  audit:"<svg viewBox=\"0 0 48 48\"><path d=\"M9 8h22l8 8v24H9z\"/><path d=\"M31 8v9h8M16 24h11M16 30h9\"/><circle cx=\"31\" cy=\"31\" r=\"6\"/><path d=\"m35 35 5 5\"/></svg>",
+  permissions:"<svg viewBox=\"0 0 48 48\"><circle cx=\"17\" cy=\"17\" r=\"6\"/><path d=\"M7 37c1-7 5-11 10-11s9 4 10 11\"/><circle cx=\"34\" cy=\"20\" r=\"4\"/><path d=\"m33 34 6-6M39 34l-6-6\"/></svg>",
+  security:"<svg viewBox=\"0 0 48 48\"><path d=\"M24 6 40 12v10c0 10-6 17-16 20C14 39 8 32 8 22V12z\"/><rect x=\"17\" y=\"21\" width=\"14\" height=\"11\" rx=\"2\"/><path d=\"M20 21v-3a4 4 0 0 1 8 0v3\"/></svg>",
+  automation:"<svg viewBox=\"0 0 48 48\"><circle cx=\"14\" cy=\"24\" r=\"5\"/><circle cx=\"34\" cy=\"14\" r=\"5\"/><circle cx=\"34\" cy=\"34\" r=\"5\"/><path d=\"m18 22 11-6M18 26l11 6\"/><path d=\"m9 10 5 5 5-5-5-5z\"/></svg>",
+  integrations:"<svg viewBox=\"0 0 48 48\"><path d=\"M19 13v8M29 27v8M15 17h-4a5 5 0 0 0 0 10h8M33 21h4a5 5 0 0 1 0 10h-8\"/><path d=\"M19 21h10M19 27h10\"/></svg>",
+  content:"<svg viewBox=\"0 0 48 48\"><rect x=\"7\" y=\"9\" width=\"34\" height=\"30\" rx=\"4\"/><circle cx=\"17\" cy=\"18\" r=\"3\"/><path d=\"m11 33 9-9 7 6 5-5 5 8\"/></svg>",
+  files:"<svg viewBox=\"0 0 48 48\"><path d=\"M6 12h14l4 5h18v22H6z\"/><path d=\"M6 12V9h13l4 5\"/></svg>",
+  importexport:"<svg viewBox=\"0 0 48 48\"><path d=\"M10 8h28v32H10z\"/><path d=\"M17 17h14M17 25h14M17 33h8\"/><path d=\"m22 13 5 5-5 5M26 25l-5 5 5 5\"/></svg>",
+  backup:"<svg viewBox=\"0 0 48 48\"><ellipse cx=\"24\" cy=\"12\" rx=\"14\" ry=\"6\"/><path d=\"M10 12v12c0 3 6 6 14 6s14-3 14-6V12M10 24v12c0 3 6 6 14 6s14-3 14-6V24\"/><path d=\"M32 28h8v8M40 28l-8 8\"/></svg>",
+  settings:"<svg viewBox=\"0 0 48 48\"><path d=\"M8 14h32M8 24h32M8 34h32\"/><circle cx=\"19\" cy=\"14\" r=\"4\"/><circle cx=\"31\" cy=\"24\" r=\"4\"/><circle cx=\"24\" cy=\"34\" r=\"4\"/></svg>"
+});
+function iconFor389(id){return CC389_ICONS[id]||''}
+function renderFunctions(){const x=ensureShell();if(!x?.stage)return false;const stage=x.stage;stage.innerHTML='<nav class="cc378-nav" id="cc378AdminNav" aria-label="Funciones administrativas"></nav>';const nav=stage.firstElementChild;nav.innerHTML=arr.map(([id,[num,label,lead]])=>{return `<button type="button" data-cc378-section="${esc(id)}" aria-label="Abrir ${esc(label)}"><span class="cc378-nav-icon">${iconFor389(id)}</span><span class="cc378-nav-label">${esc(label)}</span><span class="cc378-nav-sub">${esc(lead)}</span></button>`}).join('');nav.onclick=(e)=>{const b=e.target.closest('[data-cc378-section]');if(!b)return;e.preventDefault();e.stopPropagation();openModule(b.dataset.cc378Section)};x.overlay.scrollTop=0;x.overlay.scrollLeft=0;return true}
+
+function classifyCatalogKind(p){
+ const r=String(p?.digitalKind||p?.digitalType||p?.name||'').toLowerCase();
+ if(/diamant|recarga|free\s*fire|fc\s*point|robux|moneda/.test(r))return 'recharge';
+ if(/curso|clase|programa/.test(r))return 'course';
+ if(/licen|clave|key|software/.test(r))return 'license';
+ if(/perfil|suscrip|netflix|disney|max|prime|crunchy|vix|stream/.test(r))return 'profile';
+ if(/membres|invitaci|spotify|youtube/.test(r))return 'membership';
+ return 'other';
+}
+function catalogKindIcon(kind){
+ const icons={
+  profile:'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="15" r="7"/><path d="M11 38c1-8 6-12 13-12s12 4 13 12"/></svg>',
+  membership:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="10" width="32" height="28" rx="5"/><path d="M13 17h22M16 25h7M16 30h12"/></svg>',
+  recharge:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m24 6 14 14-14 22L10 20 24 6Z"/><path d="M18 22h12M24 16v12"/></svg>',
+  course:'<svg viewBox="0 0 48 48" aria-hidden="true"><path d="m8 16 16-7 16 7-16 7-16-7Z"/><path d="M12 20v13l12 6 12-6V20"/><path d="M40 18v12"/></svg>',
+  license:'<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="8" y="10" width="32" height="28" rx="4"/><path d="M15 18h18M15 24h10M15 30h7"/><circle cx="34" cy="30" r="3"/></svg>'
+ }; return icons[kind]||'<svg viewBox="0 0 48 48" aria-hidden="true"><circle cx="24" cy="24" r="15"/><path d="M24 15v18M15 24h18"/></svg>';
+}
+function renewalRows(){try{const raw=typeof expirationLeads362==='function'?expirationLeads362():[];const plist=products();const us=users();return raw.map(x=>{const ord=(state.orders||[]).find(o=>String(o?.id||'')===String(x?.orderId||''));const prod=plist.find(p=>String(p?.name||'').trim().toLowerCase()===String(x?.product||'').trim().toLowerCase());const k=prod?classifyCatalogKind(prod):( /perfil|suscrip|netflix|disney|max|prime|crunchy|vix|stream/i.test(String(x?.product||''))?'profile': /membres|invitaci|spotify|youtube/i.test(String(x?.product||''))?'membership':'other');let uid=ord?.userId||ord?.customer?.userId||null;if(!uid&&ord?.customer?.email)uid=us.find(u=>String(u?.email||'').toLowerCase()===String(ord.customer.email).toLowerCase())?.id||null;return {...x, userId:uid, days:n(x.days),kind:k,state:n(x.days)<0?'expired':n(x.days)<=5?'expiring':'upcoming'};}).filter(x=>x.kind==='profile'||x.kind==='membership');}catch(e){return []}}
+function syncRenewalNotifications392(){try{const nowRows=renewalRows().filter(x=>x.days>=0&&x.days<=5&&x.userId);if(!nowRows.length)return;const key='jm_digital_v23_notifications';let list=[];try{const raw=localStorage.getItem(key);list=raw?JSON.parse(raw):[]}catch(e){}if(!Array.isArray(list))list=[];let changed=false;for(const r of nowRows){const marker=`renewal5:${r.orderId||''}:${r.product||''}:${r.cutoff||''}`;const exists=list.some(n=>String(n?.renewalMarker||'')===marker);if(exists)continue;list.push({id:`ren_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,7)}`,target:'user',userId:r.userId,type:'Renovación',renewalMarker:marker,title:r.days===0?'Tu perfil vence hoy':'Tu perfil está por vencer',message:r.days===0?`Tu perfil de ${r.product||'tu servicio'} vence hoy. Si deseas continuar usando el mismo perfil, realiza la renovación antes del vencimiento.`:`Tu perfil de ${r.product||'tu servicio'} vence en ${r.days} día${r.days===1?'':'s'}. Si deseas continuar usando el mismo perfil, indícalo antes de la fecha de vencimiento.`,createdAt:new Date().toISOString()});changed=true;}if(changed)localStorage.setItem(key,JSON.stringify(list.slice(-300)));}catch(e){}}
+function renderDashboardDetail(title,subtitle,icon,body){
+ const x=ensureShell(); if(!x?.stage)return false;
+ x.stage.innerHTML=`<section class="cc390-detail-window" aria-label="${esc(title)}"><header class="cc390-detail-head"><button type="button" class="cc390-detail-back" id="cc390DetailBack">← <span>Panel General</span></button><div class="cc390-detail-title"><span class="cc390-detail-icon">${icon}</span><div><h1>${esc(title)}</h1><p>${esc(subtitle)}</p></div></div></header><div class="cc390-detail-body">${body}</div></section>`;
+ x.stage.querySelector('#cc390DetailBack')?.addEventListener('click',panelGeneral,{once:true}); x.overlay.scrollTop=0;x.overlay.scrollLeft=0; return true;
+}
+function detailList(title,desc,rows,empty='No hay información disponible.'){
+ return `<section class="cc390-info-section"><div class="cc390-info-section-head"><div><h2>${esc(title)}</h2><p>${esc(desc)}</p></div><span class="cc388-badge">${rows.length}</span></div>${rows.length?`<div class="cc390-info-list">${rows.map(r=>`<article class="cc390-info-row">${r}</article>`).join('')}</div>`:`<div class="cc390-empty">${esc(empty)}</div>`}</section>`;
+}
+function dashboardDetail(kind,key){
+ const os=orders(),ps=products(),us=users();
+ if(kind==='sales'){const rows=os.filter(paid);return renderDashboardDetail('Ventas confirmadas','Pedidos con pago confirmado o completados.',catalogKindIcon('membership'),detailList('Registro de ventas','Operaciones registradas.',rows.map(o=>`<div><b>${esc(o?.id||'Pedido')}</b><span>${esc(o?.customer?.fullName||'Cliente')} · ${esc(o?.status||o?.payment?.status||'Confirmado')}</span></div><strong>${esc(money(o?.total))}</strong>`),'Todavía no hay ventas confirmadas.'))}
+ if(kind==='clients'){return renderDashboardDetail('Clientes','Cuentas registradas actualmente.',catalogKindIcon('profile'),detailList('Clientes registrados','Información tomada del registro local.',us.map(u=>`<div><b>${esc(u?.fullName||u?.username||'Cliente')}</b><span>${esc(u?.email||'Sin correo registrado')}</span></div><strong>${esc(u?.phone||'')}</strong>`),'No hay clientes registrados.'))}
+ if(kind==='catalog'){const labels={profile:'Perfiles / suscripciones',membership:'Invitaciones / membresías',recharge:'Diamantes / recargas',course:'Cursos digitales',license:'Licencias / claves'};const list=key==='all'?ps:ps.filter(p=>classifyCatalogKind(p)===key);return renderDashboardDetail(labels[key]||'Catálogo digital','Productos de esta categoría.',catalogKindIcon(key),detailList(labels[key]||'Productos','Configuración actual del catálogo.',list.map(p=>`<div><b>${esc(p?.name||'Producto')}</b><span>${esc(p?.digitalKind||p?.digitalType||p?.category||'Producto digital')}</span></div><strong>${esc(money(p?.price))}</strong>`),'No hay productos configurados en esta categoría.'))}
+ if(kind==='order'){const o=os.find(v=>String(v?.id||'')===String(key)); if(!o)return renderDashboardDetail('Pedido','Información del pedido.','<svg viewBox="0 0 48 48"><rect x="9" y="7" width="30" height="34" rx="4"/></svg>','<div class="cc390-empty">No se encontró el pedido.</div>'); const items=(Array.isArray(o?.items)?o.items:[]).map(i=>`<div><b>${esc(i?.name||'Producto')}</b><span>Cantidad: ${n(i?.qty)||1}</span></div><strong>${esc(money(n(i?.price||0)*(n(i?.qty)||1)))}</strong>`);return renderDashboardDetail(`Pedido ${o?.id||''}`,'Detalle del pedido seleccionado.','<svg viewBox="0 0 48 48"><rect x="9" y="7" width="30" height="34" rx="4"/><path d="M16 15h16M16 22h16M16 29h8"/><path d="m29 31 3 3 6-7"/></svg>',detailList('Productos','Contenido registrado en el pedido.',items,'El pedido no tiene productos registrados.')+`<section class="cc390-detail-summary"><div><span>Cliente</span><b>${esc(o?.customer?.fullName||'Cliente')}</b></div><div><span>Estado</span><b>${esc(o?.status||o?.payment?.status||'Pendiente')}</b></div><div><span>Total</span><b>${esc(money(o?.total))}</b></div></section>`)}
+ if(kind==='storage')return renderDashboardDetail('Almacenamiento local','Espacio aproximado utilizado.','<svg viewBox="0 0 48 48"><rect x="8" y="10" width="32" height="28" rx="4"/><path d="M15 18h18M15 24h11M15 30h14"/></svg>',`<section class="cc390-detail-summary"><div><span>Estimación actual</span><b>${esc(storageInfo())}</b></div><div><span>Fuente</span><b>localStorage</b></div></section>`);
+ if(kind==='digital')return renderDashboardDetail('Modelo comercial','Estructura de operación de CRULOX.','<svg viewBox="0 0 48 48"><rect x="7" y="9" width="34" height="22" rx="4"/><path d="M18 39h12M24 31v8"/></svg>','<section class="cc390-detail-summary"><div><span>Modelo</span><b>100% digital</b></div><div><span>Entrega física</span><b>No aplica</b></div><div><span>Operación</span><b>Activaciones, recargas, perfiles, invitaciones y cursos</b></div></section>');
+ let rows=[];if(kind==='pending')rows=os.filter(o=>!['Completado','Entregado digital','Cancelado','Reserva vencida'].includes(String(o?.status||'')));else if(kind==='receipts')rows=os.filter(o=>!paid(o)&&receipt(o));else if(kind==='delivery')rows=os.filter(o=>String(o?.status||'')==='Listo para entregar');else if(kind==='renewals')rows=renewalRows().filter(x=>x.days>=0&&x.days<=5);else if(kind==='payments')rows=os.filter(o=>!paid(o));else if(kind==='preparing')rows=os.filter(o=>['Preparando acceso','Listo para entregar'].includes(String(o?.status||'')));
+ const labels={pending:['Pedidos pendientes','Pedidos todavía abiertos.'],receipts:['Comprobantes para verificar','Comprobantes sin pago confirmado.'],delivery:['Entregas pendientes','Pedidos listos para entrega digital.'],renewals:['Renovaciones ≤ 5 días','Perfiles que requieren seguimiento.'],payments:['Pagos por revisar','Pedidos con pago sin confirmar.'],preparing:['En preparación','Pedidos en preparación o listos.']};const [ttl,ds]=labels[kind]||['Información','Detalle operativo.'];const list=rows.map(o=>o?.kind==='expiration'?`<div><b>${esc(o.product||'Perfil')}</b><span>${esc(o.name||'Cliente')} · ${o.days===0?'vence hoy':`vence en ${o.days} día${o.days===1?'':'s'}`}</span></div><strong>${esc(o.cutoff||'')}</strong>`:`<div><b>${esc(o?.id||'Pedido')}</b><span>${esc(o?.customer?.fullName||'Cliente')} · ${esc(o?.status||o?.payment?.status||'Pendiente')}</span></div><strong>${esc(money(o?.total))}</strong>`);return renderDashboardDetail(ttl,ds,'<svg viewBox="0 0 48 48"><circle cx="24" cy="24" r="15"/><path d="M24 14v20M17 21h14M17 27h10"/></svg>',detailList(ttl,ds,list,'No hay registros que mostrar.'));
+}
+function rowsList(rows,stateName){if(!rows.length)return '<div class="cc390-empty">No hay registros en este grupo.</div>';return `<div class="cc390-renewal-list">${rows.slice(0,60).map(x=>`<button type="button" class="cc390-renewal-row" data-renewal-order="${esc(x.orderId||'')}"><span class="cc390-renewal-row-main"><b>${esc(x.product||'Perfil')}</b><small>${esc(x.name||'Cliente')} · ${esc(x.orderId||'')}</small></span><span class="cc390-renewal-row-status ${stateName}">${stateName==='expired'?'Vencido':x.days===0?'Hoy':`${x.days} d`}</span></button>`).join('')}</div>`;}
+function renewalModule(){syncRenewalNotifications392();const rows=renewalRows(),expiring=rows.filter(x=>x.days>=0&&x.days<=5),expired=rows.filter(x=>x.days<0),upcoming=rows.filter(x=>x.days>5);const x=ensureShell();if(!x?.stage)return false;x.stage.innerHTML=`<section class="cc378-module-window cc390-renewal-module"><header class="cc378-module-head"><button type="button" class="cc378-back" id="cc390RenewBack" aria-label="Volver a funciones">← <span class="cc389-back-label">Funciones</span></button><div class="cc378-module-id"><span class="cc378-module-icon">${iconFor389('renewals')}</span><div><h1>Renovaciones y Vencimientos</h1><p>Perfiles y cuentas por vencer, renovar o liberar.</p></div></div></header><div class="cc378-module-body"><section class="cc390-renewal-hero"><div><span class="cc388-kicker"><i></i>Ciclo de renovación</span><h2>Seguimiento de 5 días</h2><p>Los perfiles con vencimiento dentro de los próximos cinco días requieren aviso y seguimiento. Cuando el plan vence sin reactivación ni cancelación, pasa a estado de nueva venta y el cliente debe realizar una nueva compra.</p></div><div class="cc390-renewal-stats"><span><b>${expiring.length}</b> por vencer</span><span><b>${expired.length}</b> vencidos</span><span><b>${upcoming.length}</b> próximos</span></div></section><section class="cc390-renewal-grid"><article class="cc390-renewal-card"><div class="cc390-renewal-card-head"><h3>Por vencer en ≤ 5 días</h3><b>${expiring.length}</b></div><p>Perfiles dentro del período de aviso y seguimiento.</p>${rowsList(expiring,'expiring')}</article><article class="cc390-renewal-card expired"><div class="cc390-renewal-card-head"><h3>Vencidos · disponibles para nueva compra</h3><b>${expired.length}</b></div><p>Sin reactivación ni cancelación; requieren una nueva compra.</p>${rowsList(expired,'expired')}</article></section><section class="cc390-renewal-rule"><div class="cc390-rule-icon">!</div><div><b>Regla operativa</b><p>Vencido el plan, no se renueva automáticamente. Para perfiles cuyo método de entrega sea cambio de código, se conserva correo y contraseña y solo se cambia el código del perfil. La vuelta del cliente exige una <strong>nueva compra</strong>.</p></div></section></div></section>`;x.stage.querySelector('#cc390RenewBack')?.addEventListener('click',renderFunctions,{once:true});x.overlay.scrollTop=0;x.overlay.scrollLeft=0;return true;}
+function panelGeneral(){
+ syncRenewalNotifications392();
+ const x=ensureShell();if(!x?.stage)return false;const os=orders(),ps=products(),us=users();const pending=os.filter(o=>!['Completado','Entregado digital','Cancelado','Reserva vencida'].includes(String(o?.status||''))).length;const pp=os.filter(o=>!paid(o)&&!receipt(o)).length;const rp=os.filter(o=>!paid(o)&&receipt(o)).length;const del=os.filter(o=>String(o?.status||'')==='Listo para entregar').length;const prep=os.filter(o=>['Preparando acceso','Listo para entregar'].includes(String(o?.status||''))).length;const rev=os.filter(paid).reduce((s,o)=>s+n(o?.total),0);const ren=renewalRows().filter(r=>r.days>=0&&r.days<=5).length;const recent=os.slice().sort((a,b)=>Date.parse(b?.updatedAt||b?.createdAt||0)-Date.parse(a?.updatedAt||a?.createdAt||0)).slice(0,5);const kinds={recharge:0,profile:0,membership:0,course:0,license:0};ps.forEach(p=>{const k=classifyCatalogKind(p);if(kinds[k]!==undefined)kinds[k]++});const max=Math.max(1,...Object.values(kinds));const kpi=(k,t,v,sub)=>`<button type="button" class="cc388-kpi cc388-clickable" data-cc388-detail="${k}"><small>${t}</small><strong>${v}</strong><span>${sub}</span></button>`;const card=(k,t,num,desc,pct)=>`<button type="button" class="cc388-card cc388-clickable" data-cc388-detail="${k}"><div class="cc388-card-head"><h4>${t}</h4><span class="cc388-num">${num}</span></div><p>${desc}</p><div class="cc388-bar"><b style="--w:${pct}%"></b></div></button>`;const cats=[['profile','Perfiles / suscripciones'],['membership','Invitaciones / membresías'],['recharge','Diamantes / recargas'],['course','Cursos digitales'],['license','Licencias / claves']];x.stage.innerHTML=`<section class="cc388-dashboard"><div class="cc389-return-row"><button type="button" class="cc389-back" id="cc389PanelBack" aria-label="Regresar a las funciones">← <span>Funciones</span></button></div><section class="cc388-hero"><span class="cc388-kicker"><i></i>Panel General · control operativo</span><h2>Centro de control de CRULOX</h2><p>Vista central de pedidos, pagos, comprobantes, entregas, renovaciones y catálogo. Haz clic en cualquier indicador o registro para abrir su detalle.</p><span class="cc388-live">● Datos locales activos</span></section><section class="cc388-kpis">${kpi('sales','Ventas confirmadas',esc(money(rev)),'Ingresos registrados')}${kpi('pending','Pedidos activos',pending,'Requieren seguimiento')}${kpi('payments','Pagos por revisar',pp+rp,`${pp} sin comprobante · ${rp} con comprobante`)}${kpi('clients','Clientes',us.length,'Cuentas registradas')}</section><section class="cc388-section"><div class="cc388-section-head"><div><h3>Estado operativo</h3><p>Selecciona un bloque para consultar su información.</p></div></div><div class="cc388-grid">${card('pending','Pedidos pendientes',pending,'Pedidos todavía abiertos.',Math.min(100,(pending/Math.max(1,os.length))*100))}${card('receipts','Comprobantes para verificar',rp,'Comprobantes sin pago confirmado.',Math.min(100,(rp/Math.max(1,os.length))*100))}${card('delivery','Entregas pendientes',del,'Pedidos listos para entrega digital.',Math.min(100,(del/Math.max(1,os.length))*100))}${card('renewals','Renovaciones ≤ 5 días',ren,'Perfiles dentro del período de aviso.',Math.min(100,(ren/Math.max(1,os.length))*100))}</div></section><section class="cc388-section"><div class="cc388-section-head"><div><h3>Composición del catálogo digital</h3><p>Selecciona un tipo para ver los productos.</p></div><span class="cc388-badge">${ps.length} productos</span></div><div class="cc388-list">${cats.map(([k,l])=>`<button type="button" class="cc388-row cc388-clickable" data-cc388-detail="catalog:${k}"><span class="cc388-row-icon">${catalogKindIcon(k)}</span><div><b>${l}</b><span>${kinds[k]} producto${kinds[k]===1?'':'s'} configurado${kinds[k]===1?'':'s'}</span></div><span class="cc388-badge">${Math.round(kinds[k]/max*100)}%</span></button>`).join('')}</div></section><section class="cc388-section"><div class="cc388-section-head"><div><h3>Actividad reciente</h3><p>Selecciona un pedido para abrir su información.</p></div><span class="cc388-badge">${os.length} total</span></div>${recent.length?`<div class="cc388-list">${recent.map(o=>`<button type="button" class="cc388-row cc388-clickable" data-cc388-detail="order:${esc(o?.id||'')}"><span class="cc388-row-icon">${iconFor389('orders')}</span><div><b>${esc(o?.id||'Pedido')}</b><span>${esc(o?.customer?.fullName||'Cliente')} · ${esc(o?.status||o?.payment?.status||'Pendiente')}</span></div><span class="cc388-badge">${esc(money(o?.total))}</span></button>`).join('')}</div>`:'<div class="cc388-empty">Todavía no hay pedidos registrados.</div>'}</section><section class="cc388-section"><div class="cc388-section-head"><div><h3>Acciones rápidas</h3><p>Entrada directa a módulos operativos.</p></div></div><div class="cc388-actions"><button type="button" class="cc388-action" data-cc388-go="orders"><b>Pedidos</b><span>Revisar el flujo de pedidos.</span></button><button type="button" class="cc388-action" data-cc388-go="payments"><b>Pagos</b><span>Controlar pagos y comprobantes.</span></button><button type="button" class="cc388-action" data-cc388-go="delivery"><b>Entregas</b><span>Controlar entregas digitales.</span></button><button type="button" class="cc388-action" data-cc388-go="renewals"><b>Renovaciones</b><span>Ver vencimientos y nuevas compras.</span></button></div></section><section class="cc388-section"><div class="cc388-section-head"><div><h3>Estado del sistema</h3><p>Selecciona un indicador para consultar su información.</p></div></div><div class="cc388-system"><button type="button" data-cc388-detail="catalog:all"><small>Productos</small><b>${ps.length}</b></button><button type="button" data-cc388-detail="clients"><small>Clientes</small><b>${us.length}</b></button><button type="button" data-cc388-detail="pending"><small>Pedidos</small><b>${os.length}</b></button><button type="button" data-cc388-detail="preparing"><small>En preparación</small><b>${prep}</b></button><button type="button" data-cc388-detail="storage"><small>Almacenamiento local estimado</small><b>${esc(storageInfo())}</b></button><button type="button" data-cc388-detail="digital"><small>Modelo comercial</small><b>100% digital</b></button></div></section></section>`;x.stage.querySelectorAll('[data-cc388-go]').forEach(b=>b.addEventListener('click',()=>openModule(b.dataset.cc388Go),{once:true}));x.stage.querySelectorAll('[data-cc388-detail]').forEach(b=>b.addEventListener('click',()=>{const raw=b.dataset.cc388Detail||'';if(raw.startsWith('catalog:'))return dashboardDetail('catalog',raw.split(':')[1]);if(raw.startsWith('order:'))return dashboardDetail('order',raw.slice(6));return dashboardDetail(raw,'')},{once:true}));x.stage.querySelector('#cc389PanelBack')?.addEventListener('click',renderFunctions,{once:true});x.overlay.scrollTop=0;x.overlay.scrollLeft=0;return true;
+}
+const CC394_TOOLSETS=Object.freeze({
+  catalog:[["Vista del catálogo", "Ver estructura, categorías y disponibilidad"], ["Categorías", "Organizar productos por plataforma y tipo"], ["Disponibilidad", "Ver qué está disponible, reservado o agotado"], ["Buscador administrativo", "Localizar productos y servicios"], ["Orden y visibilidad", "Controlar posición y publicación"], ["Auditoría de catálogo", "Detectar productos incompletos o inconsistentes"]],
+  products:[["Crear producto o servicio", "Alta guiada con método de entrega"], ["Editar producto", "Precio, costo, descripción, imagen y reglas"], ["5 métodos de entrega", "ID de juego, correo, enlace, credenciales/perfil o curso"], ["Campos requeridos", "Definir ID, Gmail u otros datos obligatorios"], ["Precios y costos", "Precio de venta, costo y margen esperado"], ["Stock/cupos", "Controlar unidades, perfiles, invitaciones o plazas"], ["Variantes y planes", "Duraciones, paquetes y opciones"], ["Estado comercial", "Activo, oculto, agotado o suspendido"], ["Duplicar producto", "Crear variantes sin repetir configuración"], ["Validación previa", "Comprobar que el producto pueda venderse correctamente"]],
+  clients:[["Directorio de clientes", "Datos, contacto y estado"], ["Ficha 360°", "Compras, pagos, perfiles, incidencias y actividad"], ["Historial de compras", "Pedidos y productos adquiridos"], ["Servicios activos", "Perfiles, cursos, invitaciones y recargas"], ["Vencimientos por cliente", "Planes próximos a finalizar"], ["Segmentación", "Nuevos, recurrentes, VIP, inactivos o riesgo"], ["Notas internas", "Observaciones administrativas"], ["Bloqueos y restricciones", "Controlar abuso, fraude o incumplimientos"], ["Valor del cliente", "Compras acumuladas, ticket y LTV"], ["Exportar clientes", "Salida controlada de información"]],
+  sales:[["Ventas del día", "Operaciones confirmadas hoy"], ["Historial de ventas", "Consulta completa y filtros"], ["Venta por producto", "Rendimiento de cada servicio"], ["Venta por cliente", "Compras acumuladas por usuario"], ["Venta manual", "Registrar operación administrativa"], ["Reactivaciones", "Ventas originadas por recompra tras vencimiento"], ["Cancelaciones y devoluciones", "Control de operaciones revertidas"], ["Descuentos aplicados", "Impacto de promociones"], ["Canal de venta", "Tienda, admin, referido o campaña"], ["Cierre de ventas", "Resumen por día, semana y mes"]],
+  orders:[["Bandeja de pedidos", "Todos los pedidos y su etapa"], ["Pendientes de pago", "Pedidos todavía sin pago válido"], ["Comprobante recibido", "Pedidos listos para verificar"], ["Verificación final", "Revisar productos y datos antes de procesar"], ["En preparación", "Pedidos pagados en proceso de entrega"], ["Listos para entregar", "Cola final de entrega digital"], ["Completados", "Historial de pedidos terminados"], ["Cancelados/rechazados", "Motivos y trazabilidad"], ["Datos requeridos", "ID de juego, Gmail y datos específicos"], ["Timeline del pedido", "Registro cronológico de cada cambio"], ["Búsqueda y filtros", "Cliente, estado, producto, fecha o ID"], ["Acciones masivas", "Cambios controlados sobre varios pedidos"]],
+  delivery:[["Cola de entregas", "Pedidos listos para despacho digital"], ["Recarga por ID", "Entrega de diamantes u otros créditos"], ["Invitación por correo", "Servicios que requieren Gmail"], ["Enlace de invitación", "Spotify u otros servicios por enlace"], ["Credenciales y perfil", "Correo, contraseña y código asignado"], ["Curso digital", "Enlace y datos de acceso"], ["Plantillas de entrega", "Mensajes consistentes por tipo"], ["Confirmación de entrega", "Fecha, responsable y evidencia"], ["Reenvío controlado", "Volver a enviar sin duplicar la venta"], ["Entregas fallidas", "Errores, causa y reintento"], ["SLA de entrega", "Tiempo desde pago hasta entrega"]],
+  subscriptions:[["Suscripciones activas", "Planes actualmente ocupados"], ["Calendario de vencimientos", "Vista por fecha"], ["Avisos de 5 días", "Seguimiento previo al vencimiento"], ["Solicitudes de continuidad", "Clientes que desean conservar perfil"], ["Reactivaciones antes de vencer", "Continuidad del mismo perfil"], ["Vencidas", "Planes que terminaron sin continuidad"], ["Liberación automática", "Devolver cupo a disponibilidad al vencer"], ["Nueva compra posterior", "Registrar regreso del cliente como compra nueva"], ["Duración y ciclos", "30 días u otros periodos configurables"], ["Historial de renovaciones", "Trazabilidad por cliente y perfil"]],
+  profiles:[["Inventario de cuentas", "Cuentas maestras por plataforma"], ["Perfiles disponibles", "Cupos listos para vender"], ["Perfiles ocupados", "Asignaciones actuales"], ["Asignar perfil", "Vincular cliente, pedido y vencimiento"], ["Cambiar código de perfil", "Rotar solo el código cuando aplique"], ["Credenciales maestras", "Correo y contraseña de la cuenta"], ["Códigos de acceso", "Control individual por perfil"], ["Liberar perfil", "Devolver perfil a venta"], ["Estado de cuenta", "Activa, llena, suspendida o mantenimiento"], ["Capacidad", "Perfiles totales, ocupados y libres"], ["Historial de asignaciones", "Quién utilizó cada perfil y cuándo"], ["Alerta de modificación", "Registrar intentos o cambios no autorizados"]],
+  finance:[["Resumen financiero", "Ingresos, costos, gastos y utilidad"], ["Ingresos", "Ventas y otros ingresos registrados"], ["Egresos", "Gastos operativos y compras"], ["Costos variables", "Costo asociado a cada venta"], ["Costos fijos", "Gastos periódicos del negocio"], ["Flujo de caja", "Entradas y salidas de efectivo"], ["Cuentas por pagar", "Obligaciones pendientes"], ["Cuentas por cobrar", "Montos pendientes de recibir"], ["Presupuesto", "Plan y comparación contra real"], ["Conciliación", "Cruzar pagos, ventas y movimientos"], ["Cierre mensual", "Resultado consolidado del periodo"]],
+  payments:[["Pagos pendientes", "Operaciones esperando pago"], ["Comprobantes por verificar", "Cola de revisión"], ["Aprobar pago", "Confirmar monto y método"], ["Rechazar pago", "Motivo y devolución al cliente"], ["Métodos de pago", "Cuentas bancarias y medios disponibles"], ["Conciliación de pagos", "Cruzar comprobante con pedido"], ["Pagos duplicados", "Detección y revisión"], ["Pagos parciales", "Control cuando estén permitidos"], ["Historial de pagos", "Trazabilidad completa"], ["Reembolsos", "Registro y estado de devoluciones"]],
+  support:[["Bandeja de atención", "Consultas abiertas"], ["Tickets", "Casos con seguimiento"], ["Chat interno", "Conversaciones con clientes"], ["Casos por pedido", "Atención vinculada a una compra"], ["Problemas de acceso", "Credenciales, códigos o invitaciones"], ["Problemas de recarga", "ID incorrecto o entrega no reflejada"], ["Reclamos", "Registro y resolución"], ["Prioridades", "Normal, alta y urgente"], ["SLA de soporte", "Tiempo de primera respuesta y solución"], ["Historial del cliente", "Contexto antes de responder"]],
+  communication:[["Centro de mensajes", "Comunicaciones salientes"], ["Plantillas", "Mensajes de compra, pago y entrega"], ["Avisos de vencimiento", "Mensajes 5 días antes"], ["Confirmación de pago", "Aviso automático al aprobar"], ["Confirmación de entrega", "Mensaje final por método"], ["Mensajes masivos", "Segmentos autorizados"], ["Canales", "Chat, correo, WhatsApp u otros"], ["Historial de envíos", "Qué se envió, cuándo y a quién"], ["Preferencias del cliente", "Canales y consentimiento"]],
+  marketing:[["Panel de campañas", "Campañas activas y resultados"], ["Fuentes de clientes", "Origen de cada compra"], ["UTM/códigos de campaña", "Atribución comercial"], ["CAC", "Costo de adquisición de cliente"], ["Conversión", "Visitas o leads frente a compras"], ["Productos promocionados", "Rendimiento por producto"], ["Segmentos", "Audiencias por comportamiento"], ["Calendario comercial", "Planificación de campañas"], ["Presupuesto de marketing", "Inversión y retorno"], ["ROI de campaña", "Ingresos atribuibles vs gasto"]],
+  promotions:[["Cupones", "Códigos y condiciones"], ["Descuentos", "Porcentaje o monto fijo"], ["Promociones por producto", "Ofertas específicas"], ["Promociones por cliente", "Beneficios segmentados"], ["Combos", "Paquetes de productos"], ["Fechas de vigencia", "Inicio y vencimiento automático"], ["Límites de uso", "Por cliente o total"], ["Reglas de compatibilidad", "Evitar descuentos conflictivos"], ["Impacto en margen", "Validar rentabilidad antes de publicar"]],
+  loyalty:[["Puntos o saldo", "Beneficios acumulados"], ["Niveles de cliente", "Segmentos por fidelidad"], ["Recompensas", "Beneficios canjeables"], ["Compras recurrentes", "Frecuencia y retención"], ["Clientes inactivos", "Campañas de recuperación"], ["Beneficios por antigüedad", "Premios por permanencia"], ["Historial de canjes", "Control de recompensas"], ["Costo de fidelización", "Impacto financiero del programa"]],
+  referrals:[["Códigos de referido", "Identificador por cliente"], ["Referidos registrados", "Quién invitó a quién"], ["Compras por referido", "Conversión real"], ["Recompensas pendientes", "Beneficios por aprobar"], ["Recompensas pagadas", "Historial"], ["Fraude de referidos", "Duplicados o auto-referidos"], ["Ranking de referidores", "Mejores promotores"], ["Costo y retorno", "Rentabilidad del programa"]],
+  stats:[["Ventas", "Tendencias y crecimiento"], ["Pedidos", "Volumen y estados"], ["Clientes", "Nuevos, recurrentes e inactivos"], ["Productos", "Más vendidos y desempeño"], ["Renovaciones", "Continuidad, vencimiento y recompra"], ["Entregas", "Tiempos y éxito"], ["Pagos", "Aprobación y rechazo"], ["Soporte", "Casos y tiempos de solución"], ["Conversión", "Compra iniciada vs completada"], ["Panel comparativo", "Hoy, semana, mes y periodo anterior"]],
+  reports:[["Reporte de ventas", "Detalle por periodo"], ["Reporte financiero", "Ingresos, costos y utilidad"], ["Reporte de productos", "Rendimiento del catálogo"], ["Reporte de clientes", "Actividad y valor"], ["Reporte de suscripciones", "Activas, vencidas y reactivadas"], ["Reporte de cuentas/perfiles", "Ocupación y disponibilidad"], ["Reporte de pagos", "Aprobados, rechazados y pendientes"], ["Reporte de entregas", "Estado y tiempos"], ["Reporte de incidencias", "Casos y resolución"], ["Reporte de auditoría", "Acciones administrativas"], ["Exportar reportes", "CSV/JSON según compatibilidad"]],
+  notifications:[["Centro de notificaciones", "Avisos del sistema"], ["Vencimiento 5 días", "Aviso preventivo al cliente"], ["Pago recibido", "Aviso al administrador"], ["Pago aprobado/rechazado", "Resultado al cliente"], ["Pedido actualizado", "Cambios de estado"], ["Entrega lista", "Aviso previo a entrega"], ["Entrega completada", "Confirmación final"], ["Stock/cupo bajo", "Aviso operativo"], ["Incidencia crítica", "Escalamiento administrativo"], ["Preferencias", "Qué avisos recibe cada usuario"]],
+  alerts:[["Alertas críticas", "Problemas que requieren acción"], ["Perfiles por vencer", "Ventana de 5 días"], ["Cuenta llena", "Sin cupos disponibles"], ["Stock agotado", "Producto no vendible"], ["Pago sospechoso", "Revisión manual"], ["Pedido estancado", "Sin avance por tiempo excesivo"], ["Entrega retrasada", "SLA superado"], ["Errores de datos", "Información obligatoria faltante"], ["Seguridad", "Intentos o cambios sensibles"]],
+  incidents:[["Nueva incidencia", "Registrar problema"], ["Incidencias abiertas", "Casos sin resolver"], ["Por pedido", "Problemas vinculados a compra"], ["Por cuenta/perfil", "Acceso o modificación"], ["Por pago", "Comprobante o conciliación"], ["Por entrega", "Fallo de despacho"], ["Severidad", "Baja, media, alta, crítica"], ["Responsable", "Asignación interna"], ["Resolución", "Causa, solución y cierre"], ["Historial", "Trazabilidad del caso"]],
+  receipts:[["Bandeja de comprobantes", "Archivos recibidos"], ["Pendientes de verificar", "Cola prioritaria"], ["Aprobados", "Comprobantes validados"], ["Rechazados", "Motivo y nueva carga"], ["Vista ampliada", "Revisión legible del archivo"], ["Vincular a pedido", "Relación obligatoria"], ["Datos del pago", "Monto, fecha, referencia y método"], ["Duplicados", "Control de reutilización"], ["Historial", "Auditoría de verificaciones"]],
+  suppliers:[["Directorio de proveedores", "Datos y contacto"], ["Productos suministrados", "Servicios asociados"], ["Costos de compra", "Costo vigente por producto"], ["Historial de precios", "Cambios de costo"], ["Cuentas por pagar", "Obligaciones con proveedor"], ["Compras a proveedor", "Registro de abastecimiento"], ["Calidad/fiabilidad", "Incidencias y cumplimiento"], ["Tiempo de entrega", "Rendimiento del proveedor"], ["Proveedor alterno", "Plan de contingencia"]],
+  commissions:[["Reglas de comisión", "Porcentaje o monto"], ["Comisiones por venta", "Cálculo por operación"], ["Comisiones por referido", "Beneficios vinculados"], ["Comisiones pendientes", "Por liquidar"], ["Comisiones pagadas", "Historial"], ["Beneficiarios", "Usuarios o socios"], ["Ajustes", "Correcciones con trazabilidad"], ["Reporte de comisiones", "Resumen por periodo"]],
+  profitability:[["Margen bruto", "Venta menos costo directo"], ["Margen de contribución", "Venta menos costos variables"], ["Margen neto", "Utilidad final sobre ventas"], ["Rentabilidad por producto", "Margen individual"], ["Rentabilidad por plataforma", "Comparación de servicios"], ["Rentabilidad por cliente", "Valor frente a costo de atención"], ["Punto de equilibrio", "Ventas mínimas necesarias"], ["Productos no rentables", "Alertas por margen bajo"], ["Escenarios de precio", "Simular precio, costo y margen"], ["Ranking de rentabilidad", "Mejores y peores productos"]],
+  history:[["Actividad reciente", "Últimos cambios del sistema"], ["Historial por usuario", "Acciones de cada administrador"], ["Historial por pedido", "Cambios de estado"], ["Historial por cliente", "Acciones relacionadas"], ["Historial por producto", "Cambios de precio o disponibilidad"], ["Historial por perfil", "Asignaciones y liberaciones"], ["Filtros de fecha", "Consultar periodos"], ["Búsqueda", "Localizar eventos"]],
+  audit:[["Bitácora de auditoría", "Registro inalterable lógico"], ["Cambios sensibles", "Credenciales, permisos y pagos"], ["Auditoría de pedidos", "Estados y responsables"], ["Auditoría de perfiles", "Asignación y códigos"], ["Auditoría financiera", "Cambios de montos y costos"], ["Auditoría de acceso", "Inicios y cierres de sesión"], ["Comparar cambios", "Antes y después"], ["Exportar auditoría", "Respaldo para revisión"]],
+  permissions:[["Usuarios administrativos", "Personal con acceso"], ["Roles", "Dueño, administrador, soporte, finanzas"], ["Permisos por función", "Acceso granular"], ["Permisos por acción", "Ver, crear, editar, aprobar, eliminar"], ["Sesiones activas", "Control de accesos"], ["Revocar acceso", "Bloqueo inmediato"], ["Historial de permisos", "Quién cambió qué"], ["Principio de mínimo acceso", "Revisión de privilegios"]],
+  security:[["Centro de seguridad", "Estado general"], ["Inicio de sesión", "Protección del panel"], ["Cambio de contraseña", "Credenciales administrativas"], ["Sesiones", "Dispositivos y accesos"], ["Bloqueos", "Intentos fallidos"], ["Datos sensibles", "Protección de credenciales de perfiles"], ["Acciones críticas", "Confirmación reforzada"], ["Registro de seguridad", "Eventos relevantes"], ["Revisión periódica", "Lista de controles"]],
+  automation:[["Motor de automatización", "Reglas y flujos"], ["Aviso 5 días antes", "Notificar vencimiento"], ["Liberar al vencer", "Perfil vuelve a disponibilidad"], ["Cambio de estado por pago", "Mover pedido al aprobar"], ["Crear entrega", "Generar tarea según método"], ["Notificación de entrega", "Avisar al completar"], ["Alertar pedido estancado", "Seguimiento por tiempo"], ["Stock/cupo automático", "Actualizar disponibilidad"], ["Reactivación", "Continuidad antes de vencer"], ["Nueva compra tras vencimiento", "Evitar renovación fuera de plazo"], ["Registro automático", "Guardar cada acción ejecutada"]],
+  integrations:[["Métodos de pago", "Conexiones disponibles"], ["Mensajería", "Canales externos"], ["Correo", "Invitaciones y avisos"], ["WhatsApp", "Atención y notificaciones"], ["Webhooks", "Eventos hacia otros sistemas"], ["API", "Conexiones futuras"], ["Estado de integración", "Salud y última sincronización"], ["Credenciales de integración", "Gestión segura de claves"], ["Logs de integración", "Errores y respuestas"]],
+  content:[["Banners", "Contenido visual de tienda"], ["Textos de ayuda", "Cómo comprar y preguntas frecuentes"], ["Políticas", "Términos y condiciones"], ["Mensajes de checkout", "Instrucciones de pago y verificación"], ["Plantillas de producto", "Descripciones reutilizables"], ["Avisos legales", "Información obligatoria"], ["SEO/metadatos", "Contenido de presentación"], ["Publicación", "Borrador, activo o programado"]],
+  files:[["Biblioteca de archivos", "Recursos del sistema"], ["Comprobantes", "Archivos de pago"], ["Imágenes de productos", "Multimedia comercial"], ["Material de cursos", "Enlaces y recursos"], ["Documentos internos", "Archivos administrativos"], ["Organización", "Carpetas y etiquetas"], ["Archivos huérfanos", "Detectar recursos sin vínculo"], ["Límites y tamaño", "Control de almacenamiento"], ["Eliminar/archivar", "Gestión controlada"]],
+  importexport:[["Importar productos", "Carga masiva"], ["Importar clientes", "Migración controlada"], ["Importar perfiles", "Inventario de cuentas"], ["Exportar ventas", "Datos por periodo"], ["Exportar clientes", "Directorio y métricas"], ["Exportar pedidos", "Historial operativo"], ["Exportar finanzas", "Movimientos y resultados"], ["Validación de importación", "Previsualizar errores antes de guardar"], ["Plantillas", "Formatos compatibles"]],
+  backup:[["Crear respaldo", "Copia completa de datos"], ["Respaldos automáticos", "Programación futura"], ["Historial de respaldos", "Versiones disponibles"], ["Restaurar respaldo", "Recuperación controlada"], ["Verificar respaldo", "Comprobar integridad"], ["Exportar JSON", "Copia portable"], ["Recuperación de emergencia", "Procedimiento ante pérdida"], ["Política de retención", "Cuántas copias conservar"]],
+  settings:[["Datos del negocio", "Nombre, marca y contacto"], ["Moneda", "Configuración monetaria"], ["Métodos de pago", "Cuentas visibles al cliente"], ["Reglas de compra", "Flujo carrito → pago → verificación"], ["Métodos de entrega", "Configurar los 5 tipos"], ["Renovaciones", "Ventana de aviso de 5 días"], ["Estados del pedido", "Flujo operativo"], ["Notificaciones", "Reglas generales"], ["Seguridad", "Preferencias administrativas"], ["Apariencia", "Identidad visual"], ["Fechas y zona horaria", "Configuración regional"], ["Mantenimiento", "Modo operativo y diagnóstico"]]
+});
+
+function cc394ToolIcon(i){const a=['◈','◎','◇','▣','↻','✓','⌁','⊙','△','≡','⇄','⊕'];return a[i%a.length]}
+function cc394ModuleSummary(id){const os=orders(),ps=products(),us=users();const data={catalog:[ps.length,'productos'],products:[ps.length,'productos'],clients:[us.length,'clientes'],sales:[os.filter(paid).length,'ventas confirmadas'],orders:[os.length,'pedidos'],delivery:[os.filter(o=>String(o?.status||'')==='Listo para entregar').length,'por entregar'],subscriptions:[renewalRows().length,'suscripciones/perfiles'],profiles:[renewalRows().length,'asignaciones detectadas'],finance:[os.filter(paid).reduce((a,o)=>a+n(o?.total),0),'ingresos confirmados'],payments:[os.filter(o=>receipt(o)&&!paid(o)).length,'por verificar'],receipts:[os.filter(o=>receipt(o)&&!paid(o)).length,'comprobantes pendientes']};return data[id]||[0,'registros vinculados']}
+function cc394OpenTool(moduleId,index){const info=MODULES[moduleId],tools=CC394_TOOLSETS[moduleId]||[],t=tools[index];if(!info||!t)return false;const x=ensureShell();if(!x?.stage)return false;const os=orders(),ps=products(),us=users();let rows=[];
+ if(moduleId==='orders')rows=os.slice(-20).reverse().map(o=>[o?.id||'Pedido',o?.customer?.fullName||'Cliente',o?.status||o?.payment?.status||'Pendiente',money(o?.total)]);
+ else if(moduleId==='clients')rows=us.slice(-20).reverse().map(u=>[u?.fullName||u?.username||'Cliente',u?.email||'Sin correo',u?.phone||'', '']);
+ else if(['catalog','products'].includes(moduleId))rows=ps.slice(0,20).map(p=>[p?.name||'Producto',p?.category||p?.digitalKind||'Digital',p?.active===false?'Oculto':'Activo',money(p?.price)]);
+ else if(['sales','payments','receipts','delivery'].includes(moduleId))rows=os.slice(-20).reverse().map(o=>[o?.id||'Pedido',o?.customer?.fullName||'Cliente',o?.payment?.status||o?.status||'Pendiente',money(o?.total)]);
+ else if(['subscriptions','profiles'].includes(moduleId))rows=renewalRows().slice(0,20).map(r=>[r?.product||'Servicio',r?.days<0?'Vencido':`${r?.days} días`,r?.state||'',r?.orderId||'']);
+ const table=rows.length?`<div class="cc394-table">${rows.map(r=>`<div class="cc394-tr">${r.map((c,j)=>`<span class="c${j}">${esc(c)}</span>`).join('')}</div>`).join('')}</div>`:`<div class="cc390-empty">No hay registros vinculados todavía. La herramienta queda disponible y mostrará información cuando el sistema tenga datos.</div>`;
+ x.stage.innerHTML=`<section class="cc378-module-window"><header class="cc378-module-head"><button class="cc378-back" id="cc394ToolBack">← <span>Volver</span></button><div class="cc378-module-id"><span class="cc378-module-icon">${iconFor389(moduleId)}</span><div><h1>${esc(t[0])}</h1><p>${esc(info[1])} · ${esc(t[1])}</p></div></div></header><div class="cc378-module-body cc394-tool-view"><section class="cc394-tool-hero"><span>${cc394ToolIcon(index)}</span><div><small>HERRAMIENTA OPERATIVA</small><h2>${esc(t[0])}</h2><p>${esc(t[1])}</p></div></section><section class="cc394-info"><div><small>Módulo</small><b>${esc(info[1])}</b></div><div><small>Estado</small><b>Disponible</b></div><div><small>Fuente</small><b>Datos del sistema</b></div></section>${table}<p class="cc394-note">Esta vista no inventa datos. Cuando una automatización dependa de servicios externos (pagos, correo, WhatsApp o backend), requerirá su integración real para ejecutarse automáticamente.</p></div></section>`;
+ D.getElementById('cc394ToolBack')?.addEventListener('click',()=>openModule(moduleId),{once:true});x.overlay.scrollTop=0;return true;
+}
+function openModule(id){if(id==='panel')return panelGeneral();if(id==='renewals')return renewalModule();const x=ensureShell();if(!x?.stage)return false;const info=MODULES[id];if(!info)return false;const ico=iconFor389(id),tools=CC394_TOOLSETS[id]||[];const summary=cc394ModuleSummary(id);x.stage.innerHTML=`<section class="cc378-module-window" data-cc378-window="${esc(id)}"><header class="cc378-module-head"><button type="button" class="cc378-back" id="cc388Back" aria-label="Volver a funciones">← <span>Funciones</span></button><div class="cc378-module-id"><span class="cc378-module-icon">${ico}</span><div><h1>${esc(info[1])}</h1><p>${esc(info[2])}</p></div></div></header><div class="cc378-module-body cc394-module-body"><section class="cc394-module-hero"><div><small>CENTRO OPERATIVO</small><h2>${esc(info[1])}</h2><p>${esc(info[2])}</p></div><div class="cc394-module-count"><b>${tools.length}</b><span>herramientas</span></div></section><div class="cc394-module-stat"><b>${typeof summary[0]==='number'&&id==='finance'?money(summary[0]):esc(summary[0])}</b><span>${esc(summary[1])}</span></div><div class="cc394-tools-grid">${tools.map((t,i)=>`<button type="button" class="cc394-tool-card" data-cc394-tool="${i}"><span class="cc394-tool-symbol">${cc394ToolIcon(i)}</span><span><b>${esc(t[0])}</b><small>${esc(t[1])}</small></span><em>›</em></button>`).join('')}</div></div></section>`;D.getElementById('cc388Back')?.addEventListener('click',renderFunctions,{once:true});x.stage.querySelectorAll('[data-cc394-tool]').forEach(b=>b.addEventListener('click',()=>cc394OpenTool(id,Number(b.dataset.cc394Tool)),{once:true}));x.overlay.scrollTop=0;x.overlay.scrollLeft=0;return true;}
+function install(){if(!D.getElementById('adminOverlay'))return false;try{window.openAdmin=openAdmin;window.renderAdminSection=(id)=>id?openModule(id):renderFunctions;window.renderAdminV2=(id)=>openModule(id||'panel')}catch(e){}try{openAdmin=openAdmin;renderAdminSection=window.renderAdminSection;renderAdminV2=window.renderAdminV2}catch(e){}return true}
+// Capture final admin navigation so no legacy layer can hijack module clicks.
+D.addEventListener('click',e=>{const b=e.target?.closest?.('#cc378AdminNav [data-cc378-section]');if(!b)return;e.preventDefault();e.stopImmediatePropagation();openModule(b.dataset.cc378Section)},true);
+D.addEventListener('click',e=>{const t=e.target?.closest?.('#cc378Store,#cc378Logout,#adminStoreBtn,#adminLogout');if(!t)return;e.preventDefault();e.stopImmediatePropagation();if(t.id==='cc378Logout'||t.id==='adminLogout')logout();else closeAdmin()},true);
+D.addEventListener('click',e=>{const p=e.target?.closest?.('#profileBtn,#drawerProfile,#footerProfile');if(!p)return;let ok=false;try{ok=window.CRUZCLICK_V3718?.ownerSession?.()||false}catch(_){}if(!ok)return;e.preventDefault();e.stopImmediatePropagation();openAdmin()},true);
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>setTimeout(install,0),{once:true});else setTimeout(install,0);setTimeout(install,200);setTimeout(install,1000);
+function bootLeakGuard389(){try{scrubRuntimeLeak389();}catch(e){}}
+if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',()=>{bootLeakGuard389();setTimeout(bootLeakGuard389,250);setTimeout(bootLeakGuard389,1000)},{once:true});else{bootLeakGuard389();setTimeout(bootLeakGuard389,250);setTimeout(bootLeakGuard389,1000)}
+new MutationObserver(()=>{try{scrubRuntimeLeak389()}catch(e){}}).observe(D.body,{childList:true,subtree:true});
+window.CRUZCLICK_V388=Object.freeze({version:'3.8.9',openAdmin,closeAdmin,logout,renderFunctions,openModule,panelGeneral});
+})();
+</script>
+
+<script id="cruzclick-v389-selftest">
+(()=>{
+  'use strict';
+  function run(){
+    const nav=document.getElementById('cc378AdminNav');
+    const buttons=nav?[...nav.querySelectorAll('[data-cc378-section]')]:[];
+    const iconOk=buttons.length===37&&buttons.every(b=>b.querySelector('svg'));
+    const expected=['panel','catalog','products','clients','sales','orders','delivery','subscriptions','profiles','finance','payments','support','communication','marketing','promotions','loyalty','referrals','stats','reports','notifications','alerts','incidents','receipts','suppliers','commissions','profitability','history','audit','permissions','security','automation','integrations','content','files','importexport','backup','settings'];const orderOk=buttons.map(b=>b.dataset.cc378Section).join(',')===expected.join(',');
+    const returnOk=!!document.getElementById('cc389PanelBack')||!!document.getElementById('cc388Back');
+    const visibleLeak=!!document.body.innerText.match(/adminObs34|JM_DIGITAL_STORE_V34|w\.document\.write|window\.JM_DIGITAL_STORE_V34/);
+    window.CRUZCLICK_V389_SELF_TEST={version:'3.8.9',iconOk,orderOk,returnOk,visibleLeak,ok:iconOk&&orderOk&&!visibleLeak};
+    document.documentElement.dataset.ccV389=window.CRUZCLICK_V389_SELF_TEST.ok?'ok':'review';
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(run,250),{once:true});else setTimeout(run,250);
+})();
+</script>
+
+
+<!-- CRULOX V3.9.0 · Capa de presentación profesional + aislamiento de errores -->
+<style id="cruzclick-v390-premium-stability">
+/* =========================================================
+   V3.9.0 — SOLO PANEL ADMINISTRATIVO
+   - Corrige el botón de retorno que se partía verticalmente.
+   - Centra los iconos de las 37 funciones.
+   - Mejora jerarquía visual, profundidad y legibilidad.
+   - Evita overflow horizontal y textos comprimidos.
+   ========================================================= */
+#adminOverlay .cc378-admin,
+#adminOverlay .cc378-admin *{box-sizing:border-box}
+
+#adminOverlay .cc378-admin{
+  --a-cyan:#55ecff;
+  --a-blue:#668cff;
+  --a-green:#2ff0a3;
+  --a-red:#ff5e78;
+  --a-text:#f4fbff;
+  --a-soft:#9ab5c5;
+  --a-line:rgba(111,222,255,.14);
+  background:
+    radial-gradient(900px 500px at 50% -10%,rgba(0,231,255,.12),transparent 68%),
+    radial-gradient(600px 420px at 100% 30%,rgba(91,99,255,.10),transparent 68%),
+    radial-gradient(650px 420px at 0% 80%,rgba(0,255,180,.06),transparent 68%),
+    linear-gradient(180deg,#020812 0%,#03131f 46%,#020810 100%);
+}
+
+#adminOverlay .cc378-bar{
+  min-height:72px!important;
+  padding:12px 14px!important;
+  border-radius:22px!important;
+  border-color:rgba(119,229,255,.18)!important;
+  background:
+    linear-gradient(135deg,rgba(12,34,53,.94),rgba(4,16,28,.91))!important;
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.36),
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 0 0 1px rgba(0,210,255,.025)!important;
+}
+
+#adminOverlay .cc378-brand{gap:11px!important}
+#adminOverlay .cc378-brand img{
+  width:42px!important;height:42px!important;flex-basis:42px!important;
+  border-radius:13px!important;
+  box-shadow:0 0 30px rgba(0,226,255,.14)!important;
+}
+#adminOverlay .cc378-brand b{font-size:.91rem!important;letter-spac

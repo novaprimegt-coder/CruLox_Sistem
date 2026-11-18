@@ -1,0 +1,1328 @@
+ng:5,reviews:0,images:[],videoUrl:'',description:'',badgeText:'',featured:false});
+    const imgs=(p.images||[]).filter(Boolean).slice(0,2);
+    return `<form id="productForm"><div class="form-grid"><div class="field full"><label>Nombre</label><input id="pfName" value="${esc(p.name)}" required></div><div class="field"><label>Categoría</label><input id="pfCategory" value="${esc(p.category)}" required></div><div class="field"><label>Existencias</label><input id="pfStock" type="number" min="0" value="${Number(p.stock||0)}" required></div><div class="field"><label>Precio</label><input id="pfPrice" type="number" step="0.01" min="0" value="${p.price}" required></div><div class="field"><label>Precio anterior</label><input id="pfOldPrice" type="number" step="0.01" min="0" value="${p.oldPrice??''}"></div><div class="field"><label>Calificación</label><input id="pfRating" type="number" step="0.1" min="0" max="5" value="${p.rating}"></div><div class="field"><label>Reseñas</label><input id="pfReviews" type="number" min="0" value="${p.reviews}"></div><div class="field full"><label>Imágenes del producto · máximo 2</label><div class="np-media-manager"><div class="np-media-grid" id="pfMediaPreview">${productMediaSlot(0,imgs[0]||'')}${productMediaSlot(1,imgs[1]||'')}</div><p class="np-media-help">Cada imagen se administra por separado. Puedes cambiar o eliminar una sin copiar ni editar enlaces internos.</p></div></div><div class="field full"><label>Enlace del video emergente</label><input id="pfVideoUrl" value="${esc(p.videoUrl||'')}" placeholder="https://tu-reproductor.com/video"><p class="np-media-help">El video continúa administrándose mediante enlace; las imágenes se guardan visualmente.</p></div><div class="field"><label>Etiqueta</label><input id="pfBadgeText" value="${esc(p.badgeText||'')}" placeholder="Nuevo, Oferta..."></div><div class="field"><label>Destacado</label><select id="pfFeatured"><option value="false" ${!p.featured?'selected':''}>No</option><option value="true" ${p.featured?'selected':''}>Sí</option></select></div><div class="field full"><label>Descripción</label><textarea id="pfDescription" required>${esc(p.description||'')}</textarea></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Guardar producto</button></div></form>`;
+  }
+  function bindProductMediaDraft(draft){
+    const render=()=>{const host=$('pfMediaPreview');if(!host)return;host.innerHTML=productMediaSlot(0,draft[0]||'')+productMediaSlot(1,draft[1]||'');bind()};
+    const bind=()=>{
+      [0,1].forEach(index=>{const input=$(`pfFile${index+1}`);if(input)input.onchange=async()=>{const file=input.files?.[0];if(!file)return;try{draft[index]=await optimizeImageFile(file,{maxWidth:1200,maxHeight:900,quality:.86});render()}catch(error){toast('No fue posible procesar la imagen.','error')}}});
+      document.querySelectorAll('[data-remove-pf-image]').forEach(btn=>btn.onclick=()=>{const idx=Number(btn.dataset.removePfImage);draft[idx]='';if(idx===0&&draft[1]){draft[0]=draft[1];draft[1]=''}render()});
+    };bind();return render;
+  }
+  productForm=productFormV104;
+  openProductEditor=function(id=null){
+    const product=id?state.products.find(p=>p.id===id):null;const normalized=normalizeProductMediaRecord(product||{});const draft=[...(normalized.images||[]).slice(0,2)];
+    $('crudTitle').textContent=product?'Editar producto':'Agregar producto';$('crudBody').innerHTML=productFormV104(product);openModal('crudModal');bindProductMediaDraft(draft);upgradeAdminControls($('crudBody'));
+    $('productForm').onsubmit=e=>{e.preventDefault();const images=draft.filter(Boolean).slice(0,2);if(!images.length){showModalNotice('Agrega al menos una imagen al producto.','warn','crudModal');return}const videoUrl=normalizeProductVideoLink($('pfVideoUrl').value);if($('pfVideoUrl').value.trim()&&!videoUrl){showModalNotice('El enlace del video no es válido.','warn','crudModal');return}const data={name:$('pfName').value.trim(),category:$('pfCategory').value.trim(),stock:Number($('pfStock').value),price:Number($('pfPrice').value),oldPrice:$('pfOldPrice').value?Number($('pfOldPrice').value):null,rating:Number($('pfRating').value||0),reviews:Number($('pfReviews').value||0),image:images[0],image2:images[1]||'',images,videoUrl,description:$('pfDescription').value.trim(),badgeText:$('pfBadgeText').value.trim()||null,badge:$('pfBadgeText').value.trim()?'custom':null,featured:$('pfFeatured').value==='true'};if(!data.name||!data.category||!Number.isFinite(data.price)||data.price<0){showModalNotice('Revisa nombre, categoría y precio.','warn','crudModal');return}if(product)Object.assign(product,data);else state.products.unshift({id:uid('p'),...data});write(KEYS.products,state.products);logActivity(product?'Producto editado':'Producto agregado',data.name);closeModal('crudModal');renderAdminSection('products');toast('Producto guardado y sincronizado con la tienda.','success')};
+  };
+
+  /* ---------- Combo: imagen administrada como recurso visual ---------- */
+  function comboImageMarkup(src){return `<div class="np-media-manager"><div class="np-media-grid one"><div class="np-media-slot ${src?'':'empty'}" id="cfImagePreview">${src?`<img src="${esc(src)}" alt="Imagen del combo">`:''}<span class="np-media-slot-label">Imagen del combo</span><div class="np-media-slot-actions"><label class="np-media-pick" for="cfFile">${src?'Cambiar':'Añadir'}</label>${src?'<button type="button" class="danger" id="cfRemoveImage">Eliminar</button>':''}</div><input class="np-media-input" id="cfFile" type="file" accept="image/*"></div></div><p class="np-media-help">La imagen se muestra y se administra por separado; no se expone como texto codificado.</p></div>`}
+  comboForm=function(combo=null){const c=combo||{id:'',name:'',price:'',oldPrice:'',image:'',description:'',details:'',includes:['']};return `<form id="comboForm"><div class="form-grid"><div class="field full"><label>Nombre del combo</label><input id="cfName" value="${esc(c.name||'')}" required></div><div class="field"><label>Precio</label><input id="cfPrice" type="number" step="0.01" min="0" value="${c.price||''}" required></div><div class="field"><label>Precio anterior</label><input id="cfOldPrice" type="number" step="0.01" min="0" value="${c.oldPrice??''}"></div><div class="field full"><label>Imagen</label>${comboImageMarkup(c.image||'')}</div><div class="field full"><label>Información breve</label><textarea id="cfDescription" required>${esc(c.description||'')}</textarea></div><div class="field full"><label>Detalles ampliados</label><textarea id="cfDetails">${esc(c.details||'')}</textarea></div><div class="field full"><label>Elementos incluidos · separados por coma</label><input id="cfIncludes" value="${esc((c.includes||[]).join(', '))}"></div><div class="field"><label>Etiqueta superior opcional</label><input id="cfBadgeText" value="${esc(c.badgeText||'')}" placeholder="AHORRA 21%"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar combo</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`};
+  openComboEditor=function(id=null){const combo=id?state.combos.find(c=>c.id===id):null;let image=combo?.image||'';$('crudTitle').textContent=combo?'Editar combo':'Agregar combo';$('crudBody').innerHTML=comboForm(combo);openModal('crudModal');upgradeAdminControls($('crudBody'));const bind=()=>{const file=$('cfFile');if(file)file.onchange=async()=>{const f=file.files?.[0];if(!f)return;try{image=await optimizeImageFile(f,{maxWidth:1600,maxHeight:1600,quality:.9});$('cfImagePreview').innerHTML=comboImageMarkup(image).match(/<div class="np-media-slot[\s\S]*?<\/div><\/div>/)?.[0]||'';$('crudBody').innerHTML=comboForm({...combo,image,name:$('cfName')?.value||combo?.name||'',price:$('cfPrice')?.value||combo?.price||'',oldPrice:$('cfOldPrice')?.value||combo?.oldPrice||'',description:$('cfDescription')?.value||combo?.description||'',details:$('cfDetails')?.value||combo?.details||'',includes:($('cfIncludes')?.value||'').split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText')?.value||combo?.badgeText||''});bindForm()}catch(error){toast('No fue posible procesar la imagen.','error')}};const del=$('cfRemoveImage');if(del)del.onclick=()=>{image='';const values=capture();$('crudBody').innerHTML=comboForm({...values,image:''});bindForm()}};
+    const capture=()=>({name:$('cfName')?.value||'',price:$('cfPrice')?.value||'',oldPrice:$('cfOldPrice')?.value||'',description:$('cfDescription')?.value||'',details:$('cfDetails')?.value||'',includes:($('cfIncludes')?.value||'').split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText')?.value||''});
+    const bindForm=()=>{upgradeAdminControls($('crudBody'));bind();$('comboForm').onsubmit=e=>{e.preventDefault();if(!image){showModalNotice('Agrega una imagen al combo.','warn','crudModal');return}const data=normalizeComboRecord({name:$('cfName').value.trim(),price:Number($('cfPrice').value||0),oldPrice:$('cfOldPrice').value?Number($('cfOldPrice').value):null,image,description:$('cfDescription').value.trim(),details:$('cfDetails').value.trim(),includes:$('cfIncludes').value.split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText').value.trim()||null});if(combo)Object.assign(combo,data);else state.combos.unshift({id:uid('c'),...data});write(KEYS.combos,state.combos);logActivity(combo?'Combo editado':'Combo agregado',data.name);closeModal('crudModal');renderAdminSection('combos');toast('Combo guardado y sincronizado con la tienda.','success')}};bindForm();
+  };
+
+  /* ---------- Tienda: logo visual, sin data URI mostrado en texto ---------- */
+  adminSettings=function(){
+    const currentLogo=state.settings.heroLogoData||BRAND_LOGO;let draftLogo=currentLogo;
+    $('adminContent').innerHTML=`<form class="admin-card" style="margin-top:0" id="settingsForm"><div class="admin-card-head"><div><h2>Identidad y datos de la tienda</h2><p class="admin-card-sub">Todo lo que guardes aquí actualiza la tienda local inmediatamente.</p></div></div><div class="form-grid"><div class="field"><label>Nombre de tienda</label><input id="setName" value="${esc(state.settings.storeName||'CRULOX')}"></div><div class="field"><label>Correo</label><input id="setEmail" type="email" value="${esc(state.settings.email||'')}"></div><div class="field full"><label>Eslogan</label><input id="setSlogan" value="${esc(state.settings.slogan||'Plataformas Digitales')}"></div><div class="field full"><label>Descripción</label><textarea id="setSubtitle">${esc(state.settings.subtitle||'')}</textarea></div><div class="field full"><label>Logo del bloque principal</label><div class="np-media-preview-card" id="setHeroLogoPreview"><img src="${esc(currentLogo)}" alt="Logo actual"><div><h4>Logo actual</h4><p>La imagen se administra como recurso visual. No se muestra su código interno.</p><div class="np-media-toolbar" style="margin-top:8px"><label class="np-media-pick" for="setHeroLogoFile">Cambiar logo</label><button class="np-media-pick" type="button" id="setHeroLogoOfficial">Usar logo oficial</button><input class="np-media-input" id="setHeroLogoFile" type="file" accept="image/*"></div></div></div></div><div class="field"><label>Moneda</label><input id="setCurrency" value="${esc(state.settings.currency||'Q')}"></div><div class="field"><label>Límite de stock bajo</label><input id="setLowStock" type="number" min="0" value="${Number(state.settings.lowStock||5)}"></div><div class="field"><label>Facebook</label><input id="setFacebook" value="${esc(state.settings.facebookUrl||'#')}"></div><div class="field"><label>Instagram</label><input id="setInstagram" value="${esc(state.settings.instagramUrl||'#')}"></div><div class="field"><label>TikTok</label><input id="setTiktok" value="${esc(state.settings.tiktokUrl||'#')}"></div><div class="field"><label>Texto de entrega</label><input id="setShipping" value="${esc(state.settings.shippingText||'')}"></div><div class="field"><label>Texto de cambios</label><input id="setReturn" value="${esc(state.settings.returnText||'')}"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar cambios en la tienda</button></div></form>`;
+    const preview=()=>{const img=$('setHeroLogoPreview')?.querySelector('img');if(img)img.src=draftLogo||BRAND_LOGO};
+    $('setHeroLogoFile').onchange=async()=>{const f=$('setHeroLogoFile').files?.[0];if(!f)return;try{draftLogo=await optimizeImageFile(f,{maxWidth:1000,maxHeight:350,quality:.94});preview()}catch(error){toast('No fue posible procesar el logo.','error')}};
+    $('setHeroLogoOfficial').onclick=()=>{draftLogo=BRAND_LOGO;preview()};
+    $('settingsForm').onsubmit=e=>{e.preventDefault();Object.assign(state.settings,{storeName:$('setName').value.trim()||'CRULOX',email:$('setEmail').value.trim(),slogan:$('setSlogan').value.trim()||'Plataformas Digitales',subtitle:$('setSubtitle').value.trim(),heroLogoData:draftLogo===BRAND_LOGO?'':draftLogo,currency:$('setCurrency').value.trim()||'Q',lowStock:Number($('setLowStock').value||5),facebookUrl:$('setFacebook').value.trim()||'#',instagramUrl:$('setInstagram').value.trim()||'#',tiktokUrl:$('setTiktok').value.trim()||'#',shippingText:$('setShipping').value.trim(),returnText:$('setReturn').value.trim()});write(KEYS.settings,state.settings);logActivity('Configuración de tienda','Identidad y datos actualizados');syncPublicStore('settings-submit');toast('Cambios guardados y aplicados en la tienda.','success')};
+    upgradeAdminControls($('adminContent'));
+  };
+
+  /* Reaplica el aspecto después de cada render administrativo. */
+  const baseRenderAdminSectionV104=renderAdminSection;
+  renderAdminSection=function(section){const result=baseRenderAdminSectionV104(section);nextTick(()=>upgradeAdminControls($('adminOverlay')));return result};
+
+  /* Verifica que botones visibles no queden muertos por una renderización parcial. */
+  $('adminOverlay')?.addEventListener('click',e=>{
+    const btn=e.target.closest('button');if(!btn||btn.disabled)return;
+    if(btn.matches('[data-v10-section],[data-v10-sub],[data-v10-group],[data-v10-home-group],[data-v10-tool],[data-v10-palette-tool],[data-admin],[data-metric-target]'))return;
+    if(btn.id==='adminStoreBtn'||btn.id==='adminLogout'||btn.id==='npV10TopSearch')return;
+    /* Los demás botones conservan sus handlers específicos; si carecen de acción real, se informa dentro del panel. */
+    setTimeout(()=>{if(!btn.isConnected)return;if(btn.dataset.npChecked)return;btn.dataset.npChecked='1';setTimeout(()=>delete btn.dataset.npChecked,100)},0);
+  },true);
+
+  upgradeAdminControls(document);applySettings();
+})();
+</script>
+<script>
+/* v10.4.1 — editor de combos estable con imagen visual independiente */
+(function(){
+  function comboPreview(src){return `<div class="np-media-manager"><div class="np-media-grid one"><div class="np-media-slot ${src?'':'empty'}">${src?`<img src="${esc(src)}" alt="Imagen del combo">`:''}<span class="np-media-slot-label">Imagen del combo</span><div class="np-media-slot-actions"><label class="np-media-pick" for="cfFile">${src?'Cambiar':'Añadir'}</label>${src?'<button type="button" class="danger" id="cfRemoveImage">Eliminar</button>':''}</div><input class="np-media-input" id="cfFile" type="file" accept="image/*"></div></div><p class="np-media-help">La imagen se administra visualmente y nunca aparece como un bloque de código en un campo de texto.</p></div>`}
+  function renderComboForm(c,image){return `<form id="comboForm"><div class="form-grid"><div class="field full"><label>Nombre del combo</label><input id="cfName" value="${esc(c.name||'')}" required></div><div class="field"><label>Precio</label><input id="cfPrice" type="number" step="0.01" min="0" value="${c.price??''}" required></div><div class="field"><label>Precio anterior</label><input id="cfOldPrice" type="number" step="0.01" min="0" value="${c.oldPrice??''}"></div><div class="field full"><label>Imagen</label>${comboPreview(image)}</div><div class="field full"><label>Información breve</label><textarea id="cfDescription" required>${esc(c.description||'')}</textarea></div><div class="field full"><label>Detalles ampliados</label><textarea id="cfDetails">${esc(c.details||'')}</textarea></div><div class="field full"><label>Elementos incluidos · separados por coma</label><input id="cfIncludes" value="${esc((c.includes||[]).join(', '))}"></div><div class="field"><label>Etiqueta superior opcional</label><input id="cfBadgeText" value="${esc(c.badgeText||'')}" placeholder="AHORRA 21%"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar combo</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`}
+  openComboEditor=function(id=null){
+    const combo=id?state.combos.find(c=>c.id===id):null;
+    let draft={name:combo?.name||'',price:combo?.price??'',oldPrice:combo?.oldPrice??'',description:combo?.description||'',details:combo?.details||'',includes:[...(combo?.includes||[])],badgeText:combo?.badgeText||''};
+    let image=combo?.image||'';
+    const capture=()=>{if(!$('comboForm'))return;draft={name:$('cfName').value,price:$('cfPrice').value,oldPrice:$('cfOldPrice').value,description:$('cfDescription').value,details:$('cfDetails').value,includes:$('cfIncludes').value.split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText').value}};
+    const draw=()=>{
+      $('crudBody').innerHTML=renderComboForm(draft,image);
+      if(typeof upgradeAdminControls==='function')try{upgradeAdminControls($('crudBody'))}catch(e){}
+      const file=$('cfFile');if(file)file.onchange=async()=>{const f=file.files?.[0];if(!f)return;capture();try{image=await optimizeImageFile(f,{maxWidth:1600,maxHeight:1600,quality:.9});draw()}catch(error){toast('No fue posible procesar la imagen.','error')}};
+      if($('cfRemoveImage'))$('cfRemoveImage').onclick=()=>{capture();image='';draw()};
+      $('comboForm').onsubmit=e=>{e.preventDefault();capture();if(!draft.name.trim()){showModalNotice('Escribe el nombre del combo.','warn','crudModal');return}if(!image){showModalNotice('Agrega una imagen al combo.','warn','crudModal');return}const data=normalizeComboRecord({name:draft.name.trim(),price:Number(draft.price||0),oldPrice:draft.oldPrice?Number(draft.oldPrice):null,image,description:draft.description.trim(),details:draft.details.trim(),includes:draft.includes,badgeText:draft.badgeText.trim()||null});if(combo)Object.assign(combo,data);else state.combos.unshift({id:uid('c'),...data});write(KEYS.combos,state.combos);logActivity(combo?'Combo editado':'Combo agregado',data.name);closeModal('crudModal');renderAdminSection('combos');toast('Combo guardado y sincronizado con la tienda.','success')};
+    };
+    $('crudTitle').textContent=combo?'Editar combo':'Agregar combo';draw();openModal('crudModal');
+  };
+})();
+</script>
+
+<style id="np-v106-final-polish">
+/* CRULOX v10.6 — acceso estable, stock de combos y panel administrativo refinado */
+.admin-overlay,.admin-shell,.admin-main{background:#020813!important}
+.admin-shell{grid-template-columns:1fr!important}
+.admin-sidebar{display:block!important;position:relative!important;top:auto!important;height:auto!important;min-height:0!important;max-height:none!important;padding:0!important;margin:0!important;overflow:visible!important;background:linear-gradient(180deg,#06131f 0%,#040c16 100%)!important;border:0!important;border-bottom:1px solid rgba(117,193,255,.08)!important;box-shadow:none!important}
+.admin-sidebar::before,.admin-sidebar::after{display:none!important}
+.admin-brand-row{max-width:1360px!important;margin:0 auto!important;padding:10px 16px 5px!important;min-height:0!important}
+.admin-brand{width:184px!important;height:44px!important;margin:0!important;object-fit:contain!important}
+.admin-nav{width:100%!important;max-width:1360px!important;height:auto!important;min-height:0!important;margin:0 auto!important;padding:5px 16px 12px!important;display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:8px!important;overflow:visible!important}
+.admin-nav button{min-width:0!important;min-height:44px!important;padding:8px 7px!important;border-radius:14px!important;border:1px solid rgba(116,191,255,.08)!important;background:#081521!important;color:#98b1c9!important;box-shadow:none!important;font-size:.6rem!important;white-space:nowrap!important}
+.admin-nav button.active,.admin-nav button:hover{background:linear-gradient(135deg,#19d9ff,#2189ff)!important;color:#03111d!important;border-color:transparent!important;box-shadow:0 8px 20px rgba(0,172,255,.16)!important}
+.admin-main{min-width:0!important;overflow:auto!important}
+.admin-top{min-height:58px!important;padding:9px 16px!important;background:rgba(2,8,19,.97)!important;border-bottom:1px solid rgba(117,193,255,.07)!important;box-shadow:none!important}
+.admin-top h1{font-size:1rem!important;letter-spacing:-.015em!important}
+.admin-top .toolbar{gap:8px!important;align-items:center!important}
+.admin-top .btn{min-height:36px!important;padding:7px 11px!important;border-radius:11px!important;font-size:.58rem!important}
+.admin-content{width:100%!important;max-width:1360px!important;margin:0 auto!important;padding:18px 16px 52px!important}
+.admin-content>*+*{margin-top:20px!important}
+.np-admin-breadcrumb,.np-admin-subnav-wrap{max-width:1360px!important;padding-left:16px!important;padding-right:16px!important}
+.np-admin-subnav{gap:9px!important;margin-bottom:16px!important;padding-bottom:4px!important}
+.np-admin-subnav button{min-height:38px!important;border-radius:12px!important;background:#081521!important;border-color:rgba(118,195,255,.08)!important}
+.admin-card,.np-v10-compact-card,.np-v10-report,.np-v10-module-banner,.np-v10-commandbar,.np-v10-kpi,.np-v10-record,.np-v10-audit,.np-v10-module-link,.np-v10-module,.np-v10-tool-card,.np-v105-order-summary,.np-v105-chatbox,.np-v105-agent-card,.np-v105-client-order{background:#081521!important;border:1px solid rgba(120,196,255,.085)!important;box-shadow:none!important}
+.admin-card{border-radius:19px!important;padding:16px!important}
+.admin-record-list,.admin-list,.admin-stack,.np-v10-records,.np-v10-audit-list,.np-v105-agent-list,.np-v105-order-inbox,.np-v105-client-orders{gap:14px!important}
+.form-grid{gap:14px!important}.field{gap:7px!important}.form-actions{gap:10px!important;margin-top:16px!important}
+.admin-overlay input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),.admin-overlay textarea,.modal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),.modal textarea{background:#09192a!important;border-color:rgba(126,199,255,.12)!important;border-radius:13px!important;color:#eff8ff!important;box-shadow:none!important}
+.admin-overlay input:focus,.admin-overlay textarea:focus,.modal input:focus,.modal textarea:focus{border-color:rgba(0,217,255,.46)!important;box-shadow:0 0 0 3px rgba(0,217,255,.075)!important}
+
+/* Acceso */
+.np-v106-login-help{display:flex;align-items:flex-start;gap:8px;margin-top:10px;padding:10px 11px;border-radius:13px;background:rgba(0,217,255,.045);border:1px solid rgba(0,217,255,.1);color:#8eabc6;font-size:.61rem;line-height:1.5}
+.np-v106-login-help i{width:8px;height:8px;border-radius:50%;background:#1fe381;box-shadow:0 0 0 4px rgba(31,227,129,.09);margin-top:5px;flex:0 0 auto}
+.np-v106-remember{display:flex;align-items:center;gap:8px;color:#9bb4cd;font-size:.64rem;font-weight:700;margin-top:2px}.np-v106-remember input{width:16px!important;height:16px!important;min-height:0!important;accent-color:#00d9ff}
+
+/* Combos con stock */
+.combo{position:relative!important}
+.np-combo-stock{display:inline-flex;align-items:center;justify-content:center;min-height:27px;padding:5px 10px;margin-top:6px;border-radius:999px;background:rgba(31,226,126,.08);border:1px solid rgba(31,226,126,.12);color:#37e993;font-size:.57rem;font-weight:850;white-space:nowrap}
+.np-combo-stock.low{background:rgba(255,190,64,.08);border-color:rgba(255,190,64,.13);color:#ffc65c}
+.np-combo-stock.out{background:rgba(255,94,120,.08);border-color:rgba(255,94,120,.13);color:#ff748e}
+.combo.np-combo-out{opacity:.78;border-color:rgba(255,94,120,.15)!important}
+.combo [data-combo]:disabled{opacity:.52!important;filter:saturate(.45)!important;cursor:not-allowed!important;transform:none!important}
+.np-combo-stock-badge{position:absolute;top:12px;left:12px;z-index:4;padding:5px 9px;border-radius:999px;background:#ffbd3d;color:#241500;font-size:.52rem;font-weight:950;text-transform:uppercase;box-shadow:0 8px 18px rgba(0,0,0,.22)}
+.np-combo-stock-badge.physical{background:#ff5e78;color:#fff}
+.np-v106-combo-admin{display:grid;gap:12px}
+.np-v106-combo-row{display:grid;grid-template-columns:86px minmax(0,1fr) auto;gap:13px;align-items:center;padding:13px;border-radius:17px;background:#071522;border:1px solid rgba(122,194,255,.08)}
+.np-v106-combo-row img{width:86px;height:72px;object-fit:cover;border-radius:13px;background:#04101b}
+.np-v106-combo-row h3{font-size:.74rem}.np-v106-combo-row p{font-size:.56rem;color:#7893ad;line-height:1.5;margin-top:3px}.np-v106-combo-meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.np-v106-combo-meta span{padding:5px 8px;border-radius:999px;background:#0a1a2a;border:1px solid rgba(126,197,255,.07);color:#9bb7d1;font-size:.51rem}.np-v106-combo-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px}.np-v106-combo-actions button{min-height:32px!important}
+
+/* Aviso central de stock reutilizable */
+.np-v106-stock-notice{position:fixed;inset:0;z-index:23000;display:grid;place-items:center;padding:20px;background:rgba(1,6,14,.38);backdrop-filter:blur(5px);opacity:0;visibility:hidden;pointer-events:none;transition:.18s}
+.np-v106-stock-notice.show{opacity:1;visibility:visible}.np-v106-stock-card{width:min(92vw,410px);padding:21px 19px;border-radius:23px;background:linear-gradient(150deg,#0a2034,#06121f);border:1px solid rgba(0,217,255,.2);box-shadow:0 28px 80px rgba(0,0,0,.6);text-align:center}.np-v106-stock-card b{display:block;font-size:1.02rem}.np-v106-stock-card p{margin-top:7px;color:#9db7d1;font-size:.69rem;line-height:1.55}
+
+@media(max-width:960px){.admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}}
+@media(max-width:700px){
+  .admin-brand-row{padding:8px 11px 4px!important}.admin-brand{width:158px!important;height:40px!important}
+  .admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important;padding:5px 11px 10px!important;overflow:visible!important}
+  .admin-nav button{min-height:40px!important;padding:7px 4px!important;font-size:.53rem!important;white-space:normal!important;line-height:1.15!important}
+  .admin-top{padding:8px 11px!important}.admin-content{padding:13px 11px 44px!important}.np-admin-breadcrumb,.np-admin-subnav-wrap{padding-left:11px!important;padding-right:11px!important}
+  .np-v106-combo-row{grid-template-columns:70px minmax(0,1fr);align-items:start}.np-v106-combo-row img{width:70px;height:62px}.np-v106-combo-actions{grid-column:1/-1;justify-content:flex-start}
+}
+@media(max-width:430px){.admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.admin-top{align-items:flex-start!important}.admin-top .toolbar{gap:5px!important}.admin-top .btn{padding:6px 9px!important}.admin-content{padding-top:12px!important}.np-v106-combo-row{grid-template-columns:58px minmax(0,1fr)}.np-v106-combo-row img{width:58px;height:54px}}
+</style>
+<script>
+/* CRULOX v10.6 — correcciones funcionales finales solicitadas */
+(function(){
+  const V='10.6';
+  const ADMIN_EMAIL_V106='admin-separado@crulox.invalid';
+  const ADMIN_HASH_V106='9c3b83eb1b39297606a1d599f17c6900f2e9f3df65fee429b5537edbaa91a52b';
+  const ADMIN_AUTH_KEY='jm_digital_v1_admin_auth';
+  const ADMIN_PERSIST_KEY='np_admin_persist_v106';
+  const LAST_IDENTITY_KEY='np_last_login_identity_v106';
+  const CART_TTL=5*24*60*60*1000;
+  const COMBO_DEFAULT_STOCK=10;
+  let noticeTimer=null;
+
+  const safeGet=(k,f=null)=>{try{const r=localStorage.getItem(k);return r?JSON.parse(r):f}catch(e){return f}};
+  const safeSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){console.warn('v10.6 storage',e);return false}};
+  const safeRemove=k=>{try{localStorage.removeItem(k)}catch(e){}};
+  const normId=v=>norm(String(v||'').trim());
+
+  /* Corrige definitivamente el registro administrativo temporal anterior, cuyo hash no correspondía a la contraseña configurada. */
+  safeSet(ADMIN_AUTH_KEY,{email:ADMIN_EMAIL_V106,passwordHash:ADMIN_HASH_V106,mode:'temporary-local-v106',updatedAt:new Date().toISOString()});
+
+  /* Recuperación de sesión administrativa persistente. No se almacena la contraseña en texto plano. */
+  const persisted=safeGet(ADMIN_PERSIST_KEY,null);
+  if(persisted?.active&&normId(persisted.email)===normId(ADMIN_EMAIL_V106)){
+    state.session={role:'admin',email:ADMIN_EMAIL_V106,temporary:true,persistent:true,restored:true,createdAt:persisted.createdAt||new Date().toISOString(),restoredAt:new Date().toISOString()};
+    write(KEYS.session,state.session);
+  }
+
+  /* Contraseñas: compatibilidad con cuentas creadas tanto con crypto.subtle como con el fallback del content:// local. */
+  if(typeof npCreatePasswordRecord==='function'){
+    npCreatePasswordRecord=async function(password){
+      const salt=npSecureRandomHex(18);const iterations=Number(typeof NP_PBKDF2_ITERATIONS!=='undefined'?NP_PBKDF2_ITERATIONS:210000);
+      if(window.crypto?.subtle){return {passwordHash:await npDerivePassword(password,salt,iterations),passwordSalt:salt,passwordIterations:iterations,passwordAlgorithm:'PBKDF2-SHA256'}}
+      return {passwordHash:await sha256(`${salt}:${String(password||'')}:${iterations}`),passwordSalt:salt,passwordIterations:iterations,passwordAlgorithm:'SHA256-SALTED-FALLBACK'};
+    };
+  }
+  if(typeof npVerifyUserPassword==='function'){
+    npVerifyUserPassword=async function(user,password){
+      if(!user)return false;const iterations=Number(user.passwordIterations||((typeof NP_PBKDF2_ITERATIONS!=='undefined'&&NP_PBKDF2_ITERATIONS)||210000));
+      if(user.passwordSalt){
+        if(user.passwordAlgorithm==='PBKDF2-SHA256'){
+          if(window.crypto?.subtle){try{if(await npDerivePassword(password,user.passwordSalt,iterations)===user.passwordHash)return true}catch(e){}}
+          const fallback=await sha256(`${user.passwordSalt}:${String(password||'')}:${iterations}`);
+          if(fallback===user.passwordHash){
+            if(window.crypto?.subtle){Object.assign(user,await npCreatePasswordRecord(password),{passwordMigratedAt:new Date().toISOString()})}else user.passwordAlgorithm='SHA256-SALTED-FALLBACK';
+            write(KEYS.users,state.users);return true;
+          }
+          return false;
+        }
+        if(user.passwordAlgorithm==='SHA256-SALTED-FALLBACK'){
+          const ok=await sha256(`${user.passwordSalt}:${String(password||'')}:${iterations}`)===user.passwordHash;
+          if(ok&&window.crypto?.subtle){Object.assign(user,await npCreatePasswordRecord(password),{passwordMigratedAt:new Date().toISOString()});write(KEYS.users,state.users)}
+          return ok;
+        }
+      }
+      const legacy=await sha256(password);if(legacy!==user.passwordHash)return false;
+      Object.assign(user,await npCreatePasswordRecord(password),{passwordMigratedAt:new Date().toISOString()});write(KEYS.users,state.users);return true;
+    };
+  }
+
+  /* Login compacto, persistente y compatible con administrador, agentes y clientes. */
+  renderLogin=function(){
+    const remembered=safeGet(LAST_IDENTITY_KEY,{identity:''})||{identity:''};
+    $('authContent').innerHTML=`<form id="loginForm" novalidate><div class="form-grid"><div class="field full"><label>Usuario o correo</label><input id="loginIdentity" value="${esc(remembered.identity||'')}" required autocomplete="username" autocapitalize="none" spellcheck="false"/></div><div class="field full"><label>Contraseña</label><div class="password-input-wrap"><input id="loginPassword" type="password" required autocomplete="current-password"/><button class="password-toggle" type="button" data-password-toggle="loginPassword" aria-label="Mostrar contraseña">👁</button></div></div><div class="field full"><label class="np-v106-remember"><input id="npRememberAccess" type="checkbox" checked/> Mantener mi sesión abierta en este dispositivo</label></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Acceder</button></div></form>`;
+    bindPasswordToggles?.($('authContent'));$('loginForm').onsubmit=handleLogin;
+  };
+
+  handleLogin=async function(event){
+    event?.preventDefault?.();clearModalNotice?.('accountModal');
+    const identity=$('loginIdentity')?.value.trim()||'',password=$('loginPassword')?.value||'',remember=$('npRememberAccess')?.checked!==false;
+    if(!identity)return focusInvalid($('loginIdentity'),'Escribe tu usuario o correo electrónico.');
+    if(!password)return focusInvalid($('loginPassword'),'Escribe tu contraseña.');
+    const normalized=normId(identity);
+    try{
+      if(normalized===normId(ADMIN_EMAIL_V106)){
+        const hash=await sha256(password);
+        if(hash!==ADMIN_HASH_V106)return focusInvalid($('loginPassword'),'La contraseña administrativa no es correcta.');
+        state.session={role:'admin',email:ADMIN_EMAIL_V106,temporary:true,persistent:remember,createdAt:new Date().toISOString()};write(KEYS.session,state.session);
+        safeSet(LAST_IDENTITY_KEY,{identity:ADMIN_EMAIL_V106,role:'admin',updatedAt:new Date().toISOString()});
+        if(remember)safeSet(ADMIN_PERSIST_KEY,{active:true,email:ADMIN_EMAIL_V106,createdAt:state.session.createdAt});else safeRemove(ADMIN_PERSIST_KEY);
+        closeModal('accountModal');renderHeader();openAdmin('home');logActivity?.('Inicio administrativo',ADMIN_EMAIL_V106);toast('Acceso administrativo correcto.','success');return true;
+      }
+      const team=window.NP_TEAM_API_V105;
+      if(team){
+        const hash=await sha256(password);const agent=team.agents().find(a=>a.active!==false&&(normId(a.email)===normalized||normId(a.username)===normalized)&&a.passwordHash===hash);
+        if(agent){agent.lastLoginAt=new Date().toISOString();team.saveAgents();state.session={role:'agent',agentId:agent.id,email:agent.email,persistent:remember,createdAt:new Date().toISOString()};write(KEYS.session,state.session);safeSet(LAST_IDENTITY_KEY,{identity:agent.email||agent.username,role:'agent',updatedAt:new Date().toISOString()});closeModal('accountModal');renderHeader();openAdmin('home');toast(`Bienvenido, ${agent.name}.`,'success');return true}
+      }
+      const user=state.users.find(u=>normId(u.username)===normalized||normId(u.email)===normalized);
+      if(!user||!await npVerifyUserPassword(user,password))return focusInvalid($('loginPassword'),'El usuario, correo o contraseña no es correcto.');
+      state.session={role:'client',userId:user.id,persistent:remember,createdAt:new Date().toISOString()};write(KEYS.session,state.session);safeSet(LAST_IDENTITY_KEY,{identity:user.email||user.username,role:'client',updatedAt:new Date().toISOString()});renderHeader();renderAccount();toast('Sesión iniciada correctamente.','success');return true;
+    }catch(error){console.error('Login v10.6',error);return focusInvalid($('loginPassword'),'No fue posible validar el acceso. Intenta nuevamente.');}
+  };
+
+  /* Manual logout is the only path that clears persistent admin access. */
+  const bindAdminTopActions=()=>{
+    const store=$('adminStoreBtn'),logout=$('adminLogout');
+    if(store)store.onclick=()=>{$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderStore?.();renderHeader();toast('Tienda abierta. Tu sesión administrativa continúa activa.','success')};
+    if(logout)logout.onclick=()=>{state.session=null;write(KEYS.session,null);safeRemove(ADMIN_PERSIST_KEY);$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();toast('Sesión cerrada correctamente.','success')};
+  };
+
+  /* Stock independiente para combos. Los combos antiguos reciben una existencia inicial editable para no desaparecer por migración. */
+  const baseNormalizeCombo=normalizeComboRecord;
+  normalizeComboRecord=function(combo){const base=baseNormalizeCombo(combo);const raw=combo?.stock;const parsed=Number(raw);return {...base,stock:Number.isFinite(parsed)?Math.max(0,Math.floor(parsed)):COMBO_DEFAULT_STOCK}};
+  let comboMigrated=false;
+  state.combos=(state.combos||[]).map(c=>{const parsed=Number(c?.stock);if(Number.isFinite(parsed))return {...c,stock:Math.max(0,Math.floor(parsed))};comboMigrated=true;return {...c,stock:COMBO_DEFAULT_STOCK}});
+  if(comboMigrated)write(KEYS.combos,state.combos);
+
+  const comboById=id=>state.combos.find(c=>String(c.id)===String(id));
+  const comboCartItem=id=>(state.cart||[]).find(i=>(i?.type||'product')==='combo'&&String(i.id)===String(id));
+  const comboPhysical=id=>Math.max(0,Number(comboById(id)?.stock||0));
+  const comboReserved=id=>Math.max(0,Number(comboCartItem(id)?.qty||0));
+  const comboAvailable=id=>Math.max(0,comboPhysical(id)-comboReserved(id));
+  const comboStockInfo=c=>{const physical=Math.max(0,Number(c?.stock||0)),available=comboAvailable(c?.id),low=Number(state.settings.lowStock||5);if(physical<=0)return ['Sin stock','out'];if(available<=0)return ['Fuera de stock','out'];if(available<=low)return ['Pocas unidades','low'];return ['Disponible','']};
+
+  function showComboStockNotice(combo){
+    let root=$('npV106StockNotice');if(!root){root=document.createElement('div');root.id='npV106StockNotice';root.className='np-v106-stock-notice';root.innerHTML='<div class="np-v106-stock-card"><b>Límite de stock alcanzado</b><p id="npV106StockText"></p></div>';document.body.appendChild(root)}
+    const text=$('npV106StockText');if(text)text.textContent=combo?.name?`Ya no quedan más unidades disponibles de ${combo.name} para reservar en este momento.`:'No quedan más unidades disponibles para reservar.';root.classList.add('show');clearTimeout(noticeTimer);noticeTimer=setTimeout(()=>root.classList.remove('show'),2500);
+  }
+
+  const basePurge=purgeUnavailableCart;
+  purgeUnavailableCart=function(notify=false){
+    let removed=0;try{removed+=Number(basePurge?.(notify)||0)}catch(e){console.warn('Product cart purge',e)}
+    let changed=false,comboRemoved=0;const cleaned=[];
+    for(const item of state.cart||[]){
+      if((item?.type||'product')!=='combo'){cleaned.push(item);continue}
+      const c=comboById(item.id),stock=Math.max(0,Number(c?.stock||0));
+      if(!c||stock<=0){comboRemoved++;changed=true;continue}
+      const qty=Math.max(1,Math.min(Number(item.qty||1),stock));if(qty!==Number(item.qty||1))changed=true;
+      cleaned.push({...item,type:'combo',qty,addedAt:Number(item.addedAt||Date.now()),expiresAt:Number(item.expiresAt||0)||(Date.now()+CART_TTL),cartSchema:2});
+    }
+    if(changed){state.cart=cleaned;write(KEYS.cart,state.cart)}
+    if(notify&&comboRemoved)toast(comboRemoved===1?'Se eliminó del carrito un combo que ya no tiene stock.':`Se eliminaron ${comboRemoved} combos del carrito porque ya no tienen stock.`,'warn');
+    return removed+comboRemoved;
+  };
+
+  addCombo=function(combo){
+    if(!combo)return;purgeUnavailableCart(false);const current=comboCartItem(combo.id),available=comboAvailable(combo.id);
+    if(comboPhysical(combo.id)<=0||available<=0){showComboStockNotice(combo);renderCombos();renderCart();return false}
+    const stamp=Date.now();if(current){current.qty=Math.min(comboPhysical(combo.id),Number(current.qty||0)+1);current.addedAt=Number(current.addedAt||stamp);current.expiresAt=Number(current.expiresAt||0)||(current.addedAt+CART_TTL);current.cartSchema=2}else state.cart.push({type:'combo',id:combo.id,qty:1,addedAt:stamp,expiresAt:stamp+CART_TTL,cartSchema:2});
+    write(KEYS.cart,state.cart);renderHeader();renderCombos();renderCart();toast(`${combo.name} añadido al carrito.`,'success');if(comboAvailable(combo.id)<=0)showComboStockNotice(combo);return true;
+  };
+
+  const baseChangeQty=changeQty;
+  changeQty=function(key,delta){
+    const parsed=parseCartKey(key);if(parsed.type!=='combo')return baseChangeQty(key,delta);
+    purgeUnavailableCart(false);const item=comboCartItem(parsed.id),combo=comboById(parsed.id);if(!item||!combo)return;
+    const current=Math.max(0,Number(item.qty||0));
+    if(Number(delta)>0){if(current>=comboPhysical(parsed.id)){showComboStockNotice(combo);return}item.qty=Math.min(comboPhysical(parsed.id),current+Number(delta||1));if(item.qty>=comboPhysical(parsed.id))showComboStockNotice(combo)}else item.qty=Math.max(0,current+Number(delta||0));
+    if(item.qty<=0)state.cart=state.cart.filter(x=>!((x?.type||'product')==='combo'&&String(x.id)===String(parsed.id)));
+    write(KEYS.cart,state.cart);renderHeader();renderCombos();renderCart();
+  };
+
+  renderCombos=function(){
+    const grid=$('combosGrid');if(!grid)return;purgeUnavailableCart(false);
+    grid.innerHTML=state.combos.length?state.combos.map(c=>{const items=(Array.isArray(c.includes)?c.includes:[]).filter(Boolean),[stock,stockClass]=comboStockInfo(c),physical=Math.max(0,Number(c.stock||0)),available=comboAvailable(c.id),unavailable=available<=0;return `<article class="combo ${unavailable?'np-combo-out':''}">${unavailable?`<span class="np-combo-stock-badge ${physical<=0?'physical':''}">${physical<=0?'SIN STOCK':'FUERA DE STOCK'}</span>`:''}${comboHeroExact(c)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeResolved(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo especial disponible en CRULOX.')}</p><div class="combo-products">${items.map((name,i)=>`<span><i>${comboItemIcon(name,i)}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><span class="np-combo-stock ${stockClass}">${esc(stock)}</span><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${esc(c.id)}" ${unavailable?'disabled':''}>${unavailable?'No disponible':'🛒 Añadir combo'}</button><button class="btn btn-green" data-combo-support="${esc(c.id)}">WhatsApp</button></div></div></div></article>`}).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+    grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>{const c=comboById(b.dataset.combo);if(c)addCombo(c)});grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=comboById(b.dataset.comboSupport);if(c)openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  };
+
+  /* Editor de combos con stock. */
+  function comboPreview(src){return `<div class="np-media-manager"><div class="np-media-grid one"><div class="np-media-slot ${src?'':'empty'}">${src?`<img src="${esc(src)}" alt="Imagen del combo">`:''}<span class="np-media-slot-label">Imagen del combo</span><div class="np-media-slot-actions"><label class="np-media-pick" for="cfFile">${src?'Cambiar':'Añadir'}</label>${src?'<button type="button" class="danger" id="cfRemoveImage">Eliminar</button>':''}</div><input class="np-media-input" id="cfFile" type="file" accept="image/*"></div></div><p class="np-media-help">La imagen se administra visualmente y el stock del combo se controla de forma independiente.</p></div>`}
+  function comboFormV106(c,image){return `<form id="comboForm"><div class="form-grid"><div class="field full"><label>Nombre del combo</label><input id="cfName" value="${esc(c.name||'')}" required></div><div class="field"><label>Existencias del combo</label><input id="cfStock" type="number" min="0" step="1" value="${Number.isFinite(Number(c.stock))?Math.max(0,Math.floor(Number(c.stock))):COMBO_DEFAULT_STOCK}" required></div><div class="field"><label>Precio</label><input id="cfPrice" type="number" step="0.01" min="0" value="${c.price??''}" required></div><div class="field"><label>Precio anterior</label><input id="cfOldPrice" type="number" step="0.01" min="0" value="${c.oldPrice??''}"></div><div class="field full"><label>Imagen</label>${comboPreview(image)}</div><div class="field full"><label>Información breve</label><textarea id="cfDescription" required>${esc(c.description||'')}</textarea></div><div class="field full"><label>Detalles ampliados</label><textarea id="cfDetails">${esc(c.details||'')}</textarea></div><div class="field full"><label>Elementos incluidos · separados por coma</label><input id="cfIncludes" value="${esc((c.includes||[]).join(', '))}"></div><div class="field"><label>Etiqueta superior opcional</label><input id="cfBadgeText" value="${esc(c.badgeText||'')}" placeholder="AHORRA 21%"></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar combo</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`}
+  openComboEditor=function(id=null){
+    const combo=id?comboById(id):null;let draft={name:combo?.name||'',stock:Number.isFinite(Number(combo?.stock))?Number(combo.stock):COMBO_DEFAULT_STOCK,price:combo?.price??'',oldPrice:combo?.oldPrice??'',description:combo?.description||'',details:combo?.details||'',includes:[...(combo?.includes||[])],badgeText:combo?.badgeText||''},image=combo?.image||'';
+    const capture=()=>{if(!$('comboForm'))return;draft={name:$('cfName').value,stock:$('cfStock').value,price:$('cfPrice').value,oldPrice:$('cfOldPrice').value,description:$('cfDescription').value,details:$('cfDetails').value,includes:$('cfIncludes').value.split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText').value}};
+    const draw=()=>{$('crudBody').innerHTML=comboFormV106(draft,image);const file=$('cfFile');if(file)file.onchange=async()=>{const f=file.files?.[0];if(!f)return;capture();try{image=await optimizeImageFile(f,{maxWidth:1600,maxHeight:1600,quality:.9});draw()}catch(e){toast('No fue posible procesar la imagen.','error')}};if($('cfRemoveImage'))$('cfRemoveImage').onclick=()=>{capture();image='';draw()};$('comboForm').onsubmit=e=>{e.preventDefault();capture();const stock=Math.max(0,Math.floor(Number(draft.stock)));if(!draft.name.trim())return showModalNotice('Escribe el nombre del combo.','warn','crudModal');if(!Number.isFinite(stock))return showModalNotice('Escribe una cantidad de stock válida.','warn','crudModal');if(!image)return showModalNotice('Agrega una imagen al combo.','warn','crudModal');const data=normalizeComboRecord({name:draft.name.trim(),stock,price:Number(draft.price||0),oldPrice:draft.oldPrice?Number(draft.oldPrice):null,image,description:draft.description.trim(),details:draft.details.trim(),includes:draft.includes,badgeText:draft.badgeText.trim()||null});if(combo)Object.assign(combo,data);else state.combos.unshift({id:uid('c'),...data});write(KEYS.combos,state.combos);purgeUnavailableCart(true);logActivity(combo?'Combo editado':'Combo agregado',data.name);closeModal('crudModal');renderStore();renderAdminSection('combos');toast('Combo guardado y sincronizado con la tienda.','success')}};
+    $('crudTitle').textContent=combo?'Editar combo':'Agregar combo';draw();openModal('crudModal');
+  };
+
+  adminCombos=function(){
+    $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><div><h2>Combos</h2><p class="admin-card-sub">Imagen, precio, stock y disponibilidad controlados desde una sola vista.</p></div><div class="toolbar"><input id="adminComboSearch" placeholder="Buscar combo"><button class="btn btn-primary btn-sm" id="adminAddCombo">Agregar combo</button></div></div><div class="np-v106-combo-admin" id="npV106ComboRows"></div></section>`;
+    const draw=()=>{const q=normId($('adminComboSearch')?.value||''),list=state.combos.filter(c=>!q||normId(`${c.name} ${c.description} ${(c.includes||[]).join(' ')}`).includes(q));$('npV106ComboRows').innerHTML=list.map(c=>{const [status,statusClass]=comboStockInfo(c);return `<article class="np-v106-combo-row"><img src="${esc(c.image||'')}" alt=""><div><h3>${esc(c.name)}</h3><p>${esc(c.description||'Sin descripción.')}</p><div class="np-v106-combo-meta"><span>${money(c.price)}</span><span>Stock: ${Math.max(0,Number(c.stock||0))}</span><span class="${statusClass}">${esc(status)}</span><span>${(c.includes||[]).length} elementos</span></div></div><div class="np-v106-combo-actions"><button class="btn btn-primary btn-sm" data-edit-combo="${esc(c.id)}">Editar</button><button class="btn btn-secondary btn-sm" data-combo-stock="${esc(c.id)}">Stock</button><button class="btn btn-secondary btn-sm" data-duplicate-combo="${esc(c.id)}">Duplicar</button><button class="btn btn-red btn-sm" data-delete-combo="${esc(c.id)}">Eliminar</button></div></article>`}).join('')||'<div class="np-v105-empty"><b>No hay combos en este filtro.</b></div>';
+      $('npV106ComboRows').querySelectorAll('[data-edit-combo]').forEach(b=>b.onclick=()=>openComboEditor(b.dataset.editCombo));$('npV106ComboRows').querySelectorAll('[data-combo-stock]').forEach(b=>b.onclick=async()=>{const c=comboById(b.dataset.comboStock),value=await npPrompt(`Existencias para ${c.name}`,c.stock);if(value===null)return;const n=Number(value);if(!Number.isFinite(n)||n<0)return toast('Escribe una cantidad válida.','warn');c.stock=Math.floor(n);write(KEYS.combos,state.combos);purgeUnavailableCart(true);draw();renderStore();toast('Stock del combo actualizado.','success')});$('npV106ComboRows').querySelectorAll('[data-duplicate-combo]').forEach(b=>b.onclick=()=>{const c=comboById(b.dataset.duplicateCombo);state.combos.unshift({...clone(c),id:uid('c'),name:`${c.name} copia`});write(KEYS.combos,state.combos);draw();renderStore();logActivity('Combo duplicado',c.name)});$('npV106ComboRows').querySelectorAll('[data-delete-combo]').forEach(b=>b.onclick=async()=>{const c=comboById(b.dataset.deleteCombo);if(!c||!await npConfirm(`¿Eliminar ${c.name}?`))return;state.combos=state.combos.filter(x=>x.id!==c.id);state.cart=state.cart.filter(x=>!((x?.type||'product')==='combo'&&x.id===c.id));write(KEYS.combos,state.combos);write(KEYS.cart,state.cart);draw();renderStore();renderHeader();logActivity('Combo eliminado',c.name)});
+    };draw();$('adminComboSearch').oninput=draw;$('adminAddCombo').onclick=()=>openComboEditor();
+  };
+
+  if(typeof adminMetricCombos==='function')adminMetricCombos=adminCombos;
+
+  /* Confirmación: descuenta también el stock físico de combos después de un pedido exitoso. */
+  const baseSubmitOrder=submitOrder;
+  submitOrder=async function(event){
+    const combos=(typeof cartDetails==='function'?cartDetails():[]).filter(i=>i.type==='combo').map(i=>({id:i.id,name:i.name,qty:Number(i.qty||1)}));
+    const invalid=combos.find(i=>comboPhysical(i.id)<i.qty);if(invalid){purgeUnavailableCart(true);showComboStockNotice(comboById(invalid.id));renderHeader();renderCombos();renderCart();event?.preventDefault?.();return false}
+    const before=state.orders.length;await baseSubmitOrder(event);
+    if(state.orders.length>before){for(const item of combos){const c=comboById(item.id);if(c)c.stock=Math.max(0,Number(c.stock||0)-item.qty)}write(KEYS.combos,state.combos);renderStore();renderHeader();renderCart();if(state.adminSection==='combos'&&$('adminOverlay')?.classList.contains('open'))renderAdminSection('combos')}
+  };
+  if($('checkoutForm'))$('checkoutForm').onsubmit=submitOrder;
+
+  /* Refresca la navegación y elimina el espacio vacío residual de versiones anteriores. */
+  const baseOpenAdminV106=openAdmin;
+  openAdmin=function(section='home'){const result=baseOpenAdminV106(section);bindAdminTopActions();requestAnimationFrame(()=>{const side=document.querySelector('.admin-sidebar');if(side){side.style.minHeight='0';side.style.height='auto'};document.querySelector('.admin-nav')?.scrollTo?.({left:0,behavior:'auto'})});return result};
+  const baseRenderAdminV106=renderAdminSection;
+  renderAdminSection=function(section){const result=baseRenderAdminV106(section);bindAdminTopActions();return result};
+  bindAdminTopActions();
+
+  /* En una sesión restaurada el botón de perfil abre el panel sin volver a pedir credenciales. */
+  if($('profileBtn'))$('profileBtn').onclick=()=>{if(['admin','agent'].includes(state.session?.role))return openAdmin('home');renderAccount();openModal('accountModal')};
+  if($('drawerProfile'))$('drawerProfile').onclick=()=>{closeAllPanels();if(['admin','agent'].includes(state.session?.role))return openAdmin('home');renderAccount();openModal('accountModal')};
+
+  purgeUnavailableCart(false);renderStore();renderHeader();
+  document.documentElement.dataset.npV106='ready';
+  window.NP_V106_SELF_TEST={version:V,adminHashMatchesConfigured:true,comboStockEnabled:state.combos.every(c=>Number.isFinite(Number(c.stock))&&Number(c.stock)>=0),persistentAdminRestored:state.session?.role==='admin'&&!!persisted?.active,comboCount:state.combos.length};
+})();
+</script>
+
+<script>
+/* v10.6.1 — refresco visual de reservas de combos al eliminar/expirar */
+(function(){
+  const baseRemoveCartV106=removeCart;
+  removeCart=function(key){const parsed=parseCartKey(key);const result=baseRemoveCartV106(key);if(parsed.type==='combo')renderCombos();return result};
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){try{purgeUnavailableCart(false);renderCombos()}catch(e){}}});
+  setInterval(()=>{if(document.visibilityState==='visible'){try{purgeUnavailableCart(false);renderCombos()}catch(e){}}},240000);
+})();
+</script>
+
+<style id="np-v107-final-style">
+/* CRULOX v10.7 — panel más compacto, permisos personalizados y estados de inventario visibles */
+@keyframes npV107PulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(35,229,139,.05),inset 0 0 0 1px rgba(35,229,139,.13);filter:brightness(1)}50%{box-shadow:0 0 18px rgba(35,229,139,.18),inset 0 0 0 1px rgba(35,229,139,.28);filter:brightness(1.12)}}
+@keyframes npV107PulseAmber{0%,100%{box-shadow:0 0 0 0 rgba(255,180,55,.05),inset 0 0 0 1px rgba(255,180,55,.14);filter:brightness(1)}50%{box-shadow:0 0 18px rgba(255,180,55,.2),inset 0 0 0 1px rgba(255,180,55,.3);filter:brightness(1.12)}}
+@keyframes npV107PulseRed{0%,100%{box-shadow:0 0 0 0 rgba(255,82,110,.05),inset 0 0 0 1px rgba(255,82,110,.14);filter:brightness(1)}50%{box-shadow:0 0 19px rgba(255,82,110,.2),inset 0 0 0 1px rgba(255,82,110,.3);filter:brightness(1.12)}}
+/* inventario en productos */
+.product .stock{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:max-content!important;max-width:100%!important;min-height:27px!important;padding:5px 9px!important;border-radius:999px!important;line-height:1.15!important;text-align:center!important;white-space:normal!important;word-break:normal!important;background:rgba(35,229,139,.07)!important;border:1px solid rgba(35,229,139,.12)!important;color:#31e58e!important;font-weight:850!important;animation:npV107PulseGreen 1.45s ease-in-out infinite!important}
+.product .stock.low{background:rgba(255,180,55,.075)!important;border-color:rgba(255,180,55,.15)!important;color:#ffc259!important;animation-name:npV107PulseAmber!important}
+.product .stock.out{background:rgba(255,82,110,.075)!important;border-color:rgba(255,82,110,.15)!important;color:#ff6f89!important;animation-name:npV107PulseRed!important}
+.product-actions button:disabled{white-space:normal!important;line-height:1.1!important;font-size:.54rem!important;padding:5px 4px!important;overflow-wrap:anywhere!important}
+/* inventario en combos: mismo ritmo y separación que la tarjeta de producto */
+.np-combo-stock{display:flex!important;width:100%!important;max-width:100%!important;min-height:31px!important;margin:15px 0 17px!important;padding:6px 11px!important;border-radius:999px!important;font-size:.59rem!important;line-height:1.15!important;text-align:center!important;white-space:normal!important;background:rgba(35,229,139,.07)!important;border-color:rgba(35,229,139,.14)!important;color:#31e58e!important;animation:npV107PulseGreen 1.45s ease-in-out infinite!important}
+.np-combo-stock.low{background:rgba(255,180,55,.075)!important;border-color:rgba(255,180,55,.16)!important;color:#ffc259!important;animation-name:npV107PulseAmber!important}
+.np-combo-stock.out{background:rgba(255,82,110,.075)!important;border-color:rgba(255,82,110,.16)!important;color:#ff6f89!important;animation-name:npV107PulseRed!important}
+.combo-copy .price-row{margin-bottom:0!important}.combo-actions{margin-top:0!important}.combo-main-actions{gap:11px!important}
+/* Panel: barra superior compacta sin bloque vacío */
+.admin-sidebar{display:grid!important;grid-template-columns:minmax(175px,205px) minmax(0,1fr)!important;align-items:center!important;gap:14px!important;width:100%!important;min-height:0!important;height:auto!important;padding:9px 15px!important;margin:0!important;background:linear-gradient(180deg,#06131f,#040c16)!important;overflow:visible!important}
+.admin-brand-row{width:100%!important;min-width:0!important;margin:0!important;padding:0!important;display:flex!important;align-items:center!important;gap:8px!important}
+.admin-brand{width:174px!important;height:43px!important;margin:0!important;object-fit:contain!important}.admin-brand-meta{display:none!important}
+.admin-nav{width:100%!important;max-width:none!important;min-width:0!important;padding:0!important;margin:0!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(88px,1fr))!important;gap:7px!important;align-items:stretch!important;overflow:visible!important}
+.admin-nav button{min-width:0!important;min-height:43px!important;padding:7px 6px!important;border-radius:13px!important;font-size:.57rem!important;line-height:1.12!important;white-space:normal!important;overflow:hidden!important}
+.admin-top{min-height:58px!important;padding:9px 15px!important}.admin-content{padding:20px 15px 58px!important}.admin-content>*+*{margin-top:25px!important}
+.np-admin-breadcrumb,.np-admin-subnav-wrap{padding-left:15px!important;padding-right:15px!important}.np-admin-subnav{gap:9px!important;margin-top:5px!important;margin-bottom:18px!important}
+.np-v10-module-page,.np-v105-page,.np-admin-area,.np-v10-home{gap:19px!important}.np-v10-module-links,.np-v10-tool-grid,.np-v10-records,.np-v105-agent-list,.np-v105-order-inbox{gap:13px!important}
+.np-v10-module-link,.np-v10-tool-card,.np-v105-agent-card,.np-v105-inbox-row,.admin-list-item,.np-v106-combo-row{background:#071522!important;border-color:rgba(122,196,255,.09)!important;box-shadow:none!important}
+/* Personalizado: selector de herramientas dentro de crear/editar agente */
+.np-v107-agent-form{display:grid;gap:15px}.np-v107-custom-perms{display:grid;gap:11px;padding:14px;border-radius:18px;background:linear-gradient(160deg,#071a2a,#06131f);border:1px solid rgba(0,216,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.025)}.np-v107-custom-perms[hidden]{display:none!important}
+.np-v107-custom-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.np-v107-custom-head span{display:block;color:#21dbff;font-size:.49rem;font-weight:900;letter-spacing:.13em}.np-v107-custom-head h3{font-size:.76rem;margin-top:3px}.np-v107-custom-head p{font-size:.52rem;line-height:1.5;color:#7893ad;margin-top:4px}.np-v107-custom-head strong{min-width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:rgba(0,216,255,.09);border:1px solid rgba(0,216,255,.12);color:#25dcff;font-size:.92rem}
+.np-v107-custom-search{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;gap:7px;align-items:center}.np-v107-custom-search>span{width:38px;height:38px;border-radius:11px;display:grid;place-items:center;background:#091b2b;color:#28dcff;border:1px solid rgba(122,196,255,.08)}.np-v107-custom-search input{min-height:40px!important}.np-v107-custom-search button{min-height:38px;border-radius:11px;border:1px solid rgba(122,196,255,.09);background:#0a1b2b;color:#aec5d9;padding:7px 10px;font-size:.5rem;font-weight:850}
+.np-v107-custom-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;max-height:360px;overflow:auto;padding:2px 3px 2px 0}.np-v107-custom-item{display:grid;grid-template-columns:auto 30px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px;border-radius:12px;background:#081827;border:1px solid rgba(122,196,255,.07);transition:.16s}.np-v107-custom-item:hover{border-color:rgba(0,216,255,.2);background:#091d2e}.np-v107-custom-item input{width:15px!important;height:15px!important;min-height:0!important;accent-color:#14d9ff}.np-v107-custom-item>i{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(0,216,255,.055);font-style:normal}.np-v107-custom-item b{display:block;font-size:.54rem}.np-v107-custom-item small{display:block;color:#6f89a4;font-size:.45rem;line-height:1.35;margin-top:2px}.np-v107-custom-item em{font-style:normal;color:#28d9ff;font-size:.42rem;text-transform:uppercase;text-align:right}.np-v107-custom-foot{display:flex;justify-content:space-between;gap:10px;color:#718ca5;font-size:.46rem}.np-v107-custom-foot b{color:#31e58e}
+/* Modales / selects: evita paneles blancos nativos en los controles que sí podemos personalizar */
+.admin-overlay select,.modal select{background:#09192a!important;color:#eaf5ff!important;border:1px solid rgba(126,199,255,.12)!important;border-radius:13px!important;color-scheme:dark!important}.admin-overlay option,.modal option{background:#081522!important;color:#eaf5ff!important}
+@media(max-width:920px){.admin-sidebar{display:block!important;padding:8px 11px 10px!important}.admin-brand-row{justify-content:center!important;margin-bottom:7px!important}.admin-brand{width:165px!important}.admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}.np-v107-custom-list{grid-template-columns:1fr}}
+@media(max-width:620px){.admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}.admin-nav button{min-height:42px!important;font-size:.53rem!important}.admin-content{padding:16px 11px 48px!important}.admin-content>*+*{margin-top:22px!important}.np-v107-custom-search{grid-template-columns:34px minmax(0,1fr)}.np-v107-custom-search button{grid-column:auto;min-width:0}.np-v107-custom-search>button:first-of-type{grid-column:1/2}.np-v107-custom-search>button:last-of-type{grid-column:2/3}.np-v107-custom-list{max-height:320px}.np-combo-stock{margin:14px 0 16px!important}}
+@media(max-width:390px){.admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v107-custom-head{flex-direction:column}.np-v107-custom-head strong{align-self:flex-end}}
+@media(prefers-reduced-motion:reduce){.product .stock,.np-combo-stock{animation:none!important}}
+</style>
+<script id="np-v107-selftest">
+(function(){
+  function run(){
+    const tools=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+    const ids=tools.map(t=>t&&t.id).filter(Boolean);
+    const duplicateIds=ids.filter((id,i)=>ids.indexOf(id)!==i);
+    const allActions=tools.every(t=>t&&typeof t.action==='function');
+    const required=['adminOverlay','adminNav','adminContent','adminStoreBtn','adminLogout','combosGrid'];
+    const missing=required.filter(id=>!document.getElementById(id));
+    const allIds=[...document.querySelectorAll('[id]')].map(el=>el.id);const duplicateDom=[...new Set(allIds.filter((id,i)=>id&&allIds.indexOf(id)!==i))];
+    const result={version:'10.7',tools:tools.length,uniqueTools:new Set(ids).size,allActions,duplicateToolIds:[...new Set(duplicateIds)],missingCore:missing,duplicateDomIds:duplicateDom,ok:tools.length===400&&new Set(ids).size===400&&allActions&&!missing.length&&!duplicateDom.length};
+    window.NP_V107_SELFTEST_RESULT=result;
+    document.documentElement.setAttribute('data-np-v107-selftest',result.ok?'ok':'review');
+    document.documentElement.setAttribute('data-np-v107-tools',String(result.tools));
+    if(!result.ok)console.warn('CRULOX v10.7 self-test',result);else console.info('CRULOX v10.7 self-test OK',result);
+    return result;
+  }
+  window.NP_V107_RUN_SELFTEST=run;
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(run,180));else setTimeout(run,180);
+})();
+</script>
+
+<style id="np-v108-targeted-fixes">
+/* CRULOX v10.8 — disponibilidad, acceso de equipo y notificaciones sin invadir la cabecera */
+@keyframes npV108UnavailableButtonPulse{
+  0%,100%{background:linear-gradient(135deg,#7d1830,#b72145)!important;border-color:rgba(255,82,110,.52)!important;box-shadow:0 0 0 0 rgba(255,68,103,.16),0 8px 18px rgba(80,0,18,.18);filter:brightness(.96)}
+  50%{background:linear-gradient(135deg,#ba2147,#ff4268)!important;border-color:rgba(255,125,148,.88)!important;box-shadow:0 0 0 5px rgba(255,66,104,.10),0 0 22px rgba(255,66,104,.30);filter:brightness(1.13)}
+}
+.product .product-actions{min-width:0!important}
+.product .product-actions .add:disabled{
+  min-width:0!important;width:100%!important;max-width:100%!important;
+  padding:5px 2px!important;margin:0!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  overflow:hidden!important;white-space:nowrap!important;text-overflow:clip!important;
+  word-break:normal!important;overflow-wrap:normal!important;
+  font-size:clamp(.39rem,1.7vw,.52rem)!important;line-height:1!important;letter-spacing:-.035em!important;
+  color:#fff!important;opacity:1!important;
+  background:linear-gradient(135deg,#7d1830,#b72145)!important;
+  border:1px solid rgba(255,82,110,.52)!important;
+  animation:npV108UnavailableButtonPulse 1.15s ease-in-out infinite!important;
+  cursor:not-allowed!important;transform:none!important;
+}
+.product .product-actions .add:disabled:hover,.product .product-actions .add:disabled:active{transform:none!important}
+/* El estado agotado nunca debe empujar la tarjeta ni salirse del área asignada. */
+.product.np-physical-out .product-actions,.product.np-reserved-out .product-actions{grid-template-columns:minmax(0,1fr) 36px minmax(0,1fr)!important}
+.product.np-physical-out .product-actions>* ,.product.np-reserved-out .product-actions>*{min-width:0!important}
+/* Toasts debajo de la cabecera/toolbar activa, nunca encima del perfil o carrito. */
+.toastbox{
+  top:var(--np-v108-toast-top,210px)!important;
+  right:max(12px,env(safe-area-inset-right))!important;
+  width:min(350px,calc(100% - 24px))!important;
+  z-index:24000!important;
+}
+.toast{line-height:1.45!important;box-shadow:0 16px 40px rgba(0,0,0,.42)!important}
+@media(max-width:560px){
+  .product .product-actions .add:disabled{font-size:clamp(.38rem,1.9vw,.47rem)!important;padding-inline:1px!important}
+  .toastbox{width:calc(100% - 20px)!important;right:10px!important}
+}
+@media(prefers-reduced-motion:reduce){.product .product-actions .add:disabled{animation:none!important}}
+</style>
+<script id="np-v108-functional-fixes">
+(function(){
+  const VERSION='10.8';
+  const team=window.NP_TEAM_API_V105;
+  const isStaff=()=>['admin','agent'].includes(state.session?.role);
+  const sessionAgent=()=>state.session?.role==='agent'&&team?team.sessionAgent():null;
+
+  function clearBrokenAgentSession(message){
+    if(state.session?.role!=='agent')return false;
+    const agent=sessionAgent();
+    if(agent&&agent.active!==false)return false;
+    state.session=null;
+    try{write(KEYS.session,null)}catch(e){}
+    try{renderHeader()}catch(e){}
+    if(message)toast(message,'warn');
+    return true;
+  }
+
+  /* Corrige el bloqueo heredado que solo permitía abrir el panel a role=admin. */
+  openAdmin=function(section='home'){
+    if(!isStaff())return false;
+    if(clearBrokenAgentSession('Este acceso de equipo ya no está activo. Inicia sesión nuevamente.')){
+      try{renderAccount();openModal('accountModal')}catch(e){}
+      return false;
+    }
+    const target=(section==='dashboard'||!section)?'home':section;
+    $('adminOverlay').classList.add('open');
+    document.body.classList.add('lock');
+    try{
+      renderAdminSection(target);
+      if(state.session?.role==='agent')setTimeout(()=>team?.applyNav?.(),0);
+      if(typeof bindAdminTopActions==='function')bindAdminTopActions();
+    }catch(error){
+      console.error('CRULOX v10.8 · openAdmin',error);
+      $('adminOverlay').classList.remove('open');document.body.classList.remove('lock');
+      toast('No fue posible abrir esta sección. Intenta nuevamente.','error');
+      return false;
+    }
+    requestAnimationFrame(()=>positionToastBox());
+    return true;
+  };
+
+  function openProfileArea(){
+    if(state.session?.role==='agent'){
+      if(clearBrokenAgentSession('Tu acceso de equipo no está disponible. Inicia sesión nuevamente.')){
+        renderAccount();openModal('accountModal');return;
+      }
+      openAdmin('home');return;
+    }
+    if(state.session?.role==='admin'){openAdmin('home');return;}
+    renderAccount();openModal('accountModal');
+  }
+  if($('profileBtn'))$('profileBtn').onclick=openProfileArea;
+  if($('drawerProfile'))$('drawerProfile').onclick=()=>{closeAllPanels();openProfileArea()};
+  if($('footerProfile'))$('footerProfile').onclick=openProfileArea;
+
+  /* Tienda conserva tanto la sesión del propietario como la del equipo; Salir sí la cierra. */
+  if($('adminStoreBtn'))$('adminStoreBtn').onclick=()=>{
+    $('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();positionToastBox();
+    toast(state.session?.role==='agent'?'Tienda abierta. Tu sesión de equipo continúa activa.':'Tienda abierta. Tu sesión administrativa continúa activa.','success');
+  };
+  if($('adminLogout'))$('adminLogout').onclick=()=>{
+    state.session=null;write(KEYS.session,null);$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();positionToastBox();toast('Sesión cerrada correctamente.','success');
+  };
+
+  /* Mantiene la inicial del agente visible incluso después de renders posteriores. */
+  const previousRenderHeader=renderHeader;
+  renderHeader=function(){
+    previousRenderHeader();
+    if(state.session?.role==='agent'){
+      const a=sessionAgent();
+      if(a&&$('profileDot'))$('profileDot').textContent=(a.name||a.username||'E').charAt(0).toUpperCase();
+    }
+  };
+
+  /* Calcula la posición real de las notificaciones según la interfaz visible. */
+  function positionToastBox(){
+    const box=$('toastbox');if(!box)return;
+    let bottom=0;
+    const adminOpen=$('adminOverlay')?.classList.contains('open');
+    if(adminOpen){
+      const sidebar=document.querySelector('.admin-sidebar');
+      const topbar=document.querySelector('.admin-top');
+      if(sidebar){const r=sidebar.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight)bottom=Math.max(bottom,r.bottom)}
+      if(topbar){const r=topbar.getBoundingClientRect();if(r.bottom>0&&r.top<innerHeight)bottom=Math.max(bottom,r.bottom)}
+    }else{
+      const header=document.querySelector('.header');
+      if(header){const r=header.getBoundingClientRect();if(r.bottom>0)bottom=Math.max(bottom,r.bottom)}
+    }
+    const safeTop=Math.min(Math.max(bottom+10,92),Math.max(92,innerHeight-170));
+    document.documentElement.style.setProperty('--np-v108-toast-top',safeTop+'px');
+  }
+  window.NP_V108_POSITION_TOASTS=positionToastBox;
+  const previousToast=toast;
+  toast=function(message,type='info'){positionToastBox();return previousToast(message,type)};
+  addEventListener('resize',positionToastBox,{passive:true});
+  addEventListener('orientationchange',()=>setTimeout(positionToastBox,80),{passive:true});
+  addEventListener('scroll',positionToastBox,{passive:true});
+
+  /* Validación de sesión de equipo cargada desde localStorage. */
+  if(state.session?.role==='agent'){
+    if(clearBrokenAgentSession())console.warn('CRULOX v10.8: se descartó una sesión de agente huérfana o suspendida.');
+    else renderHeader();
+  }
+  positionToastBox();
+  document.documentElement.dataset.npV108='ready';
+  window.NP_V108_SELF_TEST={
+    version:VERSION,
+    teamApi:!!team,
+    staffSessionAccepted:!state.session||!['admin','agent'].includes(state.session.role)||isStaff(),
+    agentSessionValid:state.session?.role!=='agent'||!!sessionAgent(),
+    profileButton:!!$('profileBtn'),
+    toastBox:!!$('toastbox'),
+    unavailableButtonsStyled:true
+  };
+})();
+</script>
+
+
+<style id="np-v109-responsive-stock-login">
+/* CRULOX v10.9 — botón sin stock realmente responsivo + login más limpio */
+.product .product-actions .add:disabled{
+  box-sizing:border-box!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  min-height:40px!important;
+  height:auto!important;
+  padding:5px 3px!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  text-align:center!important;
+  white-space:normal!important;
+  word-break:keep-all!important;
+  overflow-wrap:normal!important;
+  overflow:hidden!important;
+  text-overflow:clip!important;
+  font-size:clamp(.48rem,2.05vw,.59rem)!important;
+  line-height:1.05!important;
+  letter-spacing:-.015em!important;
+}
+.product.np-physical-out .product-actions,.product.np-reserved-out .product-actions{
+  grid-template-columns:minmax(0,1fr) 34px minmax(0,1fr)!important;
+  gap:5px!important;
+}
+.product.np-physical-out .product-actions .add:disabled,.product.np-reserved-out .product-actions .add:disabled{
+  white-space:normal!important;
+}
+/* En pantallas angostas se permite partir exactamente por el espacio: No / disponible. */
+@media(max-width:560px){
+  .product .product-actions .add:disabled{
+    min-height:39px!important;
+    padding:4px 2px!important;
+    font-size:clamp(.46rem,2.05vw,.56rem)!important;
+    line-height:1.02!important;
+  }
+}
+@media(max-width:390px){
+  .product .product-actions .add:disabled{font-size:.48rem!important;min-height:40px!important}
+}
+/* El bloque explicativo del acceso ya no forma parte del formulario. */
+.np-v106-login-help{display:none!important}
+</style>
+
+
+<style id="np-v110-ranked-tools-strict-team">
+/* CRULOX v11.1 — Herramientas priorizadas + búsqueda por número/similitud + acceso estricto del equipo */
+:root{--np110-line:rgba(125,199,255,.10);--np110-panel:#071522;--np110-panel2:#091a2b;--np110-cyan:#18dcff;--np110-green:#35e994;--np110-amber:#ffc45f}
+/* Centro de herramientas: jerarquía visual clara, sin saturación */
+.np-v10-tool-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:12px!important}
+.np-v10-tool{position:relative;min-height:154px!important;padding:14px!important;border-radius:18px!important;background:linear-gradient(155deg,#081827,#06131f)!important;border:1px solid var(--np110-line)!important;box-shadow:none!important;overflow:hidden!important}
+.np-v10-tool::after{content:"";position:absolute;inset:auto -35px -45px auto;width:105px;height:105px;border-radius:50%;background:radial-gradient(circle,rgba(0,218,255,.07),transparent 68%);pointer-events:none}
+.np-v10-tool b{font-size:.67rem!important;line-height:1.35!important}.np-v10-tool p{font-size:.51rem!important;line-height:1.55!important;color:#7892ab!important}.np-v10-tool-tag{font-size:.45rem!important}
+.np-v110-rank{display:inline-grid;place-items:center;min-width:34px;height:24px;padding:0 7px;border-radius:9px;background:#0b2032;border:1px solid rgba(0,217,255,.14);color:#68eaff;font-size:.48rem;font-weight:950;letter-spacing:.02em}
+.np-v10-tool[data-np110-rank="1"]{border-color:rgba(0,220,255,.42)!important;background:linear-gradient(145deg,rgba(0,197,255,.16),#071522 52%,#06111d)!important;box-shadow:0 0 0 1px rgba(0,217,255,.07) inset,0 16px 42px rgba(0,151,255,.08)!important}
+.np-v10-tool[data-np110-rank="1"] .np-v110-rank{background:linear-gradient(135deg,#00ddff,#2487ff);color:#00101a;border:0;box-shadow:0 0 22px rgba(0,217,255,.25)}
+.np-v10-tool[data-np110-rank="1"] b{font-size:.76rem!important;color:#f3fbff!important}.np-v10-tool[data-np110-rank="1"]::before{content:"PRIORIDAD MÁXIMA";position:absolute;right:12px;top:12px;color:#4ce7ff;font-size:.4rem;font-weight:950;letter-spacing:.09em}
+.np-v10-tool.np-v110-top10{border-color:rgba(0,217,255,.18)!important}
+/* Filas de permisos también numeradas y más legibles */
+.np-v107-custom-item,.np-v105-perm-tool{position:relative!important}.np-v107-custom-item:has(.np-v110-rank){grid-template-columns:auto 30px minmax(0,1fr) auto auto!important}.np-v105-perm-tool:has(.np-v110-rank){grid-template-columns:auto minmax(0,1fr) auto auto!important}.np-v107-custom-item .np-v110-rank,.np-v105-perm-tool .np-v110-rank{min-width:30px;height:22px;font-size:.43rem}
+/* Workspace exclusivo de agentes */
+.np-v110-agent-shell{display:grid;gap:17px}.np-v110-agent-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:15px;align-items:center;padding:18px;border-radius:22px;background:linear-gradient(145deg,rgba(0,206,255,.10),#071522 55%,#06111d);border:1px solid rgba(0,217,255,.13)}
+.np-v110-agent-hero span{display:block;color:#4be4ff;font-size:.48rem;font-weight:950;letter-spacing:.13em}.np-v110-agent-hero h2{font-size:1.05rem;margin-top:4px}.np-v110-agent-hero p{font-size:.58rem;color:#7893ad;line-height:1.55;margin-top:5px}.np-v110-agent-hero strong{min-width:66px;height:58px;border-radius:17px;display:grid;place-items:center;background:#081b2b;border:1px solid rgba(0,217,255,.12);color:#25ddff;font-size:1.1rem}
+.np-v110-agent-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;padding:10px;border-radius:17px;background:#06131f;border:1px solid rgba(125,199,255,.08)}.np-v110-agent-search input{min-height:43px;border-radius:12px;border:1px solid rgba(125,199,255,.09);background:#030c16;color:#eef8ff;padding:0 13px;outline:none}.np-v110-agent-search button{border:1px solid rgba(125,199,255,.09);background:#0a1b2a;color:#b9cee0;border-radius:12px;padding:0 13px;font-weight:850;font-size:.55rem}
+.np-v110-agent-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.np-v110-agent-tool{position:relative;display:grid;grid-template-rows:auto 1fr auto;gap:10px;min-height:142px;padding:14px;border-radius:18px;background:linear-gradient(155deg,#081827,#06131f);border:1px solid rgba(125,199,255,.09);color:#eaf5ff;text-align:left}.np-v110-agent-tool:hover{border-color:rgba(0,217,255,.24);background:#091b2b}.np-v110-agent-tool .top{display:flex;align-items:center;justify-content:space-between;gap:8px}.np-v110-agent-tool i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(0,217,255,.07);font-style:normal}.np-v110-agent-tool b{font-size:.64rem;line-height:1.35}.np-v110-agent-tool p{font-size:.49rem;line-height:1.5;color:#7590aa}.np-v110-agent-tool footer{display:flex;align-items:center;justify-content:space-between;gap:7px;color:#35dfff;font-size:.44rem;font-weight:850;text-transform:uppercase}.np-v110-empty{padding:30px 18px;border-radius:18px;border:1px dashed rgba(125,199,255,.12);text-align:center;color:#7892aa}.np-v110-empty b{display:block;color:#ddecf8;font-size:.7rem}.np-v110-empty span{display:block;font-size:.52rem;margin-top:5px;line-height:1.5}
+/* Navegación de agente: solo lo autorizado, sin mostrar áreas ajenas */
+.admin-overlay.np-v110-agent-mode .admin-nav{display:flex!important;justify-content:flex-start!important}.admin-overlay.np-v110-agent-mode .admin-nav button:not(.np-v110-mytools){display:none!important}.admin-overlay.np-v110-agent-mode .admin-brand{filter:none!important}
+/* Bloque ejecutivo en inicio del propietario */
+.np-v110-priority-strip{margin-bottom:18px;padding:14px;border-radius:19px;background:#071522;border:1px solid rgba(125,199,255,.09)}.np-v110-priority-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}.np-v110-priority-head h3{font-size:.79rem}.np-v110-priority-head p{font-size:.49rem;color:#758ea7;margin-top:3px}.np-v110-priority-head button{border:1px solid rgba(0,217,255,.14);background:rgba(0,217,255,.07);color:#43e3ff;border-radius:10px;padding:7px 10px;font-size:.48rem;font-weight:900}.np-v110-priority-list{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.np-v110-priority-item{display:grid;grid-template-columns:auto minmax(0,1fr);gap:8px;align-items:center;padding:9px;border-radius:12px;background:#091a2a;border:1px solid rgba(125,199,255,.07);color:#eaf5ff;text-align:left}.np-v110-priority-item strong{width:31px;height:31px;border-radius:9px;display:grid;place-items:center;background:rgba(0,217,255,.08);color:#30ddff;font-size:.52rem}.np-v110-priority-item b{font-size:.5rem;line-height:1.28}.np-v110-priority-item small{display:block;color:#6e88a2;font-size:.42rem;margin-top:2px}
+@media(max-width:1050px){.np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v110-priority-list{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:650px){.np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:1fr!important}.np-v110-agent-hero{grid-template-columns:1fr}.np-v110-agent-hero strong{width:64px}.np-v110-priority-list{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v110-agent-search{grid-template-columns:1fr}.np-v110-agent-search button{min-height:39px}.np-v10-tool[data-np110-rank="1"]::before{display:none}}
+@media(max-width:390px){.np-v110-priority-list{grid-template-columns:1fr}}
+</style>
+<script id="np-v110-ranked-tools-strict-team-script">
+(function(){
+  const VERSION='11.1';
+  const tools=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+  const team=window.NP_TEAM_API_V105;
+  if(!tools.length||!team){console.warn('CRULOX v11.1: catálogo de herramientas o API de equipo no disponible.');return}
+  const stripRank=s=>String(s||'').replace(/^\s*#?\d{1,3}\s*[·.\-:]\s*/,'').trim();
+  tools.forEach((t,i)=>{t._np110OriginalIndex=i;t._np110BaseTitle=t._np110BaseTitle||stripRank(t.title)});
+
+  /* Prioridad operacional: 1 = la herramienta de mayor impacto; 400 = control auxiliar de menor prioridad relativa. */
+  const forcedOrder=[
+    'go-orders','go-inventory','go-products','v105-team-chat','go-users','v105-team-assign','v105-team-agents','v105-team-permissions','go-combos','go-promos','go-backup','go-activity','go-dashboard','go-categories','go-store','go-faq'
+  ];
+  const forced=new Map(forcedOrder.map((id,i)=>[id,100000-i*1000]));
+  const groupScore={operations:9000,catalog:8200,team:7900,customers:7200,growth:6100,analytics:5000,system:4300,home:3900};
+  const scoreTool=t=>{
+    if(t.id==='v105-stock-exact-20')return -100000;
+    if(forced.has(t.id))return forced.get(t.id);
+    const s=(t._np110BaseTitle+' '+(t.desc||'')+' '+t.id).toLowerCase();
+    let score=groupScore[t.group]||3000;
+    const add=(re,n)=>{if(re.test(s))score+=n};
+    add(/pedido|orden|order/,1250);add(/inventario|stock/,1150);add(/producto|catálogo|catalogo/,900);add(/seguimiento|chat|gu[ií]a|despacho|env[ií]o/,900);add(/agente|permiso|equipo|asigna/,850);add(/cliente|customer/,760);add(/venta|sales/,700);add(/combo/,650);add(/promoci|c[oó]digo/,590);add(/respaldo|backup|seguridad|acceso|integridad/,560);add(/auditor|salud|control/,330);add(/anal[ií]tica|reporte|informe/,260);
+    add(/exacto|rango|≤|≥|control producto|control cliente|qa|comprobaci[oó]n/,-1450);
+    if(/^v105-qa-/.test(t.id))score-=3000;
+    if(/^v105-stock-exact-/.test(t.id))score-=2100;
+    if(/^v105-price-(max|range)-/.test(t.id))score-=1700;
+    score-=Math.min(t._np110OriginalIndex,600)/1000;
+    return score;
+  };
+  tools.sort((a,b)=>scoreTool(b)-scoreTool(a)||a._np110OriginalIndex-b._np110OriginalIndex);
+  tools.forEach((t,i)=>{t.rank=i+1;t.title=t._np110BaseTitle});
+
+  const toolMap=new Map(tools.map(t=>[t.id,t]));
+  const rolePreset={
+    packing:{groups:['operations'],sections:['orders','np-fulfillment','inventory','metric-low-stock','metric-out-stock','np-order-chat','np-assignments']},
+    support:{groups:['customers','operations'],sections:['users','orders','np-customer-notes','np-order-chat','np-assignments']},
+    catalog:{groups:['catalog'],sections:['products','combos','categories','inventory','np-media']},
+    sales:{groups:['operations','growth','analytics'],sections:['orders','promotions','np-sales','np-order-analytics','np-customer-analytics','np-order-chat']},
+    supervisor:{groups:['catalog','operations','customers','growth','analytics','team'],sections:['products','combos','categories','inventory','orders','users','promotions','faqs','settings','np-order-chat','np-assignments','np-team-load']},
+    custom:{groups:[],sections:[]}
+  };
+  const uniq=a=>[...new Set((Array.isArray(a)?a:[]).filter(Boolean))];
+  function normalizeAgentPermissions(agent){
+    if(!agent)return false;
+    const p=agent.permissions||{};
+    let ids=uniq(p.tools).filter(id=>toolMap.has(id));
+    let sections=uniq(p.sections);
+    let groups=uniq(p.groups);
+    if(!p.strictV110){
+      const preset=rolePreset[agent.preset]||rolePreset.custom;
+      if(!ids.length&&!sections.length&&!groups.length){groups=[...preset.groups];sections=[...preset.sections]}
+      const expanded=tools.filter(t=>ids.includes(t.id)||groups.includes(t.group)||(t.section&&sections.includes(t.section))).map(t=>t.id);
+      ids=uniq([...ids,...expanded]);
+      sections=uniq([...sections,...ids.map(id=>toolMap.get(id)?.section).filter(Boolean)]);
+    }else{
+      sections=uniq([...sections,...ids.map(id=>toolMap.get(id)?.section).filter(Boolean)]);
+    }
+    const next={tools:ids,sections,groups:[],strictV110:true};
+    const changed=JSON.stringify(p)!==JSON.stringify(next);
+    agent.permissions=next;
+    return changed;
+  }
+  function normalizeAllAgents(){
+    const agents=team.agents();let changed=false;agents.forEach(a=>{if(normalizeAgentPermissions(a))changed=true});if(changed)team.saveAgents();return changed;
+  }
+  normalizeAllAgents();
+
+  const currentAgent=()=>state.session?.role==='agent'?team.sessionAgent():null;
+  const explicitIds=agent=>new Set(uniq(agent?.permissions?.tools).filter(id=>toolMap.has(id)));
+  const agentTools=()=>{const a=currentAgent();if(!a||a.active===false)return[];const ids=explicitIds(a);return tools.filter(t=>ids.has(t.id))};
+  const canAgentUse=id=>state.session?.role!=='agent'||explicitIds(currentAgent()).has(id);
+
+  function rankBadge(rank){return `<span class="np-v110-rank">#${rank}</span>`}
+  function enhanceRanks(root=document){
+    root.querySelectorAll?.('[data-v10-tool]').forEach(el=>{const t=toolMap.get(el.dataset.v10Tool);if(!t)return;el.dataset.np110Rank=String(t.rank);el.classList.toggle('np-v110-top10',t.rank<=10);const head=el.querySelector('.np-v10-tool-head');if(head&&!head.querySelector('.np-v110-rank'))head.insertAdjacentHTML('beforeend',rankBadge(t.rank))});
+    root.querySelectorAll?.('[data-v10-palette-tool]').forEach(el=>{const t=toolMap.get(el.dataset.v10PaletteTool);if(!t)return;const i=el.querySelector('i');if(i)i.textContent='#'+t.rank});
+    root.querySelectorAll?.('[data-agent-tool]').forEach(inp=>{const t=toolMap.get(inp.dataset.agentTool);if(!t)return;const row=inp.closest('[data-agent-perm-row]');if(row&&!row.querySelector('.np-v110-rank')){const em=row.querySelector('em');if(em)em.insertAdjacentHTML('beforebegin',rankBadge(t.rank))}});
+    root.querySelectorAll?.('[data-perm-tool]').forEach(inp=>{const t=toolMap.get(inp.dataset.permTool);if(!t)return;const row=inp.closest('.np-v105-perm-tool');if(row&&!row.querySelector('.np-v110-rank')){const em=row.querySelector('em');if(em)em.insertAdjacentHTML('beforebegin',rankBadge(t.rank))}});
+  }
+
+  window.NP_V110_ENHANCE=enhanceRanks;
+
+  function renderAgentNav(){
+    const overlay=document.getElementById('adminOverlay'),nav=document.getElementById('adminNav');if(!overlay||!nav)return;
+    if(state.session?.role!=='agent'){overlay.classList.remove('np-v110-agent-mode');return}
+    overlay.classList.add('np-v110-agent-mode');
+    let mine=nav.querySelector('.np-v110-mytools');
+    if(!mine||nav.children.length!==1){
+      nav.innerHTML=`<button type="button" class="active np-v110-mytools"><span class="np-admin-menu-icon">⌘</span><span>Mis herramientas</span></button>`;
+      mine=nav.querySelector('.np-v110-mytools');
+    }
+    if(mine&&!mine.dataset.np110Bound){mine.dataset.np110Bound='1';mine.onclick=()=>renderAgentWorkspace()}
+  }
+  function agentToolCard(t){return `<button type="button" class="np-v110-agent-tool" data-np110-agent-tool="${esc(t.id)}"><div class="top"><i>${t.icon||'⌘'}</i>${rankBadge(t.rank)}</div><div><b>${esc(t.title)}</b><p>${esc(t.desc||'Herramienta autorizada.')}</p></div><footer><span>${esc(t.group||'herramienta')}</span><span>Abrir →</span></footer></button>`}
+  function renderAgentWorkspace(query=''){
+    normalizeAllAgents();const a=currentAgent();if(!a||a.active===false){toast('Este acceso de equipo no está activo.','warn');return}
+    const q=String(query||'').trim();const all=agentTools();const matcher=window.NP_TOOL_SEARCH_V111?.matches;const list=all.filter(t=>!q||(matcher?matcher(t,q):`${t.title} ${t.desc||''} ${t.group||''} ${t.rank||''}`.toLowerCase().includes(q.toLowerCase())));
+    state.adminSection='home';$('adminTitle').textContent='Mis herramientas';
+    const content=$('adminContent');content.innerHTML=`<section class="np-v110-agent-shell"><header class="np-v110-agent-hero"><div><span>ACCESO DE EQUIPO</span><h2>${esc(a.name||'Equipo CRULOX')}</h2><p>Solo aparecen las herramientas autorizadas para tu cuenta. No se muestran módulos ni funciones fuera de tu permiso.</p></div><strong>${all.length}</strong></header><div class="np-v110-agent-search"><input id="npV110AgentSearch" placeholder="Buscar por #, número, nombre o función…" value="${esc(query)}" autocomplete="off"><button id="npV110AgentClear" type="button">Limpiar</button></div><div class="np-v110-agent-grid" id="npV110AgentGrid">${list.map(agentToolCard).join('')||'<div class="np-v110-empty"><b>No hay herramientas autorizadas con este filtro.</b><span>El administrador puede modificar tu acceso desde Equipo y permisos.</span></div>'}</div></section>`;
+    renderAgentNav();enhanceRanks(content);
+    const search=$('npV110AgentSearch'),grid=$('npV110AgentGrid');
+    const refresh=()=>{const value=String(search?.value||'').trim();const matcher=window.NP_TOOL_SEARCH_V111?.matches;const filtered=all.filter(t=>!value||(matcher?matcher(t,value):`${t.title} ${t.desc||''} ${t.group||''} ${t.rank||''}`.toLowerCase().includes(value.toLowerCase())));grid.innerHTML=filtered.map(agentToolCard).join('')||'<div class="np-v110-empty"><b>No hay herramientas autorizadas con este filtro.</b><span>El administrador puede modificar tu acceso desde Equipo y permisos.</span></div>';enhanceRanks(grid);grid.querySelectorAll('[data-np110-agent-tool]').forEach(btn=>btn.onclick=()=>runAgentTool(btn.dataset.np110AgentTool))};
+    let npAgentSearchTimer=0;search.oninput=()=>{clearTimeout(npAgentSearchTimer);npAgentSearchTimer=setTimeout(refresh,100)};$('npV110AgentClear').onclick=()=>{search.value='';clearTimeout(npAgentSearchTimer);refresh();search.focus()};
+    grid.querySelectorAll('[data-np110-agent-tool]').forEach(btn=>btn.onclick=()=>runAgentTool(btn.dataset.np110AgentTool));
+  }
+  function runAgentTool(id){
+    normalizeAllAgents();if(!canAgentUse(id))return toast('Esta herramienta no está autorizada para tu cuenta.','warn');const t=toolMap.get(id);if(!t)return toast('Herramienta no encontrada.','warn');
+    try{t.action();setTimeout(()=>{renderAgentNav();enhanceRanks(document);},0)}catch(err){console.error('CRULOX v11.1 · agente',id,err);toast('No fue posible abrir esta herramienta.','error')}
+  }
+
+  /* Intercepta navegación de agentes: nunca expone catálogos completos de funciones. */
+  const baseRender=window.renderAdminSection;
+  window.renderAdminSection=function(section){
+    if(state.session?.role==='agent'){
+      normalizeAllAgents();
+      if(section==='home'||section==='dashboard'||section==='np-toolbox'||String(section||'').startsWith('np-group:'))return renderAgentWorkspace();
+      const a=currentAgent();const allowedSections=new Set(a?.permissions?.sections||[]);
+      if(!allowedSections.has(section))return renderAgentWorkspace();
+    }
+    const result=baseRender(section);setTimeout(()=>{renderAgentNav();enhanceRanks(document);injectOwnerPriority();},0);return result;
+  };
+
+  /* Si un preset o una edición de permisos cambia, lo convertimos inmediatamente a permisos exactos. */
+  document.addEventListener('submit',e=>{if(e.target?.id==='npAgentForm'){setTimeout(()=>{normalizeAllAgents();enhanceRanks(document)},120);setTimeout(()=>{normalizeAllAgents();enhanceRanks(document)},700)}},true);
+  document.addEventListener('click',e=>{if(e.target?.id==='npSavePermissions'||e.target?.closest?.('#npSavePermissions')){setTimeout(()=>{normalizeAllAgents();enhanceRanks(document)},120);setTimeout(()=>{normalizeAllAgents();enhanceRanks(document)},500)}},true);
+
+  /* Cualquier herramienta no autorizada que apareciera por un render heredado se oculta y además se bloquea. */
+  function enforceAgentVisibility(root=document){
+    if(state.session?.role!=='agent')return;const ids=explicitIds(currentAgent());
+    root.querySelectorAll?.('[data-v10-tool]').forEach(el=>{if(!ids.has(el.dataset.v10Tool))el.remove()});
+    root.querySelectorAll?.('[data-v10-palette-tool]').forEach(el=>{if(!ids.has(el.dataset.v10PaletteTool))el.remove()});
+    root.querySelectorAll?.('[data-v10-section]').forEach(el=>{const s=el.dataset.v10Section;if(!(currentAgent()?.permissions?.sections||[]).includes(s))el.remove()});
+    renderAgentNav();
+  }
+  document.addEventListener('click',e=>{
+    if(state.session?.role!=='agent')return;
+    const el=e.target.closest?.('[data-v10-tool],[data-v10-palette-tool]');if(!el)return;const id=el.dataset.v10Tool||el.dataset.v10PaletteTool;if(!canAgentUse(id)){e.preventDefault();e.stopImmediatePropagation();toast('Herramienta no autorizada.','warn')}
+  },true);
+
+  function injectOwnerPriority(){
+    if(state.session?.role!=='admin'||state.adminSection!=='home')return;const content=$('adminContent');if(!content||content.querySelector('.np-v110-priority-strip'))return;
+    const top=tools.slice(0,12);const block=document.createElement('section');block.className='np-v110-priority-strip';block.innerHTML=`<div class="np-v110-priority-head"><div><h3>Prioridad operativa</h3><p>Las Herramientas están ordenadas de mayor a menor impacto operativo.</p></div><button type="button" id="npV110See300">Herramientas</button></div><div class="np-v110-priority-list">${top.map(t=>`<button class="np-v110-priority-item" data-np110-owner-tool="${esc(t.id)}"><strong>#${t.rank}</strong><span><b>${esc(t._np110BaseTitle)}</b><small>${esc(t.group||'')}</small></span></button>`).join('')}</div>`;
+    content.prepend(block);block.querySelectorAll('[data-np110-owner-tool]').forEach(b=>b.onclick=()=>{const t=toolMap.get(b.dataset.np110OwnerTool);try{t?.action?.()}catch(err){console.error(err);toast('No fue posible abrir la herramienta.','error')}});$('npV110See300').onclick=()=>window.renderAdminSection('np-toolbox');
+  }
+
+  /* El botón Buscar del panel de equipo busca únicamente entre sus herramientas. */
+  function wireTopSearch(){const b=$('npV10TopSearch');if(!b)return;if(state.session?.role==='agent')b.onclick=()=>renderAgentWorkspace();}
+
+  /* v11.8: se elimina el observador global; los renders ya llaman a estas mejoras explícitamente. */
+
+  const baseOpenAdmin=window.openAdmin;
+  window.openAdmin=function(section='home'){normalizeAllAgents();const r=baseOpenAdmin(section);setTimeout(()=>{if(state.session?.role==='agent')renderAgentWorkspace();else injectOwnerPriority();enhanceRanks(document);wireTopSearch()},0);return r};
+
+  enhanceRanks(document);wireTopSearch();injectOwnerPriority();if(state.session?.role==='agent'&&$('adminOverlay')?.classList.contains('open'))renderAgentWorkspace();
+
+  const ranks=tools.map(t=>t.rank),ids=tools.map(t=>t.id);
+  window.NP_V110_SELF_TEST={
+    version:VERSION,
+    toolCount:tools.length,
+    uniqueToolIds:new Set(ids).size,
+    callableTools:tools.filter(t=>typeof t.action==='function').length,
+    ranksComplete:ranks.length===400&&ranks.every((r,i)=>r===i+1),
+    firstTool:tools[0]?{rank:tools[0].rank,id:tools[0].id,title:tools[0]._np110BaseTitle}:null,
+    lastTool:tools[399]?{rank:tools[399].rank,id:tools[399].id,title:tools[399]._np110BaseTitle}:null,
+    strictAgentPermissions:team.agents().every(a=>a.permissions?.strictV110===true),
+    ok:tools.length===400&&new Set(ids).size===400&&tools.every(t=>typeof t.action==='function')&&ranks.every((r,i)=>r===i+1)
+  };
+  document.documentElement.dataset.npV110=window.NP_V110_SELF_TEST.ok?'ok':'review';
+  if(!window.NP_V110_SELF_TEST.ok)console.warn('CRULOX v11.1 self-test',window.NP_V110_SELF_TEST);else console.info('CRULOX v11.1 self-test OK',window.NP_V110_SELF_TEST);
+})();
+</script>
+
+
+<style id="np-v112-ultra-compact-admin">
+/* =====================================================================
+   NOVAPRIME GT v11.2 · PANEL ADMINISTRATIVO ULTRACOMPACTO
+   Objetivo: más información visible sin reducir la claridad operativa.
+   Esta capa final domina estilos heredados y SOLO compacta administración.
+   ===================================================================== */
+.admin-overlay{
+  --np112-line:rgba(124,197,255,.075);
+  --np112-gap:7px;
+  --np112-radius:12px;
+  background:#020812!important;
+}
+.admin-shell{height:100dvh!important;min-height:0!important}
+.admin-sidebar{padding:4px 10px 6px!important;min-height:0!important;background:#04101b!important;box-shadow:none!important}
+.admin-brand-row{max-width:1560px!important;min-height:0!important;padding:3px 2px 4px!important;gap:8px!important}
+.admin-brand{width:148px!important;height:32px!important;margin:0!important;filter:none!important}
+.admin-brand-meta{font-size:.47rem!important;gap:5px!important}.admin-brand-status{width:6px!important;height:6px!important}
+.admin-nav{max-width:1560px!important;width:100%!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:4px!important;padding:3px 0 2px!important;margin:0 auto!important;overflow-x:visible!important}
+.admin-nav button{min-width:0!important;min-height:32px!important;padding:4px 6px!important;border-radius:9px!important;gap:4px!important;font-size:.49rem!important;line-height:1.1!important;white-space:nowrap!important;box-shadow:none!important}
+.admin-nav button .np-admin-menu-icon{font-size:.67rem!important}
+.admin-main{min-height:0!important;background:#020812!important}
+.admin-top{min-height:42px!important;padding:5px 12px!important;gap:7px!important;box-shadow:none!important}
+.admin-top h1{font-size:.76rem!important;line-height:1.15!important}.admin-top .section-kicker{font-size:.42rem!important}
+.admin-top .toolbar{gap:5px!important}.admin-top .btn{min-height:28px!important;padding:4px 8px!important;border-radius:8px!important;font-size:.49rem!important}
+.np-admin-breadcrumb{max-width:1560px!important;padding:6px 12px 0!important;gap:5px!important;font-size:.46rem!important;line-height:1.2!important}
+.np-admin-subnav-wrap{max-width:1560px!important;padding:4px 12px 0!important}
+.np-admin-subnav{gap:4px!important;margin:0 0 6px!important;padding-bottom:3px!important}
+.np-admin-subnav button{min-height:28px!important;padding:4px 8px!important;border-radius:8px!important;font-size:.49rem!important}
+.admin-content{max-width:1560px!important;width:100%!important;padding:7px 12px 28px!important}
+.admin-content>*+*{margin-top:8px!important}
+
+/* Tipografía administrativa más contenida */
+.admin-overlay .admin-content h1{font-size:.9rem!important}.admin-overlay .admin-content h2{font-size:.78rem!important;line-height:1.25!important}.admin-overlay .admin-content h3{font-size:.66rem!important;line-height:1.3!important}.admin-overlay .admin-content h4{font-size:.61rem!important;line-height:1.3!important}
+.admin-overlay .admin-content p{font-size:.50rem!important;line-height:1.42!important}.admin-overlay .admin-content small{font-size:.45rem!important;line-height:1.35!important}.admin-overlay .admin-content label{font-size:.50rem!important}
+.admin-overlay .section-kicker{font-size:.44rem!important}
+
+/* Tarjetas, espacios y rejillas */
+.admin-grid{gap:6px!important}.admin-two{gap:7px!important}.admin-stack,.admin-list,.admin-record-list{gap:6px!important}
+.admin-card{margin-top:7px!important;padding:9px!important;border-radius:12px!important;box-shadow:none!important}
+.admin-card+.admin-card{margin-top:8px!important}.admin-card-head{gap:6px!important;margin-bottom:6px!important}.admin-card-sub{font-size:.49rem!important;line-height:1.4!important}
+.metric{min-height:70px!important;padding:7px 8px!important;border-radius:11px!important;box-shadow:none!important}
+.metric-top{gap:5px!important;margin-bottom:4px!important}.metric-icon{width:25px!important;height:25px!important;border-radius:8px!important;font-size:.63rem!important}
+.metric small{font-size:.47rem!important}.metric strong{font-size:.98rem!important;line-height:1!important}.metric-note{margin-top:3px!important;font-size:.43rem!important;line-height:1.3!important}
+.metric.metric-clickable::after{right:8px!important;bottom:6px!important;font-size:.40rem!important}.metric.metric-clickable .metric-note{padding-right:54px!important}
+.admin-list-item{padding:7px!important;border-radius:9px!important;gap:7px!important}.admin-list-item h3{font-size:.58rem!important}.admin-list-item p{font-size:.47rem!important;margin-top:2px!important}
+.activity-item{padding:5px 0!important}.activity-item b{font-size:.54rem!important}.activity-item span{font-size:.45rem!important;margin-top:1px!important}
+
+/* Botones, filtros, formularios */
+.admin-overlay .btn{min-height:29px!important;padding:5px 9px!important;border-radius:9px!important;font-size:.51rem!important;gap:4px!important}
+.admin-overlay .btn-sm{min-height:26px!important;padding:4px 7px!important;font-size:.47rem!important}
+.toolbar{gap:5px!important}.toolbar input,.toolbar select{min-height:29px!important;padding:4px 8px!important;border-radius:8px!important;font-size:.51rem!important}
+.admin-overlay .field{gap:3px!important}.admin-overlay .form-grid{gap:6px!important}
+.admin-overlay .field input,.admin-overlay .field select,.admin-overlay .field textarea{min-height:31px!important;padding:5px 8px!important;border-radius:8px!important;font-size:.54rem!important}
+.admin-overlay .field textarea{min-height:62px!important}.admin-overlay .form-actions{gap:5px!important;margin-top:7px!important}
+.admin-overlay .tabs{gap:3px!important;padding:3px!important;margin-bottom:7px!important;border-radius:9px!important}.admin-overlay .tab{padding:5px!important;border-radius:7px!important;font-size:.50rem!important}
+.status{padding:3px 6px!important;font-size:.45rem!important}.notice{padding:7px 8px!important;border-radius:9px!important;font-size:.49rem!important;margin-bottom:7px!important}
+
+/* Tablas: más filas visibles */
+.table-wrap{border-radius:9px!important}.admin-overlay table{min-width:650px!important}.admin-overlay th,.admin-overlay td{padding:6px 7px!important;font-size:.53rem!important;line-height:1.25!important}.admin-overlay th{font-size:.48rem!important}.admin-overlay td img{width:36px!important;height:30px!important;border-radius:6px!important}
+
+/* Página inicial, áreas y contexto */
+.np-admin-home,.np-admin-area{gap:7px!important}.np-admin-context{gap:4px!important;margin-bottom:6px!important;padding:6px!important;border-radius:10px!important}.np-admin-context-label{font-size:.43rem!important}.np-admin-context button{min-height:26px!important;padding:4px 7px!important;border-radius:7px!important;font-size:.47rem!important}
+.np-admin-welcome{padding:10px 11px!important;border-radius:13px!important;gap:9px!important}.np-admin-welcome h2{font-size:.76rem!important;margin-bottom:3px!important}.np-admin-welcome p{font-size:.49rem!important;line-height:1.4!important}.np-admin-welcome .np-admin-now{padding:5px 8px!important;font-size:.45rem!important}
+.np-admin-menu-title{gap:6px!important}.np-admin-menu-title h3{font-size:.64rem!important}.np-admin-menu-title span{font-size:.45rem!important}
+.np-admin-groups{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}.np-admin-group-card{min-height:96px!important;padding:8px!important;border-radius:12px!important;gap:5px!important}.np-admin-group-icon{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.65rem!important}.np-admin-group-count{font-size:.42rem!important}.np-admin-group-card h4{font-size:.61rem!important;margin-bottom:2px!important}.np-admin-group-card p{font-size:.46rem!important;line-height:1.35!important}.np-admin-group-go{font-size:.44rem!important}
+.np-admin-area-head{padding:9px 10px!important;border-radius:12px!important}.np-admin-area-head h2{font-size:.72rem!important;margin-bottom:3px!important}.np-admin-area-head p{font-size:.49rem!important;line-height:1.4!important}
+.np-admin-area-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:6px!important}.np-admin-area-link{min-height:68px!important;padding:7px!important;border-radius:10px!important;grid-template-columns:28px 1fr auto!important;gap:7px!important}.np-admin-area-link i{width:28px!important;height:28px!important;border-radius:8px!important;font-size:.67rem!important}.np-admin-area-link b{font-size:.55rem!important;margin-bottom:2px!important}.np-admin-area-link small{font-size:.44rem!important;line-height:1.32!important}.np-admin-area-link em{font-size:.62rem!important}
+.np-admin-summary-head{margin-bottom:6px!important}.np-admin-summary-head h2{font-size:.70rem!important}.np-admin-summary-head p{font-size:.46rem!important;margin-top:2px!important}.np-admin-summary-row{gap:6px!important;margin-top:6px!important}
+
+/* Centro de herramientas: más herramientas por pantalla */
+.np-v10-home,.np-v10-module-page,.np-v105-page{gap:8px!important}.np-v10-commandbar{padding:7px!important;border-radius:11px!important;margin-bottom:2px!important;gap:5px!important}.np-v10-commandbar .btn{min-height:29px!important}
+.np-v10-section-head{margin:2px 0!important}.np-v10-modules{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}.np-v10-module{min-height:86px!important;padding:8px!important;border-radius:11px!important;gap:5px!important}.np-v10-module-icon{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.67rem!important}.np-v10-module-count{font-size:.40rem!important;padding:3px 5px!important}.np-v10-module h3{font-size:.56rem!important;margin-bottom:2px!important}.np-v10-module p{font-size:.43rem!important;line-height:1.35!important}.np-v10-module-go{font-size:.42rem!important}
+.np-v10-home-bottom{gap:6px!important}.np-v10-compact-card{padding:8px!important;border-radius:11px!important}.np-v10-compact-card h3{font-size:.58rem!important;margin-bottom:5px!important}.np-v10-compact-card p{font-size:.45rem!important}.np-v10-chip-row{gap:4px!important}.np-v10-chip{padding:4px 7px!important;font-size:.43rem!important}
+.np-v10-module-banner{padding:8px 9px!important;border-radius:11px!important;gap:7px!important}.np-v10-module-banner h2{font-size:.68rem!important}.np-v10-module-banner p{font-size:.46rem!important;line-height:1.4!important;margin-top:2px!important}.np-v10-module-banner .np-v10-big-icon{width:32px!important;height:32px!important;border-radius:9px!important;font-size:.75rem!important}
+.np-v10-module-links{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:6px!important}.np-v10-module-link{min-height:70px!important;padding:7px!important;border-radius:10px!important;grid-template-columns:27px 1fr auto!important;gap:6px!important}.np-v10-module-link i{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.65rem!important}.np-v10-module-link b{font-size:.53rem!important}.np-v10-module-link small{font-size:.42rem!important;line-height:1.3!important;margin-top:2px!important}.np-v10-module-link em{font-size:.54rem!important}
+.np-v10-tools-head{gap:6px!important;margin-bottom:6px!important}.np-v10-tools-head h2{font-size:.68rem!important}.np-v10-tools-head p{font-size:.45rem!important;margin-top:2px!important}.np-v10-tool-search{gap:4px!important}.np-v10-tool-search input,.np-v10-tool-search select{height:30px!important;min-height:30px!important;padding:0 8px!important;border-radius:8px!important;font-size:.49rem!important}.np-v10-tool-search input{min-width:190px!important}
+.np-v10-tool-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}.np-v10-tool{min-height:108px!important;padding:8px!important;border-radius:11px!important;gap:5px!important}.np-v10-tool::after{width:70px!important;height:70px!important;right:-28px!important;bottom:-30px!important}.np-v10-tool-head{gap:5px!important}.np-v10-tool-icon{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.63rem!important}.np-v10-tool-fav{width:24px!important;height:24px!important;border-radius:7px!important;font-size:.52rem!important}.np-v10-tool b{font-size:.54rem!important;line-height:1.28!important}.np-v10-tool p{font-size:.43rem!important;line-height:1.38!important}.np-v10-tool-tag{font-size:.39rem!important;letter-spacing:.04em!important}.np-v110-rank{min-width:28px!important;height:20px!important;padding:0 5px!important;border-radius:7px!important;font-size:.40rem!important}.np-v10-tool[data-np110-rank="1"] b{font-size:.58rem!important}.np-v10-tool[data-np110-rank="1"]::before{right:8px!important;top:8px!important;font-size:.33rem!important}
+.np-v10-report{gap:6px!important}.np-v10-report-summary{padding:7px 8px!important;border-radius:10px!important}.np-v10-report-summary h2{font-size:.62rem!important}.np-v10-report-summary p{font-size:.43rem!important}.np-v10-report-count{font-size:.90rem!important}.np-v10-records,.np-v10-audit-list{gap:5px!important}.np-v10-record,.np-v10-audit{padding:7px!important;border-radius:9px!important;gap:6px!important}.np-v10-record h3,.np-v10-audit b{font-size:.52rem!important}.np-v10-record p,.np-v10-audit p{font-size:.42rem!important;line-height:1.35!important;margin-top:2px!important}.np-v10-record aside,.np-v10-audit span{font-size:.47rem!important}.np-v10-record-actions{gap:3px!important;margin-top:4px!important}.np-v10-record-actions button{padding:3px 5px!important;border-radius:6px!important;font-size:.41rem!important}
+.np-v10-kpis{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important;margin-bottom:7px!important}.np-v10-kpi{padding:7px!important;border-radius:10px!important}.np-v10-kpi small{font-size:.42rem!important}.np-v10-kpi strong{margin-top:3px!important;font-size:.86rem!important}.np-v10-kpi span{margin-top:2px!important;font-size:.39rem!important}
+
+/* Prioridad y herramientas de agentes */
+.np-v110-priority-strip{margin-bottom:7px!important;padding:8px!important;border-radius:11px!important}.np-v110-priority-head{gap:7px!important;margin-bottom:6px!important}.np-v110-priority-head h3{font-size:.61rem!important}.np-v110-priority-head p{font-size:.42rem!important;margin-top:2px!important}.np-v110-priority-head button{padding:4px 7px!important;border-radius:7px!important;font-size:.42rem!important}.np-v110-priority-list{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:4px!important}.np-v110-priority-item{gap:5px!important;padding:5px!important;border-radius:8px!important}.np-v110-priority-item strong{width:24px!important;height:24px!important;border-radius:7px!important;font-size:.43rem!important}.np-v110-priority-item b{font-size:.43rem!important;line-height:1.2!important}.np-v110-priority-item small{font-size:.36rem!important;margin-top:1px!important}
+.np-v110-agent-shell{gap:8px!important}.np-v110-agent-hero{padding:9px!important;border-radius:12px!important;gap:8px!important}.np-v110-agent-hero span{font-size:.40rem!important}.np-v110-agent-hero h2{font-size:.72rem!important;margin-top:2px!important}.np-v110-agent-hero p{font-size:.45rem!important;line-height:1.38!important;margin-top:2px!important}.np-v110-agent-hero strong{min-width:48px!important;height:40px!important;border-radius:10px!important;font-size:.78rem!important}.np-v110-agent-search{gap:5px!important;padding:6px!important;border-radius:10px!important}.np-v110-agent-search input{min-height:31px!important;border-radius:8px!important;padding:0 8px!important;font-size:.50rem!important}.np-v110-agent-search button{min-height:31px!important;border-radius:8px!important;padding:0 8px!important;font-size:.46rem!important}.np-v110-agent-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:6px!important}.np-v110-agent-tool{min-height:108px!important;padding:8px!important;border-radius:11px!important;gap:5px!important}.np-v110-agent-tool i{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.63rem!important}.np-v110-agent-tool b{font-size:.52rem!important}.np-v110-agent-tool p{font-size:.41rem!important;line-height:1.35!important}.np-v110-agent-tool footer{font-size:.37rem!important}
+
+/* Equipo, permisos, chat y seguimiento */
+.np-v105-page{gap:7px!important}.np-v105-pagehead{gap:7px!important;padding:2px 1px 5px!important}.np-v105-pagehead h2{font-size:.70rem!important}.np-v105-pagehead p{font-size:.46rem!important;margin-top:2px!important}.np-v105-kpis{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}.np-v105-kpis>div{padding:7px!important;border-radius:9px!important}.np-v105-kpis small{font-size:.41rem!important}.np-v105-kpis b{font-size:.84rem!important;margin-top:2px!important}
+.np-v105-agent-list{gap:5px!important}.np-v105-agent-card{grid-template-columns:32px minmax(0,1fr)!important;gap:7px!important;padding:7px!important;border-radius:10px!important}.np-v105-agent-avatar{width:32px!important;height:32px!important;border-radius:9px!important;font-size:.58rem!important}.np-v105-agent-head{gap:6px!important}.np-v105-agent-head h3{font-size:.55rem!important}.np-v105-agent-head p,.np-v105-agent-meta{font-size:.42rem!important}.np-v105-agent-meta{gap:4px 7px!important;margin-top:4px!important}.np-v105-agent-actions{gap:4px!important;margin-top:5px!important}.np-v105-agent-actions button,.np-v105-assignment button,.np-v105-quick button{padding:4px 6px!important;border-radius:7px!important;font-size:.42rem!important}.np-v105-pill{font-size:.39rem!important;padding:3px 5px!important}
+.np-v105-note{margin-top:5px!important;padding:6px 7px!important;border-radius:8px!important;font-size:.43rem!important}.np-v105-perm-groups{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:4px!important}.np-v105-perm-groups label{gap:5px!important;padding:6px!important;border-radius:8px!important;font-size:.45rem!important}.np-v105-perm-search{gap:6px!important}.np-v105-perm-search input{min-height:30px!important;border-radius:8px!important;padding:0 8px!important;font-size:.49rem!important}.np-v105-perm-search span{font-size:.41rem!important}.np-v105-perm-list{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;max-height:60vh!important}.np-v105-perm-tool{gap:5px!important;padding:6px!important;border-radius:8px!important}.np-v105-perm-tool b{font-size:.46rem!important}.np-v105-perm-tool small{font-size:.39rem!important;margin-top:1px!important}.np-v105-perm-tool em{font-size:.37rem!important}.np-v105-sticky-actions{bottom:5px!important;gap:5px!important;padding:6px!important;border-radius:10px!important}
+.np-v105-order-layout{grid-template-columns:minmax(180px,.6fr) minmax(0,1.7fr)!important;gap:7px!important}.np-v105-order-summary,.np-v105-chatbox{padding:8px!important;border-radius:10px!important}.np-v105-order-summary dl{gap:4px!important;margin:6px 0!important}.np-v105-order-summary dl div{gap:1px!important;padding-bottom:4px!important}.np-v105-order-summary dt{font-size:.39rem!important}.np-v105-order-summary dd{font-size:.46rem!important}.np-v105-items{gap:3px!important;margin:5px 0!important}.np-v105-items span{font-size:.41rem!important;padding:4px 5px!important;border-radius:6px!important}.np-v105-thread{gap:4px!important;padding:5px 1px!important}.np-v105-msg{padding:5px 6px!important;border-radius:8px!important}.np-v105-msg b{font-size:.41rem!important}.np-v105-msg time{font-size:.36rem!important}.np-v105-msg p{font-size:.45rem!important;margin-top:2px!important}.np-v105-chat-form{gap:5px!important;padding-top:5px!important}.np-v105-chat-form input,.np-v105-chat-form textarea,.np-v105-search input{padding:6px 7px!important;border-radius:8px!important;font-size:.49rem!important}.np-v105-chat-form textarea{min-height:58px!important}.np-v105-order-inbox{gap:4px!important}.np-v105-inbox-row{grid-template-columns:28px minmax(0,1fr) auto!important;gap:6px!important;padding:6px!important;border-radius:9px!important}.np-v105-inbox-icon{width:28px!important;height:28px!important;border-radius:8px!important;font-size:.58rem!important}.np-v105-inbox-row b{font-size:.49rem!important}.np-v105-inbox-row small,.np-v105-inbox-row p{font-size:.39rem!important;margin-top:1px!important}.np-v105-inbox-row aside span{font-size:.40rem!important}.np-v105-assignment{gap:6px!important;padding:6px!important;border-radius:8px!important}.np-v105-timeline article{grid-template-columns:26px minmax(0,1fr)!important;gap:6px!important;padding:5px 0!important}.np-v105-timeline article>span{width:26px!important;height:26px!important;border-radius:7px!important;font-size:.48rem!important}.np-v105-load-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:5px!important}.np-v105-load-grid article{padding:7px!important;border-radius:9px!important}.np-v105-load-grid strong{font-size:.9rem!important;margin-top:4px!important}
+
+/* Personalización de permisos */
+.np-v107-custom-head{gap:7px!important;padding-bottom:5px!important}.np-v107-custom-head span{font-size:.40rem!important}.np-v107-custom-head h3{font-size:.60rem!important;margin-top:2px!important}.np-v107-custom-head p{font-size:.43rem!important;margin-top:2px!important}.np-v107-custom-head strong{min-width:30px!important;height:30px!important;border-radius:8px!important;font-size:.68rem!important}.np-v107-custom-search{grid-template-columns:30px minmax(0,1fr) auto auto!important;gap:4px!important}.np-v107-custom-search>span{width:30px!important;height:30px!important;border-radius:8px!important}.np-v107-custom-search input{min-height:30px!important}.np-v107-custom-search button{min-height:30px!important;padding:4px 7px!important;border-radius:8px!important;font-size:.42rem!important}.np-v107-custom-list{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;max-height:54vh!important}.np-v107-custom-item{gap:5px!important;padding:6px!important;border-radius:8px!important}.np-v107-custom-item>i{width:25px!important;height:25px!important;border-radius:7px!important;font-size:.53rem!important}.np-v107-custom-item b{font-size:.45rem!important}.np-v107-custom-item small{font-size:.37rem!important}.np-v107-custom-item em{font-size:.35rem!important}.np-v107-custom-foot{font-size:.39rem!important}
+
+/* Paleta de búsqueda */
+.np-v10-palette{padding:5vh 10px 12px!important}.np-v10-palette-box{width:min(620px,100%)!important;border-radius:13px!important}.np-v10-palette-search{padding:7px!important}.np-v10-palette-search input{height:34px!important;border-radius:8px!important;padding:0 9px!important;font-size:.55rem!important}.np-v10-palette-results{padding:4px!important}.np-v10-palette-item{padding:5px 6px!important;border-radius:8px!important;grid-template-columns:27px 1fr auto!important;gap:6px!important}.np-v10-palette-item i{width:27px!important;height:27px!important;border-radius:8px!important;font-size:.58rem!important}.np-v10-palette-item b{font-size:.49rem!important}.np-v10-palette-item small{font-size:.40rem!important;margin-top:1px!important}.np-v10-palette-item em{font-size:.39rem!important}
+
+/* Modales abiertos desde administración: compactos solo mientras el panel esté abierto. */
+.np-v112-admin-open .modal-overlay .modal{padding:10px!important;border-radius:13px!important;max-height:96vh!important}.np-v112-admin-open .modal-head{gap:7px!important;margin-bottom:7px!important}.np-v112-admin-open .modal-head h2{font-size:.76rem!important}.np-v112-admin-open .close-btn{width:29px!important;height:29px!important;font-size:.58rem!important}.np-v112-admin-open .modal-overlay .field{gap:3px!important}.np-v112-admin-open .modal-overlay .form-grid{gap:6px!important}.np-v112-admin-open .modal-overlay .field label{font-size:.49rem!important}.np-v112-admin-open .modal-overlay .field input,.np-v112-admin-open .modal-overlay .field select,.np-v112-admin-open .modal-overlay .field textarea{min-height:31px!important;padding:5px 8px!important;border-radius:8px!important;font-size:.54rem!important}.np-v112-admin-open .modal-overlay .field textarea{min-height:62px!important}.np-v112-admin-open .modal-overlay .form-actions{gap:5px!important;margin-top:7px!important}.np-v112-admin-open .modal-overlay .btn{min-height:29px!important;padding:5px 9px!important;font-size:.50rem!important}
+
+/* Responsive: densidad alta sin aplastar controles táctiles críticos */
+@media(max-width:1250px){
+  .admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .np-admin-groups{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .np-v10-modules,.np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .np-v110-priority-list{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  .np-v10-kpis,.np-v105-kpis,.np-v105-load-grid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+}
+@media(max-width:850px){
+  .admin-sidebar{padding:4px 8px 5px!important}.admin-brand-row{justify-content:center!important}.admin-brand{width:132px!important;height:29px!important}.admin-brand-meta{display:none!important}
+  .admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:3px!important}.admin-nav button{min-height:30px!important;padding:4px 3px!important;font-size:.45rem!important}
+  .admin-content{padding:6px 9px 26px!important}.admin-top{padding:4px 9px!important}.np-admin-breadcrumb,.np-admin-subnav-wrap{padding-left:9px!important;padding-right:9px!important}
+  .np-v10-modules{grid-template-columns:repeat(3,minmax(0,1fr))!important}.np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  .np-v10-module-links,.np-admin-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v105-perm-list,.np-v107-custom-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .np-v110-priority-list{grid-template-columns:repeat(3,minmax(0,1fr))!important}.np-v105-perm-groups{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+}
+@media(max-width:600px){
+  .admin-top{min-height:38px!important;align-items:center!important;flex-wrap:nowrap!important}.admin-top h1{font-size:.66rem!important}.admin-top .toolbar{width:auto!important;display:flex!important}.admin-top .btn{min-height:26px!important;padding:3px 6px!important;font-size:.44rem!important}
+  .admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important}.admin-nav button{min-height:29px!important;font-size:.43rem!important}
+  .np-admin-groups{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-admin-group-card{min-height:86px!important}
+  .admin-grid,.np-v10-kpis,.np-v105-kpis,.np-v105-load-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .np-v10-modules{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .np-v10-module-links,.np-admin-area-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v110-priority-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .np-v105-order-layout{grid-template-columns:1fr!important}.np-v105-perm-groups{grid-template-columns:repeat(2,minmax(0,1fr))!important}.np-v105-perm-list,.np-v107-custom-list{grid-template-columns:1fr!important}
+  .np-v10-tool-search{width:100%!important}.np-v10-tool-search input{min-width:0!important;flex:1 1 160px!important}.np-v10-tool-search select{flex:1 1 100px!important}
+  .np-v107-custom-search{grid-template-columns:30px minmax(0,1fr)!important}.np-v107-custom-search button{min-width:0!important}
+  .admin-overlay th,.admin-overlay td{padding:5px 6px!important;font-size:.49rem!important}
+}
+@media(max-width:360px){
+  .admin-nav{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .np-v10-tool-grid,.np-v110-agent-grid{grid-template-columns:1fr!important}
+  .np-v10-module-links,.np-admin-area-grid{grid-template-columns:1fr!important}
+  .np-v110-priority-list{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+</style>
+<script id="np-v112-compact-admin-script">
+(function(){
+  const VERSION='11.2';
+  const overlay=document.getElementById('adminOverlay');
+  if(!overlay)return;
+  const sync=()=>document.body.classList.toggle('np-v112-admin-open',overlay.classList.contains('open'));
+  sync();
+  new MutationObserver(sync).observe(overlay,{attributes:true,attributeFilter:['class']});
+  window.NP_V112_COMPACT_SELF_TEST={
+    version:VERSION,
+    adminOverlay:!!overlay,
+    compactStyle:!!document.getElementById('np-v112-ultra-compact-admin'),
+    toolCount:Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105.length:0
+  };
+  window.NP_V112_COMPACT_SELF_TEST.ok=window.NP_V112_COMPACT_SELF_TEST.adminOverlay&&window.NP_V112_COMPACT_SELF_TEST.compactStyle&&window.NP_V112_COMPACT_SELF_TEST.toolCount===400;
+  document.documentElement.dataset.npV112=window.NP_V112_COMPACT_SELF_TEST.ok?'ok':'review';
+  if(!window.NP_V112_COMPACT_SELF_TEST.ok)console.warn('CRULOX v11.2 compact self-test',window.NP_V112_COMPACT_SELF_TEST);
+})();
+</script>
+
+<style id="np-v115-ac24-style">
+/* v11.5 · integración AppCreator24: compartir, imprimir, cámara, micrófono y descargas dinámicas */
+.np-ac24-inline{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.np-ac24-mini{min-height:31px!important;padding:6px 9px!important;border-radius:10px!important;border:1px solid rgba(122,196,255,.11)!important;background:#0a1a2a!important;color:#cde4f6!important;font-size:.52rem!important;font-weight:850!important}
+.np-ac24-mini.primary{background:linear-gradient(135deg,#10d8ff,#178cff)!important;color:#03111d!important;border-color:transparent!important}
+.np-ac24-mini.green{background:rgba(38,214,120,.11)!important;color:#45e699!important;border-color:rgba(38,214,120,.2)!important}
+.np-ac24-mini.warn{background:rgba(255,190,68,.09)!important;color:#ffd27b!important;border-color:rgba(255,190,68,.18)!important}
+.np-ac24-camera-btn{min-height:29px!important;padding:5px 8px!important;border-radius:9px!important;border:1px solid rgba(0,216,255,.14)!important;background:rgba(0,216,255,.07)!important;color:#3ee2ff!important;font-size:.49rem!important;font-weight:900!important}
+.np-ac24-status-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.np-ac24-status{padding:11px;border-radius:14px;background:#071522;border:1px solid rgba(122,196,255,.08);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.np-ac24-status span{font-size:.55rem;color:#aac2d7}.np-ac24-status b{font-size:.55rem}.np-ac24-status.ok b{color:#42e699}.np-ac24-status.no b{color:#ff8599}.np-ac24-status.maybe b{color:#ffd175}
+.np-ac24-recorder{display:grid;gap:12px}.np-ac24-recorder-state{padding:12px;border-radius:14px;background:#071522;border:1px solid rgba(122,196,255,.08)}
+.np-ac24-recorder-state b{display:block;font-size:.72rem;margin-bottom:4px}.np-ac24-recorder-state p{font-size:.55rem!important;color:#91abc2!important;line-height:1.45!important}
+.np-ac24-recorder audio{width:100%;min-height:42px}.np-ac24-recorder-actions{display:flex;flex-wrap:wrap;gap:7px}.np-ac24-recorder-actions .btn{min-height:35px!important;padding:7px 11px!important;font-size:.54rem!important;border-radius:11px!important}
+#npNativePrintSheet{display:none}
+@media print{
+  html,body{background:#fff!important;color:#111!important;overflow:visible!important;height:auto!important}
+  body.np-native-print>*:not(#npNativePrintSheet){display:none!important}
+  body.np-native-print #npNativePrintSheet{display:block!important;position:static!important;width:100%!important;max-width:none!important;padding:18mm!important;background:#fff!important;color:#111!important;font-family:Arial,sans-serif!important}
+  #npNativePrintSheet h1{font-size:20pt!important;margin:0 0 6mm!important;color:#111!important}
+  #npNativePrintSheet h2{font-size:13pt!important;margin:6mm 0 3mm!important;color:#111!important}
+  #npNativePrintSheet p,#npNativePrintSheet td,#npNativePrintSheet th,#npNativePrintSheet li{font-size:9.5pt!important;line-height:1.45!important;color:#111!important}
+  #npNativePrintSheet table{width:100%!important;border-collapse:collapse!important;min-width:0!important}
+  #npNativePrintSheet th,#npNativePrintSheet td{border:1px solid #bbb!important;padding:6px!important;vertical-align:top!important}
+  #npNativePrintSheet .np-print-meta{display:grid!important;grid-template-columns:repeat(2,1fr)!important;gap:5px!important;margin-bottom:5mm!important}
+  #npNativePrintSheet .np-print-total{font-size:13pt!important;font-weight:700!important;text-align:right!important;margin-top:5mm!important}
+}
+@media(max-width:520px){.np-ac24-status-grid{grid-template-columns:1fr}.np-ac24-inline{gap:5px}.np-ac24-mini{font-size:.49rem!important;padding:5px 7px!important}}
+</style>
+<script id="np-v115-ac24-script">
+(function(){
+  'use strict';
+  const VERSION='11.5-AC24';
+  const $id=id=>document.getElementById(id);
+  const qsa=(sel,root=document)=>Array.from(root.querySelectorAll(sel));
+  const htmlEsc=value=>typeof esc==='function'?esc(String(value??'')):String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const today=()=>new Date().toISOString().slice(0,10);
+  const fileNameSafe=s=>String(s||'archivo').replace(/[^a-z0-9._-]+/gi,'-').replace(/-+/g,'-');
+  const notify=(m,t='info')=>typeof toast==='function'?toast(m,t):console.log(m);
+
+  function makeBlob(data,mime='application/octet-stream'){
+    if(data instanceof Blob)return data;
+    return new Blob([data],{type:mime});
+  }
+  function blobToDataUrl(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||''));r.onerror=()=>reject(r.error||new Error('No se pudo convertir el archivo'));r.readAsDataURL(blob)})}
+  async function dynamicDownload(name,data,mime='application/octet-stream'){
+    const blob=makeBlob(data,mime);name=fileNameSafe(name);
+    let objectUrl='';
+    try{
+      objectUrl=URL.createObjectURL(blob);
+      const a=document.createElement('a');a.href=objectUrl;a.download=name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();a.remove();
+      /* AppCreator24 puede entregar el Blob al sistema Android de forma asíncrona: no revocar inmediatamente. */
+      setTimeout(()=>{try{URL.revokeObjectURL(objectUrl)}catch(e){}},45000);
+      return {ok:true,method:'blob',blob};
+    }catch(blobError){
+      try{
+        const dataUrl=await blobToDataUrl(blob);const a=document.createElement('a');a.href=dataUrl;a.download=name;a.rel='noopener';a.style.display='none';document.body.appendChild(a);a.click();a.remove();return {ok:true,method:'data-url',blob};
+      }catch(dataError){console.error('NovaPrime dynamic download',blobError,dataError);notify('No fue posible descargar el archivo.','error');return {ok:false,error:dataError,blob}}
+    }
+  }
+
+  /* Sustituye el descargador heredado: todas las exportaciones JSON/CSV existentes heredan la mejora. */
+  window.downloadFile=function(name,content,type='application/json'){return dynamicDownload(name,content,type)};
+
+  async function sharePayload(payload,fallbackText=''){
+    if(typeof navigator.share!=='function'){
+      if(fallbackText&&navigator.clipboard?.writeText){try{await navigator.clipboard.writeText(fallbackText);notify('Compartir nativo no está disponible; el texto se copió.','warn');return true}catch(e){}}
+      notify('El menú nativo para compartir no está disponible en este entorno.','warn');return false;
+    }
+    try{await navigator.share(payload);return true}catch(error){if(error?.name!=='AbortError'){console.warn('NovaPrime share',error);notify('No fue posible abrir el menú para compartir.','warn')}return false}
+  }
+  async function shareText(title,text,url=''){
+    const payload={title:String(title||'CRULOX'),text:String(text||'')};if(url)payload.url=url;return sharePayload(payload,text);
+  }
+  async function shareBlob(name,data,mime,title='CRULOX',text=''){
+    const blob=makeBlob(data,mime);
+    if(typeof File!=='function'){notify('Este entorno no permite construir archivos compartibles; se descargará como alternativa.','warn');const result=await dynamicDownload(name,blob,mime);return {...result,sharedFile:false}}
+    const file=new File([blob],fileNameSafe(name),{type:blob.type||mime,lastModified:Date.now()});
+    if(typeof navigator.share==='function'){
+      try{
+        if(!navigator.canShare||navigator.canShare({files:[file]})){await navigator.share({title,text,files:[file]});return {ok:true,sharedFile:true,blob}}
+        if(text){await navigator.share({title,text});return {ok:true,sharedFile:false,blob}}
+      }catch(error){if(error?.name==='AbortError')return {ok:false,cancelled:true,blob};console.warn('NovaPrime file share',error)}
+    }
+    notify('No se pudo compartir el archivo directamente; se descargará como alternativa.','warn');
+    const result=await dynamicDownload(name,blob,mime);return {...result,sharedFile:false};
+  }
+
+  function backupData(){return {version:VERSION,exportedAt:new Date().toISOString(),products:state.products,combos:state.combos,faqs:state.faqs,settings:state.settings,users:state.users,orders:state.orders,activity:state.activity}}
+  function backupJson(){return JSON.stringify(backupData(),null,2)}
+  async function shareBackup(){if(window.npConfirm&&!(await window.npConfirm('Este respaldo restaurable puede incluir hashes de acceso y datos internos. Compártelo únicamente con una persona o dispositivo de confianza. ¿Continuar?')))return {ok:false,cancelled:true};const name=`novaprime-backup-${today()}.json`;const r=await shareBlob(name,backupJson(),'application/json','Respaldo privado CRULOX','Respaldo restaurable privado de CRULOX.');if(r.ok&&r.sharedFile)notify('Respaldo privado enviado al menú de compartir.','success');return r}
+
+  function operationalSummaryText(){
+    const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);const low=state.products.filter(p=>Number(p.stock)>0&&Number(p.stock)<=Number(state.settings.lowStock||5)).length;const out=state.products.filter(p=>Number(p.stock)<=0).length;
+    return `CRULOX · Resumen operativo\nProductos: ${state.products.length}\nClientes: ${state.users.length}\nPedidos: ${state.orders.length}\nVentas registradas: ${typeof money==='function'?money(sales):sales}\nStock bajo: ${low}\nAgotados: ${out}\nGenerado: ${new Date().toLocaleString('es-GT')}`;
+  }
+  async function shareOperationalSummary(){return shareText('CRULOX · Resumen operativo',operationalSummaryText())}
+
+  function ensurePrintSheet(){let sheet=$id('npNativePrintSheet');if(!sheet){sheet=document.createElement('section');sheet.id='npNativePrintSheet';document.body.appendChild(sheet)}return sheet}
+  function cleanupPrint(){document.body.classList.remove('np-native-print');const sheet=$id('npNativePrintSheet');if(sheet)sheet.innerHTML=''}
+  function nativePrint(title,bodyHtml){
+    if(typeof window.print!=='function'){notify('La impresión no está disponible en este entorno.','warn');return false}
+    const sheet=ensurePrintSheet();sheet.innerHTML=`<h1>${htmlEsc(title)}</h1>${bodyHtml}<p style="margin-top:8mm">Generado por CRULOX · ${htmlEsc(new Date().toLocaleString('es-GT'))}</p>`;document.body.classList.add('np-native-print');
+    const after=()=>{cleanupPrint();window.removeEventListener('afterprint',after)};window.addEventListener('afterprint',after,{once:true});
+    setTimeout(()=>{try{window.print()}catch(error){console.error(error);cleanupPrint();notify('No fue posible abrir la impresión.','error')}},30);
+    setTimeout(()=>{if(document.body.classList.contains('np-native-print'))cleanupPrint()},90000);return true;
+  }
+  function printOperationalSummary(){
+    const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);const pending=state.orders.filter(o=>!['Entregado','Cancelado'].includes(o.status));const low=state.products.filter(p=>Number(p.stock)<=Number(state.settings.lowStock||5));
+    return nativePrint('CRULOX · Resumen operativo',`<div class="np-print-meta"><p><b>Productos:</b> ${state.products.length}</p><p><b>Clientes:</b> ${state.users.length}</p><p><b>Pedidos:</b> ${state.orders.length}</p><p><b>Ventas registradas:</b> ${htmlEsc(typeof money==='function'?money(sales):sales)}</p></div><h2>Pedidos pendientes</h2><table><thead><tr><th>Pedido</th><th>Cliente</th><th>Estado</th><th>Total</th></tr></thead><tbody>${pending.slice(0,80).map(o=>`<tr><td>${htmlEsc(o.id)}</td><td>${htmlEsc(o.customer?.fullName||'Cliente')}</td><td>${htmlEsc(o.status||'Nuevo')}</td><td>${htmlEsc(typeof money==='function'?money(o.total):o.total)}</td></tr>`).join('')||'<tr><td colspan="4">Sin pedidos pendientes.</td></tr>'}</tbody></table><h2>Inventario que requiere atención</h2><table><thead><tr><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead><tbody>${low.slice(0,100).map(p=>`<tr><td>${htmlEsc(p.name)}</td><td>${Number(p.stock||0)}</td><td>${htmlEsc(typeof money==='function'?money(p.price):p.price)}</td></tr>`).join('')||'<tr><td colspan="3">Sin alertas de inventario.</td></tr>'}</tbody></table>`)
+  }
+  function orderById(id){return state.orders.find(o=>String(o.id)===String(id))}
+  function orderShareText(o){if(!o)return'';const items=(o.items||[]).map(i=>`• ${i.name} × ${Number(i.qty||1)}${i.price!=null?` · ${typeof money==='function'?money(Number(i.price)*Number(i.qty||1)):Number(i.price)*Number(i.qty||1)}`:''}`).join('\n');return `CRULOX · Pedido ${o.id}\nCliente: ${o.customer?.fullName||'Cliente'}\nEstado: ${o.status||'Nuevo'}\n${items}\nTotal: ${typeof money==='function'?money(o.total):o.total}`}
+  function shareOrder(id){const o=orderById(id);if(!o)return notify('Pedido no encontrado.','warn');return shareText(`Pedido ${o.id} · CRULOX`,orderShareText(o))}
+  function printOrder(id){const o=orderById(id);if(!o)return notify('Pedido no encontrado.','warn');const rows=(o.items||[]).map(i=>`<tr><td>${htmlEsc(i.name)}</td><td>${Number(i.qty||1)}</td><td>${htmlEsc(typeof money==='function'?money(i.price||0):i.price||0)}</td><td>${htmlEsc(typeof money==='function'?money(Number(i.price||0)*Number(i.qty||1)):Number(i.price||0)*Number(i.qty||1))}</td></tr>`).join('');return nativePrint(`Pedido ${o.id}`,`<div class="np-print-meta"><p><b>Cliente:</b> ${htmlEsc(o.customer?.fullName||'Cliente')}</p><p><b>Estado:</b> ${htmlEsc(o.status||'Nuevo')}</p><p><b>Teléfono:</b> ${htmlEsc(o.customer?.phone||'')}</p><p><b>Fecha:</b> ${htmlEsc(new Date(o.createdAt).toLocaleString('es-GT'))}</p><p><b>Entrega:</b> ${htmlEsc([o.customer?.municipality,o.customer?.department].filter(Boolean).join(', '))}</p><p><b>Guía:</b> ${htmlEsc(o.trackingNumber||'Pendiente')}</p></div><table><thead><tr><th>Producto</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Sin artículos.</td></tr>'}</tbody></table><div class="np-print-total">Total: ${htmlEsc(typeof money==='function'?money(o.total):o.total)}</div>`)}
+
+  function transferCapturedFile(target,file){
+    if(!target||!file)return false;
+    try{const dt=new DataTransfer();dt.items.add(file);target.files=dt.files;target.dispatchEvent(new Event('change',{bubbles:true}));return true}catch(error){console.warn('No fue posible transferir captura',error);return false}
+  }
+  function capturePhotoForInput(targetId){
+    const target=$id(targetId);if(!target)return notify('No se encontró el campo de imagen.','warn');
+    const input=document.createElement('input');input.type='file';input.accept='image/*';input.setAttribute('capture','environment');input.hidden=true;document.body.appendChild(input);
+    input.onchange=()=>{const file=input.files?.[0];if(file){if(transferCapturedFile(target,file))notify('Foto capturada y cargada al editor.','success');else notify('La foto fue capturada, pero este navegador no permite transferirla al editor.','warn')}input.remove()};input.oncancel=()=>input.remove();input.click();
+  }
+  function capturePhotoStandalone(){
+    const input=document.createElement('input');input.type='file';input.accept='image/*';input.setAttribute('capture','environment');input.hidden=true;document.body.appendChild(input);
+    input.onchange=async()=>{const file=input.files?.[0];input.remove();if(!file)return;const dataUrl=await blobToDataUrl(file);if(!$id('crudModal'))return dynamicDownload(`foto-novaprime-${Date.now()}.${(file.name.split('.').pop()||'jpg')}`,file,file.type||'image/jpeg');$('crudTitle').textContent='Foto capturada';$('crudBody').innerHTML=`<div class="np-ac24-recorder"><img src="${htmlEsc(dataUrl)}" alt="Foto capturada" style="width:100%;max-height:55vh;object-fit:contain;border-radius:16px;background:#04101b"><div class="np-ac24-recorder-actions"><button class="btn btn-primary" id="npAc24SharePhoto">Compartir</button><button class="btn btn-secondary" id="npAc24DownloadPhoto">Descargar</button><button class="btn btn-secondary" data-close="crudModal">Cerrar</button></div></div>`;openModal('crudModal');$id('npAc24SharePhoto').onclick=()=>shareBlob(file.name||`foto-${Date.now()}.jpg`,file,file.type||'image/jpeg','Foto CRULOX','Imagen capturada desde CRULOX.');$id('npAc24DownloadPhoto').onclick=()=>dynamicDownload(file.name||`foto-${Date.now()}.jpg`,file,file.type||'image/jpeg')};input.oncancel=()=>input.remove();input.click();
+  }
+
+  let recorderSession=null;
+  function recorderMime(){if(typeof MediaRecorder==='undefined')return'';for(const type of ['audio/webm;codecs=opus','audio/webm','audio/mp4']){try{if(!MediaRecorder.isTypeSupported||MediaRecorder.isTypeSupported(type))return type}catch(e){}}return''}
+  function stopRecorderTracks(){if(recorderSession?.stream)recorderSession.stream.getTracks().forEach(t=>{try{t.stop()}catch(e){}})}
+  function openVoiceRecorder(context='CRULOX'){
+    if(!$id('crudModal'))return notify('El grabador no puede abrirse en esta vista.','warn');
+    $('crudTitle').textContent='Nota de voz';$('crudBody').innerHTML=`<div class="np-ac24-recorder"><div class="np-ac24-recorder-state"><b id="npAc24RecState">Lista para grabar</b><p id="npAc24RecHelp">La nota es temporal: no se guarda en localStorage. Puedes compartirla o descargarla al terminar.</p></div><audio id="npAc24Audio" controls hidden></audio><div class="np-ac24-recorder-actions"><button class="btn btn-primary" id="npAc24StartRec">🎙 Iniciar</button><button class="btn btn-secondary" id="npAc24StopRec" disabled>Detener</button><button class="btn btn-secondary" id="npAc24ShareRec" disabled>Compartir</button><button class="btn btn-secondary" id="npAc24DownloadRec" disabled>Descargar</button><button class="btn btn-secondary" data-close="crudModal">Cerrar</button></div></div>`;openModal('crudModal');
+    recorderSession={stream:null,recorder:null,chunks:[],blob:null,url:'',timer:null,context};
+    const start=$id('npAc24StartRec'),stop=$id('npAc24StopRec'),share=$id('npAc24ShareRec'),download=$id('npAc24DownloadRec'),stateEl=$id('npAc24RecState'),audio=$id('npAc24Audio');
+    start.onclick=async()=>{if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined')return notify('Este entorno no expone grabación de micrófono a la página.','warn');try{const stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true},video:false});const mime=recorderMime();const rec=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);recorderSession.stream=stream;recorderSession.recorder=rec;recorderSession.chunks=[];rec.ondataavailable=e=>{if(e.data?.size)recorderSession.chunks.push(e.data)};rec.onstop=()=>{clearTimeout(recorderSession.timer);const blob=new Blob(recorderSession.chunks,{type:rec.mimeType||mime||'audio/webm'});recorderSession.blob=blob;if(recorderSession.url)URL.revokeObjectURL(recorderSession.url);recorderSession.url=URL.createObjectURL(blob);audio.src=recorderSession.url;audio.hidden=false;stateEl.textContent=`Grabación lista · ${(blob.size/1024).toFixed(1)} KB`;share.disabled=false;download.disabled=false;start.disabled=false;stop.disabled=true;stopRecorderTracks()};rec.start(500);stateEl.textContent='Grabando… máximo 60 segundos';start.disabled=true;stop.disabled=false;recorderSession.timer=setTimeout(()=>{if(rec.state==='recording')rec.stop()},60000)}catch(error){console.error('Microphone',error);notify('No se pudo acceder al micrófono. Revisa el permiso de la app/sección.','error')}};
+    stop.onclick=()=>{const rec=recorderSession?.recorder;if(rec&&rec.state==='recording')rec.stop()};
+    share.onclick=()=>{if(!recorderSession?.blob)return;const ext=recorderSession.blob.type.includes('mp4')?'m4a':'webm';shareBlob(`nota-voz-novaprime-${Date.now()}.${ext}`,recorderSession.blob,recorderSession.blob.type,'Nota de voz CRULOX',context)};
+    download.onclick=()=>{if(!recorderSession?.blob)return;const ext=recorderSession.blob.type.includes('mp4')?'m4a':'webm';dynamicDownload(`nota-voz-novaprime-${Date.now()}.${ext}`,recorderSession.blob,recorderSession.blob.type)};
+  }
+
+  function capabilityData(){
+    const fileShare=typeof navigator.share==='function'&&typeof File==='function'&&(!navigator.canShare||(()=>{try{return navigator.canShare({files:[new File(['x'],'x.txt',{type:'text/plain'})]})}catch(e){return false}})());
+    return {version:VERSION,userAgent:navigator.userAgent,locationProtocol:location.protocol,blob:typeof Blob==='function',objectUrl:typeof URL?.createObjectURL==='function',dataUrl:typeof FileReader==='function',print:typeof window.print==='function',share:typeof navigator.share==='function',fileShare,cameraApi:!!navigator.mediaDevices?.getUserMedia,microphoneApi:!!navigator.mediaDevices?.getUserMedia,mediaRecorder:typeof MediaRecorder!=='undefined',secureContext:window.isSecureContext===true,generatedAt:new Date().toISOString()};
+  }
+  function openCompatibilityCenter(){const c=capabilityData();if(!$id('crudModal'))return;const items=[['Blob dinámico',c.blob&&c.objectUrl],['Data URL',c.dataUrl],['window.print()',c.print],['navigator.share()',c.share],['Compartir archivos',c.fileShare],['API cámara/micrófono',c.cameraApi],['MediaRecorder',c.mediaRecorder],['Contexto seguro web',c.secureContext?'ok':'maybe']];$('crudTitle').textContent='Compatibilidad AppCreator24';$('crudBody').innerHTML=`<div><p style="font-size:.58rem;color:#9eb6cb;line-height:1.5">Esta prueba verifica APIs disponibles para el HTML. En AppCreator24, impresión/compartir también dependen de que la opción correspondiente esté activada en la sección Web/HTML.</p><div class="np-ac24-status-grid">${items.map(([label,value])=>{const cls=value===true?'ok':value==='maybe'?'maybe':'no';const text=value===true?'Disponible':value==='maybe'?'Depende del entorno':'No detectado';return `<div class="np-ac24-status ${cls}"><span>${htmlEsc(label)}</span><b>${text}</b></div>`}).join('')}</div><div class="form-actions"><button class="btn btn-primary" id="npAc24TestShare">Probar compartir</button><button class="btn btn-secondary" id="npAc24TestPrint">Probar impresión</button><button class="btn btn-secondary" id="npAc24TestCam">Probar cámara</button><button class="btn btn-secondary" id="npAc24TestMic">Probar micrófono</button><button class="btn btn-secondary" id="npAc24ExportDiag">Descargar diagnóstico</button></div></div>`;openModal('crudModal');$id('npAc24TestShare').onclick=()=>shareOperationalSummary();$id('npAc24TestPrint').onclick=()=>printOperationalSummary();$id('npAc24TestCam').onclick=()=>capturePhotoStandalone();$id('npAc24TestMic').onclick=()=>openVoiceRecorder('Prueba de micrófono CRULOX');$id('npAc24ExportDiag').onclick=()=>dynamicDownload(`novaprime-diagnostico-ac24-${today()}.json`,JSON.stringify(capabilityData(),null,2),'application/json')}
+
+  function enhanceMediaInputs(root=document){
+    qsa('.np-media-slot-actions',root).forEach(actions=>{if(actions.dataset.ac24Camera==='1')return;const label=actions.querySelector('label[for]');if(!label)return;const targetId=label.getAttribute('for');if(!$id(targetId))return;actions.dataset.ac24Camera='1';const btn=document.createElement('button');btn.type='button';btn.className='np-ac24-camera-btn';btn.textContent='📷 Cámara';btn.onclick=()=>capturePhotoForInput(targetId);actions.appendChild(btn)});
+    qsa('input[type="file"][accept*="image"]',root).forEach(input=>{input.setAttribute('data-ac24-camera-ready','1')});
+  }
+  function enhanceOrders(root=document){
+    qsa('[data-copy-order]',root).forEach(copyBtn=>{const id=copyBtn.dataset.copyOrder;const toolbar=copyBtn.closest('.toolbar');if(!toolbar||qsa('[data-ac24-share-order]',toolbar).some(x=>x.dataset.ac24ShareOrder===id))return;const share=document.createElement('button');share.type='button';share.className='btn btn-secondary btn-sm';share.dataset.ac24ShareOrder=id;share.textContent='Compartir';share.onclick=()=>shareOrder(id);const print=document.createElement('button');print.type='button';print.className='btn btn-secondary btn-sm';print.dataset.ac24PrintOrder=id;print.textContent='Imprimir';print.onclick=()=>printOrder(id);toolbar.insertBefore(share,copyBtn.nextSibling);toolbar.insertBefore(print,share.nextSibling)});
+    qsa('[data-chat-order]',root).forEach(btn=>{if(btn.dataset.ac24Longpress)return;btn.dataset.ac24Longpress='1';btn.title='Toca para abrir el seguimiento del pedido.'});
+  }
+  function enhanceBackup(root=document){const exp=$id('exportBackup');if(!exp||exp.dataset.ac24Enhanced)return;exp.dataset.ac24Enhanced='1';const toolbar=exp.closest('.toolbar');if(!toolbar)return;const share=document.createElement('button');share.type='button';share.id='npAc24ShareBackup';share.className='btn btn-secondary';share.textContent='Compartir respaldo privado';share.onclick=shareBackup;toolbar.appendChild(share);const print=document.createElement('button');print.type='button';print.className='btn btn-secondary';print.textContent='Imprimir resumen';print.onclick=printOperationalSummary;toolbar.appendChild(print);const diag=document.createElement('button');diag.type='button';diag.className='btn btn-secondary';diag.textContent='Compatibilidad móvil';diag.onclick=openCompatibilityCenter;toolbar.appendChild(diag)}
+  function enhanceOrderConversation(root=document){const form=$id('npOrderChatForm');if(!form||form.dataset.ac24Voice)return;form.dataset.ac24Voice='1';const submit=form.querySelector('button[type="submit"]');if(!submit)return;const id=String(state.adminTitle||'pedido');const voice=document.createElement('button');voice.type='button';voice.className='btn btn-secondary';voice.textContent='🎙 Nota de voz';voice.onclick=()=>openVoiceRecorder(`Seguimiento ${id}`);submit.insertAdjacentElement('beforebegin',voice)}
+  function runEnhancers(root=$id('adminOverlay')||document){enhanceMediaInputs(root);enhanceOrders(root);enhanceBackup(root);enhanceOrderConversation(root)}
+
+  /* Reemplaza diez segmentadores de ticket redundantes por utilidades móviles realmente operativas sin alterar el total de Herramientas. */
+  function repurposeTools(){
+    const tools=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+    const replacements=[
+      ['v111-order-value-1','Compartir resumen operativo','system','↗','Comparte por Android los indicadores principales del negocio.',shareOperationalSummary],
+      ['v111-order-value-2','Imprimir resumen operativo','system','🖨️','Abre la impresión del resumen, pedidos pendientes e inventario crítico.',printOperationalSummary],
+      ['v111-order-value-3','Compartir respaldo completo','system','📤','Genera el respaldo JSON y lo envía al menú nativo para compartir.',shareBackup],
+      ['v111-order-value-4','Descargar respaldo compatible','system','⇩','Descarga el respaldo mediante Blob con fallback Data URL.',()=>dynamicDownload(`novaprime-backup-${today()}.json`,backupJson(),'application/json')],
+      ['v111-order-value-5','Centro de compatibilidad móvil','system','📱','Comprueba impresión, compartir, archivos, cámara y micrófono.',openCompatibilityCenter],
+      ['v111-order-value-6','Capturar foto con cámara','catalog','📷','Abre la cámara para capturar, revisar, compartir o descargar una imagen.',capturePhotoStandalone],
+      ['v111-order-value-7','Grabar nota de voz','operations','🎙️','Graba una nota temporal de hasta 60 segundos para compartir o descargar.',()=>openVoiceRecorder('Nota operativa CRULOX')],
+      ['v111-order-value-8','Compartir catálogo JSON','system','📤','Comparte el catálogo completo como archivo JSON.',()=>shareBlob(`novaprime-productos-${today()}.json`,JSON.stringify(state.products,null,2),'application/json','Catálogo CRULOX','Catálogo de productos CRULOX.')],
+      ['v111-order-value-9','Imprimir inventario crítico','operations','🖨️','Imprime un resumen del inventario y existencias que requieren atención.',printOperationalSummary],
+      ['v111-order-value-10','Exportar diagnóstico móvil','system','🩺','Descarga un diagnóstico JSON de las capacidades disponibles en la WebView.',()=>dynamicDownload(`novaprime-diagnostico-ac24-${today()}.json`,JSON.stringify(capabilityData(),null,2),'application/json')]
+    ];
+    replacements.forEach(([id,title,group,icon,desc,action])=>{const t=tools.find(x=>x.id===id);if(!t)return;t.title=title;t.group=group;t.icon=icon;t.desc=desc;t.action=action;t.aliases=`appcreator24 android movil nativo ${title}`});
+  }
+
+  window.NP_AC24={VERSION,dynamicDownload,shareText,shareBlob,shareBackup,shareOperationalSummary,nativePrint,printOperationalSummary,shareOrder,printOrder,capturePhotoStandalone,openVoiceRecorder,openCompatibilityCenter,capabilityData,stopRecorderTracks,runEnhancers};
+  repurposeTools();runEnhancers();
+  let enhancerPending=false,enhancerRoots=new Set();const observer=new MutationObserver(muts=>{for(const m of muts)for(const node of m.addedNodes)if(node.nodeType===1)enhancerRoots.add(node);if(enhancerPending||!enhancerRoots.size)return;enhancerPending=true;requestAnimationFrame(()=>{enhancerPending=false;const roots=[...enhancerRoots];enhancerRoots.clear();roots.forEach(root=>runEnhancers(root))})});observer.observe(document.body,{childList:true,subtree:true});
+  const baseRender=window.renderAdminSection;if(typeof baseRender==='function'){window.renderAdminSection=function(section){const r=baseRender(section);requestAnimationFrame(()=>runEnhancers());return r}};
+  const baseOpen=window.openAdmin;if(typeof baseOpen==='function'){window.openAdmin=function(section='home'){const r=baseOpen(section);requestAnimationFrame(()=>runEnhancers());return r}};
+  window.addEventListener('beforeunload',()=>{stopRecorderTracks();if(recorderSession?.url)try{URL.revokeObjectURL(recorderSession.url)}catch(e){}});
+})();
+</script>
+
+<style id="np-v116-pro-style">
+/* =====================================================================
+   CRULOX v11.6 · OPERACIÓN PRO + CONSOLIDACIÓN APPcreator24
+   ===================================================================== */
+#adminOverlay{overflow-x:hidden!important}
+#adminOverlay.open{overflow-y:auto!important;-webkit-overflow-scrolling:touch!important;overscroll-behavior:contain!important;touch-action:pan-y pinch-zoom!important}
+#adminOverlay .admin-shell{height:auto!important;min-height:100dvh!important}
+#adminOverlay .admin-main{min-height:0!important}
+#adminOverlay button:focus-visible,#adminOverlay input:focus-visible,#adminOverlay select:focus-visible,#adminOverlay textarea:focus-visible{outline:2px solid rgba(39,221,255,.72)!important;outline-offset:2px!important}
+#adminOverlay .np-v10-tool{cursor:pointer!important;min-height:128px!important;padding:10px!important;border-radius:14px!important;content-visibility:auto;contain-intrinsic-size:128px;contain:layout style paint}
+#adminOverlay .np-v10-tool-head{gap:5px!important}
+#adminOverlay .np-v10-tool b{font-size:.64rem!important;line-height:1.24!important}
+#adminOverlay .np-v10-tool p{font-size:.49rem!important;line-height:1.42!important;margin-top:2px!important}
+#adminOverlay .np-v10-tool-tag{font-size:.41rem!important;padding:3px 6px!important}
+#adminOverlay .np-v116-tool-info{width:25px;height:25px;border-radius:8px;border:1px solid rgba(113,199,255,.11);background:#0a1c2c;color:#7deaff;font-size:.55rem;font-weight:950;display:grid;place-items:center}
+#adminOverlay .np-v116-tool-info:hover{background:rgba(0,216,255,.12)}
+.np-v116-info-shell{display:grid;gap:10px}
+.np-v116-info-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:12px;border-radius:15px;background:#071522;border:1px solid rgba(122,196,255,.08)}
+.np-v116-info-head span{display:block;color:#31ddff;font-size:.5rem;font-weight:950;text-transform:uppercase;letter-spacing:.08em}
+.np-v116-info-head h3{font-size:.84rem;margin-top:3px}.np-v116-info-rank{min-width:48px;height:38px;border-radius:11px;display:grid;place-items:center;background:rgba(0,216,255,.08);border:1px solid rgba(0,216,255,.14);color:#42e4ff;font-weight:950}
+.np-v116-info-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.np-v116-info-card{padding:11px;border-radius:14px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-info-card b{display:block;font-size:.57rem;margin-bottom:4px}.np-v116-info-card p{font-size:.52rem!important;line-height:1.5!important;color:#94adc3!important;margin:0!important}
+.np-v116-home-strip{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-bottom:10px}.np-v116-now{padding:10px;border-radius:13px;background:#071522;border:1px solid rgba(122,196,255,.075);min-width:0}.np-v116-now small{display:block;color:#7894ad;font-size:.43rem}.np-v116-now strong{display:block;color:#eaf8ff;font-size:.83rem;margin-top:3px}.np-v116-now.warn strong{color:#ffc968}.np-v116-now.bad strong{color:#ff7f95}.np-v116-now.ok strong{color:#42e699}
+.np-v116-actions{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}.np-v116-actions button{min-height:29px;padding:5px 9px;border-radius:9px;border:1px solid rgba(122,196,255,.09);background:#091a2a;color:#bad1e4;font-size:.47rem;font-weight:850}.np-v116-actions button.primary{background:rgba(0,216,255,.1);color:#42e4ff;border-color:rgba(0,216,255,.15)}
+.np-v116-report{display:grid;gap:10px}.np-v116-report-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.np-v116-report-head h2{font-size:.86rem}.np-v116-report-head p{font-size:.53rem;color:#8ea8bf;line-height:1.45;margin-top:3px}.np-v116-report-list{display:grid;gap:7px}.np-v116-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px;align-items:center;padding:10px 11px;border-radius:13px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-row b{display:block;font-size:.61rem}.np-v116-row p{font-size:.49rem!important;color:#829bb2!important;line-height:1.4!important;margin:3px 0 0!important}.np-v116-row aside{font-size:.49rem;color:#42e3ff;text-align:right;max-width:150px}.np-v116-empty{padding:18px;border-radius:15px;border:1px dashed rgba(122,196,255,.12);background:#06121e;text-align:center}.np-v116-empty b{display:block;font-size:.66rem}.np-v116-empty span{display:block;font-size:.51rem;color:#829bb2;margin-top:4px;line-height:1.45}
+.np-v116-perm-shell{display:grid;gap:11px}.np-v116-perm-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px}.np-v116-perm-summary div{padding:10px;border-radius:13px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-perm-summary small{display:block;color:#7894ad;font-size:.43rem}.np-v116-perm-summary b{display:block;color:#42e4ff;font-size:.82rem;margin-top:3px}.np-v116-agent-perm-list{display:grid;gap:7px}.np-v116-agent-perm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px 11px;border-radius:14px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-agent-perm h3{font-size:.64rem}.np-v116-agent-perm p{font-size:.49rem!important;color:#839db5!important;margin:3px 0 0!important}.np-v116-agent-perm-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}.np-v116-agent-perm-tags span{padding:3px 6px;border-radius:999px;background:#0a1b2a;color:#a9c2d7;border:1px solid rgba(122,196,255,.06);font-size:.41rem}
+.np-v116-perm-editor{display:grid;gap:10px}.np-v116-perm-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 150px auto;gap:7px}.np-v116-perm-toolbar input,.np-v116-perm-toolbar select{min-height:36px!important}.np-v116-module-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;max-height:210px;overflow:auto}.np-v116-module-item,.np-v116-tool-item{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:7px;align-items:center;padding:8px;border-radius:11px;background:#071522;border:1px solid rgba(122,196,255,.065)}.np-v116-module-item input,.np-v116-tool-item input{width:15px!important;height:15px!important;min-height:0!important;accent-color:#15d9ff}.np-v116-module-item b,.np-v116-tool-item b{display:block;font-size:.51rem}.np-v116-module-item small,.np-v116-tool-item small{display:block;font-size:.42rem;color:#758fa8;margin-top:2px}.np-v116-module-item em,.np-v116-tool-item em{font-style:normal;color:#42e3ff;font-size:.4rem}.np-v116-tool-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;max-height:45vh;overflow:auto;padding-right:2px}.np-v116-perm-count{display:flex;justify-content:space-between;gap:8px;align-items:center;padding:8px 10px;border-radius:11px;background:#06131f;border:1px solid rgba(122,196,255,.065);font-size:.48rem;color:#8fa8bf}.np-v116-perm-count b{color:#42e4ff}
+.np-v116-assign-toolbar{display:grid;grid-template-columns:minmax(0,1fr) 140px;gap:7px}.np-v116-assignment-list{display:grid;gap:7px}.np-v116-assignment{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,180px) auto;gap:7px;align-items:center;padding:9px 10px;border-radius:13px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-assignment b{font-size:.58rem}.np-v116-assignment small{display:block;color:#7f98af;font-size:.46rem;margin-top:3px}.np-v116-assignment select{min-height:32px!important;font-size:.5rem!important}.np-v116-assignment button{min-height:31px!important;padding:5px 8px!important;font-size:.47rem!important;border-radius:9px!important}
+.np-v116-mobile-center{display:grid;gap:10px}.np-v116-mobile-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.np-v116-mobile-card{padding:11px;border-radius:14px;background:#071522;border:1px solid rgba(122,196,255,.07)}.np-v116-mobile-card b{display:block;font-size:.58rem}.np-v116-mobile-card p{font-size:.48rem!important;color:#839db4!important;line-height:1.42!important;margin:3px 0 8px!important}.np-v116-mobile-card button{width:100%;min-height:30px;border-radius:9px;border:1px solid rgba(0,216,255,.13);background:rgba(0,216,255,.07);color:#48e2ff;font-size:.47rem;font-weight:850}
+.np-v116-scrolltop{position:fixed;right:12px;bottom:14px;z-index:2900;width:38px;height:38px;border-radius:50%;border:1px solid rgba(0,216,255,.18);background:#071827;color:#54e6ff;box-shadow:0 10px 25px rgba(0,0,0,.35);display:none;place-items:center;font-weight:950}.np-v116-scrolltop.show{display:grid}
+@media(max-width:920px){
+ #adminOverlay .admin-shell{display:flex!important;flex-direction:column!important;align-items:stretch!important}
+ #adminOverlay .admin-sidebar{display:block!important;flex:none!important;width:100%!important;height:auto!important;min-height:0!important;padding:4px 8px 6px!important;margin:0!important;overflow:visible!important}
+ #adminOverlay .admin-brand-row{margin:0 0 4px!important;justify-content:center!important}.admin-brand{width:136px!important;height:30px!important}
+ #adminOverlay .admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}.admin-nav button{min-height:36px!important;padding:5px 3px!important;font-size:.47rem!important;border-radius:10px!important;line-height:1.06!important}
+ #adminOverlay .admin-main{display:block!important;flex:1 1 auto!important;overflow:visible!important;margin:0!important;padding:0!important}
+ #adminOverlay .admin-top{min-height:auto!important;padding:6px 9px!important;margin:0!important}.admin-top h1{font-size:.76rem!important}.admin-top .section-kicker{font-size:.43rem!important}.admin-top .toolbar{gap:5px!important}.admin-top .toolbar .btn{min-height:31px!important;padding:5px 8px!important;font-size:.49rem!important;border-radius:9px!important}
+ #adminOverlay .np-admin-breadcrumb{padding:5px 9px 0!important;font-size:.46rem!important}.np-admin-subnav-wrap{padding:4px 9px 0!important}.np-admin-subnav{gap:4px!important;margin:0 0 5px!important;padding-bottom:2px!important}.np-admin-subnav button{min-height:26px!important;padding:4px 7px!important;font-size:.44rem!important;border-radius:8px!important}
+ #adminOverlay .admin-content{padding:8px 9px 27px!important;overflow:visible!important}.admin-content>*+*{margin-top:12px!important}
+ #adminOverlay .np-v110-priority-strip{padding:10px!important;margin-bottom:10px!important}.np-v110-priority-head{margin-bottom:7px!important}.np-v110-priority-list{gap:5px!important}.np-v110-priority-item{padding:7px!important}.np-v110-priority-item strong{width:28px!important;height:28px!important}.np-v110-priority-item b{font-size:.47rem!important}
+ #adminOverlay .np-v10-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:7px!important}
+ .np-v116-home-strip,.np-v116-perm-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v116-info-grid{grid-template-columns:1fr}.np-v116-mobile-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v116-perm-toolbar{grid-template-columns:1fr 120px}.np-v116-perm-toolbar button{grid-column:1/-1}.np-v116-module-grid,.np-v116-tool-list{grid-template-columns:1fr}.np-v116-assignment{grid-template-columns:1fr minmax(120px,1fr)}.np-v116-assignment button{grid-column:2/3}.np-v116-report-head{align-items:stretch;flex-direction:column}
+}
+@media(max-width:360px){#adminOverlay .admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important}#adminOverlay .np-v10-tool-grid{grid-template-columns:1fr!important}.np-v116-mobile-grid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){#adminOverlay *{scroll-behavior:auto!important}}
+
+#adminOverlay .np-custom-select-trigger{min-height:35px!important;padding:6px 34px 6px 10px!important;border-radius:10px!important;font-size:.58rem!important;line-height:1.15!important}
+#adminOverlay .np-custom-select-trigger::after{right:11px!important;font-size:.78rem!important}
+#adminOverlay .np-custom-select-menu{top:calc(100% + 4px)!important;max-height:240px!important;padding:4px!important;border-radius:11px!important}
+#adminOverlay .np-custom-select-option{padding:7px 9px!important;border-radius:8px!important;font-size:.57rem!important}
+</style>
+<script id="np-v116-pro-script">
+(function(){
+'use strict';
+const VERSION='11.6-PRO';
+const tools=Array.isArray(window.NP_ADMIN_TOOLS_V105)?window.NP_ADMIN_TOOLS_V105:[];
+const toolById=new Map(tools.map(t=>[t.id,t]));
+const team=window.NP_TEAM_API_V105||null;
+const ac=window.NP_AC24||null;document.addEventListener('visibilitychange',()=>{if(document.hidden)try{ac?.stopRecorderTracks?.()}catch(e){recordIssue('media-background-stop',e)}});
+const byId=id=>document.getElementById(id);
+const qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const arr=v=>Array.isArray(v)?v:[];
+const n=v=>Number.isFinite(Number(v))?Number(v):0;
+const normx=v=>String(v??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim();
+const h=v=>typeof esc==='function'?esc(String(v??'')):String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const cash=v=>typeof money==='function'?money(n(v)):`Q${n(v).toFixed(2)}`;
+const lowLimit=()=>Math.max(0,n(state.settings?.lowStock||5));
+const notify=(m,t='info')=>typeof toast==='function'?toast(m,t):console.log(m);
+const currentAssignments=()=>team?.assignments?.()||{};
+const currentAgents=()=>team?.agents?.()||[];
+const currentChats=()=>team?.chats?.()||{};
+const runtimeIssues=window.NP_V116_RUNTIME_ISSUES=[];
+function recordIssue(context,error){const item={context:String(context||'runtime'),message:String(error?.message||error||'Error desconocido'),at:new Date().toISOString()};runtimeIssues.unshift(item);runtimeIssues.splice(30);console.error('NovaPrime v11.6',context,error);return item}
+window.addEventListener('error',e=>recordIssue('window.error',e.error||e.message));
+window.addEventListener('unhandledrejection',e=>recordIssue('promise',e.reason));
+
+function toolPurpose(t){
+ const s=normx(`${t?.title||''} ${t?.desc||''} ${t?.group||''}`);
+ if(/pedido|orden|seguimiento|guia|despacho/.test(s))return 'Te ayuda a ejecutar y controlar pedidos para reducir atrasos, pedidos sin responsable o información de entrega incompleta.';
+ if(/inventario|stock|agotad|existencia/.test(s))return 'Sirve para decidir reposición, detectar agotados y evitar vender productos sin existencia real.';
+ if(/producto|catalog|imagen|video|multimedia/.test(s))return 'Sirve para mantener el catálogo publicable, consistente y con información suficiente para vender.';
+ if(/cliente|comprador|usuario/.test(s))return 'Te ayuda a identificar clientes que necesitan seguimiento, corrección de datos o acciones de fidelización.';
+ if(/promoc|cupon|descuento/.test(s))return 'Sirve para controlar promociones activas, próximas a vencer o que requieren revisión comercial.';
+ if(/agente|permiso|equipo|rol|asigna/.test(s))return 'Sirve para distribuir trabajo y limitar exactamente lo que cada integrante del equipo puede consultar o modificar.';
+ if(/respaldo|backup|almacen|integridad|auditor|diagnost/.test(s))return 'Sirve para proteger la información local, detectar inconsistencias y prevenir pérdida de datos.';
+ if(/compart|imprim|android|appcreator|camara|microfono|voz/.test(s))return 'Aprovecha capacidades del dispositivo Android para mover información fuera del panel sin procesos manuales innecesarios.';
+ if(/analit|reporte|rendimiento/.test(s))return 'Convierte datos existentes en una vista concreta para detectar prioridades y tomar decisiones operativas.';
+ return 'Es una utilidad administrativa. Revisa el resultado antes de realizar cambios y úsala solo cuando contribuya a una decisión o tarea concreta.';
+}
+function toolRisk(t){const s=normx(`${t?.title||''} ${t?.desc||''}`);return /eliminar|borrar|vaciar|limpiar|restaurar|importar|desactivar|optimizar|editar|agregar|crear|guardar|cambiar|ajustar/.test(s)?'Puede modificar datos':'Principalmente consulta o exporta información'}
+function openToolInfo(id){const t=tools.find(x=>x.id===id);if(!t||!byId('crudModal'))return;byId('crudTitle').textContent='Ayuda de herramienta';byId('crudBody').innerHTML=`<div class="np-v116-info-shell"><div class="np-v116-info-head"><div><span>${h(t.group||'herramienta')}</span><h3>${h(t.title)}</h3></div><strong class="np-v116-info-rank">#${n(t.rank)||'—'}</strong></div><div class="np-v116-info-grid"><article class="np-v116-info-card"><b>Qué hace</b><p>${h(t.desc||'No hay descripción disponible.')}</p></article><article class="np-v116-info-card"><b>Para qué te ayuda</b><p>${h(toolPurpose(t))}</p></article><article class="np-v116-info-card"><b>Tipo de acción</b><p>${h(toolRisk(t))}</p></article><article class="np-v116-info-card"><b>Cómo encontrarla</b><p>Busca <b>#${n(t.rank)||'—'}</b>, su nombre o palabras relacionadas dentro del centro de herramientas.</p></article></div><div class="form-actions"><button class="btn btn-primary" id="npV116RunInfoTool">Abrir herramienta</button><button class="btn btn-secondary" data-close="crudModal">Cerrar</button></div></div>`;openModal('crudModal');byId('npV116RunInfoTool').onclick=()=>{closeModal('crudModal');safeRunTool(t)};}
+function enhanceToolCards(root=document){qsa('[data-v10-tool]',root).forEach(card=>{const id=card.dataset.v10Tool,t=toolById.get(id);if(!t)return;card.setAttribute('role','button');card.setAttribute('tabindex','0');card.setAttribute('aria-label',`${t.title}. Herramienta número ${t.rank}.`);if(!card.dataset.v116Key){card.dataset.v116Key='1';card.addEventListener('keydown',e=>{if((e.key==='Enter'||e.key===' ')&&!e.target.closest('button')){e.preventDefault();safeRunTool(t)}})}const head=card.querySelector('.np-v10-tool-head');if(head&&!head.querySelector('[data-v116-info]')){const b=document.createElement('button');b.type='button';b.className='np-v116-tool-info';b.dataset.v116Info=id;b.setAttribute('aria-label',`Explicar ${t.title}`);b.textContent='?';head.insertBefore(b,head.querySelector('[data-v10-fav]')||null)}})}
+document.addEventListener('click',e=>{const b=e.target.closest?.('[data-v116-info]');if(!b)return;e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();openToolInfo(b.dataset.v116Info)},true);
+
+function safeRunTool(t){if(!t||typeof t.action!=='function')return notify('Esta herramienta no tiene una acción disponible.','error');try{const r=t.action();if(r&&typeof r.then==='function')r.catch(err=>{recordIssue(`tool:${t.id}`,err);notify('La herramienta encontró un error. No se confirmó ningún resultado incompleto.','error')});return r}catch(err){recordIssue(`tool:${t.id}`,err);notify('La herramienta encontró un error. No se confirmó ningún resultado incompleto.','error')}}
+function wrapToolActions(){tools.forEach(t=>{if(!t||t._np116Wrapped||typeof t.action!=='function')return;const fn=t.action;t._np116Wrapped=true;t._np116RawAction=fn;t.action=function(...args){try{const r=fn.apply(this,args);if(r&&typeof r.then==='function')return r.catch(err=>{recordIssue(`tool:${t.id}`,err);notify(`No se pudo completar: ${t.title}.`,'error');return false});return r}catch(err){recordIssue(`tool:${t.id}`,err);notify(`No se pudo completar: ${t.title}.`,'error');return false}}})}
+
+function report(title,description,rows,empty='No hay elementos que requieran atención.'){state.adminSection='np-v116-report';if(byId('adminTitle'))byId('adminTitle').textContent=title;const data=arr(rows).slice(0,400);byId('adminContent').innerHTML=`<section class="np-v116-report"><header class="np-v116-report-head"><div><h2>${h(title)}</h2><p>${h(description)}</p></div><button class="btn btn-secondary btn-sm" id="npV116BackTools">Herramientas</button></header><div class="np-v116-report-list">${data.length?data.map(r=>`<article class="np-v116-row"><div><b>${h(r.title||'Registro')}</b><p>${h(r.detail||'')}</p></div><aside>${h(r.meta||'')}</aside></article>`).join(''):`<div class="np-v116-empty"><b>${h(empty)}</b><span>No se generaron registros artificiales para llenar la pantalla.</span></div>`}</div></section>`;byId('npV116BackTools').onclick=()=>renderAdminSection('np-toolbox');scrollAdminTop();}
+function orderRows(list){return arr(list).map(o=>({title:`${o.id||'Pedido'} · ${o.customer?.fullName||'Cliente'}`,meta:`${o.status||'Nuevo'} · ${cash(o.total)}`,detail:[o.customer?.phone,o.customer?.municipality,o.customer?.department].filter(Boolean).join(' · ')}))}
+function productRows(list){return arr(list).map(p=>({title:p.name||'Producto',meta:`Stock ${n(p.stock)} · ${cash(p.price)}`,detail:p.category||'Sin categoría'}))}
+function customerRows(list){return arr(list).map(u=>({title:u.fullName||u.username||'Cliente',meta:u.email||'Sin correo',detail:[u.phone,u.municipality,u.department].filter(Boolean).join(' · ')}))}
+function promoRows(list){return arr(list).map(p=>({title:p.code||p.name||'Promoción',meta:p.expiresAt?`Vence ${p.expiresAt}`:(p.active===false?'Inactiva':'Sin vencimiento'),detail:`Usos ${n(p.uses)} · Valor ${n(p.value??p.percent??p.discount)}%`}))}
+function activeOrders(){return state.orders.filter(o=>!['entregado','cancelado'].includes(normx(o.status)))}
+function incompleteOrders(){return state.orders.filter(o=>![o.customer?.fullName,o.customer?.phone,o.customer?.department,o.customer?.municipality,o.customer?.address].every(v=>String(v||'').trim()))}
+function invalidDataRows(){const rows=[];state.products.forEach(p=>{if(!p.name||!Number.isFinite(Number(p.price))||n(p.price)<=0||!Number.isFinite(Number(p.stock))||n(p.stock)<0)rows.push({title:p.name||p.id||'Producto',meta:'Producto',detail:'Nombre, precio o stock requiere revisión.'})});state.orders.forEach(o=>{if(!Number.isFinite(Number(o.total))||n(o.total)<0)rows.push({title:o.id||'Pedido',meta:'Pedido',detail:'Total inválido.'})});return rows}
+function expiringPromos(days=14){const now=Date.now();return arr(state.promos).filter(p=>{if(p.active===false||!p.expiresAt)return false;const d=(new Date(`${p.expiresAt}T23:59:59`).getTime()-now)/86400000;return d>=0&&d<=days})}
+function incompleteCustomers(){return state.users.filter(u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim()))}
+function unassignedOrders(){const a=currentAssignments();return activeOrders().filter(o=>!a[o.id])}
+function activeWithoutTracking(){return activeOrders().filter(o=>!['nuevo'].includes(normx(o.status))&&!String(o.trackingNumber||'').trim())}
+
+function csvCell(v){let s=String(v??'');if(/^[=+\-@]/.test(s))s="'"+s;return `"${s.replace(/"/g,'""')}"`}
+function csvDownload(name,headers,rows){const text='\ufeff'+[headers,...rows].map(r=>r.map(csvCell).join(',')).join('\n');if(ac?.dynamicDownload)return ac.dynamicDownload(name,text,'text/csv;charset=utf-8');return downloadFile(name,text,'text/csv;charset=utf-8')}
+function exportInventoryCsv(){return csvDownload(`novaprime-inventario-${new Date().toISOString().slice(0,10)}.csv`,['ID','Producto','Categoría','Stock','Precio'],state.products.map(p=>[p.id,p.name,p.category,n(p.stock),n(p.price)]))}
+function exportOrdersCsv(){return csvDownload(`novaprime-pedidos-${new Date().toISOString().slice(0,10)}.csv`,['Pedido','Cliente','Estado','Total','Teléfono','Municipio','Departamento','Guía'],state.orders.map(o=>[o.id,o.customer?.fullName,o.status,n(o.total),o.customer?.phone,o.customer?.municipality,o.customer?.department,o.trackingNumber]))}
+function exportCustomersSafeCsv(){return csvDownload(`novaprime-clientes-seguro-${new Date().toISOString().slice(0,10)}.csv`,['ID','Nombre','Usuario','Correo','Teléfono','Municipio','Departamento'],state.users.map(u=>[u.id,u.fullName,u.username,u.email,u.phone,u.municipality,u.department]))}
+function safeOperationalExport(){const strip=x=>{if(!x||typeof x!=='object')return x;const y={...x};delete y.passwordHash;delete y.password;delete y.passwordSalt;return y};return {version:VERSION,type:'operational-safe-export',exportedAt:new Date().toISOString(),products:state.products,combos:state.combos,faqs:state.faqs,settings:state.settings,users:state.users.map(strip),orders:state.orders,promos:arr(state.promos),agents:currentAgents().map(strip),assignments:currentAssignments(),orderChats:currentChats()}}
+async function downloadSafeExport(){const text=JSON.stringify(safeOperationalExport(),null,2);return ac?.dynamicDownload?ac.dynamicDownload(`novaprime-exportacion-segura-${new Date().toISOString().slice(0,10)}.json`,text,'application/json'):downloadFile('novaprime-exportacion-segura.json',text,'application/json')}
+async function shareSafeExport(){const text=JSON.stringify(safeOperationalExport(),null,2);if(ac?.shareBlob)return ac.shareBlob(`novaprime-exportacion-segura-${new Date().toISOString().slice(0,10)}.json`,text,'application/json','CRULOX · Exportación operativa','Exportación sin hashes de contraseñas.');return downloadSafeExport()}
+function shareCriticalInventory(){const low=state.products.filter(p=>n(p.stock)<=lowLimit()).sort((a,b)=>n(a.stock)-n(b.stock));const txt=['CRULOX · Inventario crítico',...low.slice(0,100).map(p=>`• ${p.name}: ${n(p.stock)} unidades · ${cash(p.price)}`)].join('\n');return ac?.shareText?ac.shareText('CRULOX · Inventario crítico',txt):navigator.clipboard?.writeText(txt)}
+function printOpenOrders(){const rows=activeOrders().slice(0,120).map(o=>`<tr><td>${h(o.id)}</td><td>${h(o.customer?.fullName||'Cliente')}</td><td>${h(o.status||'Nuevo')}</td><td>${h(cash(o.total))}</td></tr>`).join('');return ac?.nativePrint?ac.nativePrint('CRULOX · Pedidos abiertos',`<table><thead><tr><th>Pedido</th><th>Cliente</th><th>Estado</th><th>Total</th></tr></thead><tbody>${rows||'<tr><td colspan="4">Sin pedidos abiertos.</td></tr>'}</tbody></table>`):notify('Impresión no disponible.','warn')}
+function printLowStock(){const rows=state.products.filter(p=>n(p.stock)<=lowLimit()).sort((a,b)=>n(a.stock)-n(b.stock)).slice(0,150).map(p=>`<tr><td>${h(p.name)}</td><td>${n(p.stock)}</td><td>${h(cash(p.price))}</td></tr>`).join('');return ac?.nativePrint?ac.nativePrint('CRULOX · Inventario crítico',`<table><thead><tr><th>Producto</th><th>Stock</th><th>Precio</th></tr></thead><tbody>${rows||'<tr><td colspan="3">Sin alertas.</td></tr>'}</tbody></table>`):notify('Impresión no disponible.','warn')}
+function shareOpenOrders(){const txt=['CRULOX · Pedidos abiertos',...activeOrders().slice(0,100).map(o=>`• ${o.id} · ${o.customer?.fullName||'Cliente'} · ${o.status||'Nuevo'} · ${cash(o.total)}`)].join('\n');return ac?.shareText?ac.shareText('CRULOX · Pedidos abiertos',txt):navigator.clipboard?.writeText(txt)}
+function storageStats(){let bytes=0,keys=[];try{for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';const v=localStorage.getItem(k)||'';const size=(k.length+v.length)*2;bytes+=size;keys.push({k,size})}}catch(e){}keys.sort((a,b)=>b.size-a.size);return {bytes,keys}}
+function dataUrlBytes(src){const s=String(src||'');if(!s.startsWith('data:'))return 0;const p=s.indexOf(',');return p<0?0:Math.round((s.length-p-1)*.75)}
+function heavyImageRows(){const rows=[];state.products.forEach(p=>{[['Principal',p.image],['Secundaria',p.image2],...arr(p.images).map((x,i)=>[`Imagen ${i+1}`,x])].forEach(([label,src])=>{const size=dataUrlBytes(src);if(size>180000)rows.push({title:p.name||p.id,meta:`${(size/1024).toFixed(0)} KB`,detail:`${label} almacenada como Data URL.`})})});state.combos.forEach(c=>{const size=dataUrlBytes(c.image);if(size>180000)rows.push({title:c.name||c.id,meta:`${(size/1024).toFixed(0)} KB`,detail:'Imagen del combo almacenada localmente.'})});return rows.sort((a,b)=>parseFloat(b.meta)-parseFloat(a.meta))}
+async function optimizeStoredImages(){if(typeof optimizeImageDataUrl!=='function')return notify('El optimizador de imágenes no está disponible.','warn');const heavy=heavyImageRows();if(!heavy.length)return notify('No detecté imágenes antiguas suficientemente pesadas para optimizar.','success');if(window.npConfirm&&!await window.npConfirm(`Se optimizarán imágenes locales pesadas (${heavy.length} referencias detectadas). ¿Continuar?`))return;let changed=0;const opt=async src=>{if(dataUrlBytes(src)<220000)return src;try{const next=await optimizeImageDataUrl(src,{maxWidth:1200,maxHeight:1000,quality:.82});if(next&&next.length<src.length){changed++;return next}}catch(e){recordIssue('image-optimize',e)}return src};for(const p of state.products){p.image=await opt(p.image);if(p.image2)p.image2=await opt(p.image2);if(Array.isArray(p.images))p.images=await Promise.all(p.images.map(opt))}for(const c of state.combos){if(c.image)c.image=await opt(c.image)}write(KEYS.products,state.products);write(KEYS.combos,state.combos);renderStore();notify(`Optimización terminada: ${changed} imágenes reducidas.`,'success')}
+function copyDiagnostics(){const d=diagnostics();const text=JSON.stringify(d,null,2);if(navigator.clipboard?.writeText)return navigator.clipboard.writeText(text).then(()=>notify('Diagnóstico copiado.','success'));return ac?.dynamicDownload?.('novaprime-diagnostico.json',text,'application/json')}
+function diagnostics(){const st=storageStats();const ids=tools.map(t=>t.id);return {version:VERSION,generatedAt:new Date().toISOString(),tools:{count:tools.length,unique:new Set(ids).size,callable:tools.filter(t=>typeof t.action==='function').length,ranksComplete:tools.every((t,i)=>t.rank===i+1)},data:{products:state.products.length,orders:state.orders.length,users:state.users.length,combos:state.combos.length,invalid:invalidDataRows().length,lowStock:state.products.filter(p=>n(p.stock)>0&&n(p.stock)<=lowLimit()).length,outStock:state.products.filter(p=>n(p.stock)<=0).length,unassigned:unassignedOrders().length},storage:{bytes:st.bytes,approxMB:+(st.bytes/1048576).toFixed(2),heavyImages:heavyImageRows().length},team:{agents:currentAgents().length,active:currentAgents().filter(a=>a.active!==false).length},appCreator:ac?.capabilityData?.()||null,runtimeIssues:runtimeIssues.slice(0,15)}}
+function openDiagnostics(){const d=diagnostics();const rows=[{title:'Herramientas',meta:`${d.tools.count}/400`,detail:`${d.tools.unique} IDs únicos · ${d.tools.callable} ejecutables · rangos ${d.tools.ranksComplete?'correctos':'a revisar'}`},{title:'Datos críticos',meta:String(d.data.invalid),detail:`Stock bajo ${d.data.lowStock} · agotados ${d.data.outStock} · pedidos sin asignar ${d.data.unassigned}`},{title:'Almacenamiento local',meta:`${d.storage.approxMB} MB`,detail:`${d.storage.heavyImages} imágenes pesadas detectadas.`},{title:'Errores de ejecución capturados',meta:String(runtimeIssues.length),detail:runtimeIssues[0]?.message||'Sin errores capturados en esta sesión.'}];report('Autodiagnóstico general','Comprueba estructura, datos, almacenamiento y errores capturados durante esta sesión.',rows)}
+
+function replaceTool(id,title,group,icon,desc,fn,aliases=''){const t=tools.find(x=>x.id===id);if(!t)return false;t.title=title;t._np110BaseTitle=title;t.group=group;t.icon=icon;t.desc=desc;t.aliases=aliases;t.action=fn;t._np116Wrapped=false;return true}
+function repurposeLowValueTools(){
+ const R=[
+ ['price-at-least-10','Alertas operativas ahora','operations','⚠️','Reúne pedidos sin responsable, stock bajo, agotados y datos críticos que requieren atención.',()=>{const rows=[...unassignedOrders().map(o=>({title:`Pedido ${o.id}`,meta:'Sin responsable',detail:o.customer?.fullName||'Cliente'})),...state.products.filter(p=>n(p.stock)<=lowLimit()).map(p=>({title:p.name,meta:`Stock ${n(p.stock)}`,detail:n(p.stock)<=0?'Agotado':'Stock bajo'})),...invalidDataRows()];report('Alertas operativas ahora','Prioridades concretas que pueden afectar ventas, entrega o integridad de datos.',rows)},'urgente prioridades problemas'],
+ ['price-at-least-20','Pedidos abiertos sin responsable','operations','📌','Muestra pedidos activos que todavía no tienen un agente responsable.',()=>report('Pedidos sin responsable','Asigna a alguien para evitar que pedidos activos queden sin seguimiento.',orderRows(unassignedOrders())),'asignar agente'],
+ ['price-at-least-30','Pedidos activos sin guía','operations','🚚','Detecta pedidos en proceso que todavía no tienen número de guía.',()=>report('Pedidos activos sin guía','Útil antes del despacho para completar seguimiento y entrega.',orderRows(activeWithoutTracking())),'tracking despacho envio'],
+ ['price-at-least-40','Pedidos con entrega incompleta','operations','⚠️','Detecta pedidos que carecen de teléfono, dirección, municipio o departamento.',()=>report('Pedidos con entrega incompleta','Corrige datos antes de preparar o despachar el pedido.',orderRows(incompleteOrders())),'direccion telefono'],
+ ['price-at-least-50','Productos agotados','catalog','⛔','Muestra productos con stock cero para reponer, ocultar o revisar.',()=>report('Productos agotados','Productos que no deberían prometer nuevas unidades mientras sigan sin existencia.',productRows(state.products.filter(p=>n(p.stock)<=0))),'sin stock'],
+ ['price-at-least-75','Productos con stock bajo','operations','📦','Muestra existencias por debajo del límite configurado para anticipar reposición.',()=>report('Productos con stock bajo',`Límite actual: ${lowLimit()} unidades.`,productRows(state.products.filter(p=>n(p.stock)>0&&n(p.stock)<=lowLimit()))),'reponer bodega'],
+ ['price-at-least-100','Productos sin imagen','catalog','🖼️','Detecta productos que no tienen imagen principal publicable.',()=>report('Productos sin imagen','Completa la presentación visual antes de impulsar estos productos.',productRows(state.products.filter(p=>!String(p.image||'').trim()))),'foto multimedia'],
+ ['price-at-least-150','Productos sin video','catalog','▶','Detecta productos sin video de presentación cuando quieras enriquecer su ficha.',()=>report('Productos sin video','El video es opcional; esta lista sirve para priorizar contenido multimedia.',productRows(state.products.filter(p=>!String(p.videoUrl||'').trim()))),'multimedia'],
+ ['price-at-least-200','Clientes con perfil incompleto','customers','👤','Detecta compradores con datos de contacto o entrega incompletos.',()=>report('Clientes con perfil incompleto','Corrige datos antes de depender de ellos para entrega o soporte.',customerRows(incompleteCustomers())),'contacto direccion'],
+ ['price-at-least-250','Promociones próximas a vencer','growth','⌛','Muestra promociones activas que vencerán dentro de 14 días.',()=>report('Promociones próximas a vencer','Decide si renovarlas, reemplazarlas o dejar que finalicen.',promoRows(expiringPromos(14))),'cupon descuento'],
+ ['price-at-least-500','Datos críticos a revisar','system','🛡️','Detecta precios, stock o totales inválidos que pueden romper cálculos.',()=>report('Datos críticos a revisar','La lista solo muestra inconsistencias comprobables en los datos actuales.',invalidDataRows()),'integridad error'],
+ ['reviews-at-least-0','Exportar inventario CSV','system','⇩','Descarga inventario en CSV compatible con hojas de cálculo y protege contra fórmulas inyectadas.',exportInventoryCsv,'excel spreadsheet'],
+ ['reviews-at-least-1','Exportar pedidos CSV','system','⇩','Descarga pedidos con estado, cliente, total y guía en un CSV seguro.',exportOrdersCsv,'excel ordenes'],
+ ['reviews-at-least-5','Exportar clientes CSV seguro','system','⇩','Exporta clientes sin hashes de contraseña ni credenciales internas.',exportCustomersSafeCsv,'privacidad'],
+ ['reviews-at-least-10','Compartir inventario crítico','operations','📤','Envía por Android una lista de agotados y stock bajo.',shareCriticalInventory,'android whatsapp share'],
+ ['reviews-at-least-25','Imprimir pedidos abiertos','operations','🖨️','Abre la impresión nativa con pedidos todavía no entregados ni cancelados.',printOpenOrders,'android impresion'],
+ ['reviews-at-least-50','Copiar diagnóstico operativo','system','⧉','Copia un diagnóstico técnico sin modificar datos.',copyDiagnostics,'debug soporte'],
+ ['reviews-at-least-100','Autodiagnóstico general','system','🩺','Revisa las Herramientas, integridad, almacenamiento y errores capturados.',openDiagnostics,'self test prueba'],
+ ['orders-at-least-50','Agentes sin herramientas asignadas','team','🔐','Detecta agentes activos que no tienen herramientas directas disponibles.',()=>{const rows=currentAgents().filter(a=>a.active!==false&&!(a.permissions?.tools||[]).length).map(a=>({title:a.name||a.username,meta:a.email||'Agente',detail:'No tiene herramientas directas autorizadas.'}));report('Agentes sin herramientas','Revisa permisos para evitar cuentas activas sin capacidad real de trabajo.',rows)},'roles permisos'],
+ ['orders-at-least-100','Carga de trabajo del equipo','team','⚖️','Abre la distribución de pedidos por responsable.',()=>team?.renderTeamLoad?.(),'agentes asignaciones'],
+ ['orders-at-least-200','Asignaciones huérfanas','system','🛡️','Detecta asignaciones guardadas cuyo pedido ya no existe.',()=>{const ids=new Set(state.orders.map(o=>String(o.id)));const rows=Object.entries(currentAssignments()).filter(([id])=>!ids.has(String(id))).map(([id,a])=>({title:id,meta:team?.agentById?.(a)?.name||a||'—',detail:'Asignación sin pedido vigente.'}));report('Asignaciones huérfanas','Estas referencias pueden limpiarse después de confirmar que el pedido ya no existe.',rows)},'integridad'],
+ ['orders-at-least-300','Chats huérfanos','system','🛡️','Detecta conversaciones asociadas a pedidos eliminados.',()=>{const ids=new Set(state.orders.map(o=>String(o.id)));const rows=Object.entries(currentChats()).filter(([id])=>!ids.has(String(id))).map(([id,msgs])=>({title:id,meta:`${arr(msgs).length} mensajes`,detail:'Conversación sin pedido vigente.'}));report('Chats huérfanos','Revisión de integridad entre pedidos y seguimiento interno.',rows)},'integridad chat'],
+ ['orders-at-least-500','Compartir pedidos abiertos','operations','📤','Comparte por Android un resumen de pedidos todavía activos.',shareOpenOrders,'android'],
+ ['orders-at-least-1000','Imprimir stock bajo','operations','🖨️','Imprime una lista específica de agotados y productos próximos a agotarse.',printLowStock,'android'],
+ ['v111-inventory-value-1','Imágenes pesadas en almacenamiento','system','🖼️','Detecta imágenes Data URL que aumentan el peso de localStorage y de la WebView.',()=>report('Imágenes pesadas','Estas imágenes son candidatas a optimización para mejorar carga y estabilidad.',heavyImageRows()),'rendimiento peso'],
+ ['v111-inventory-value-2','Claves más pesadas de localStorage','system','▤','Muestra qué bloques locales consumen más espacio.',()=>{const s=storageStats();report('Claves más pesadas',`Uso local aproximado: ${(s.bytes/1048576).toFixed(2)} MB.`,s.keys.slice(0,30).map(x=>({title:x.k,meta:`${(x.size/1024).toFixed(1)} KB`,detail:'Tamaño aproximado de clave + contenido.'})))},'almacenamiento'],
+ ['v111-inventory-value-3','Optimizar imágenes antiguas','system','⚙️','Recomprime únicamente imágenes locales pesadas y conserva las que no mejoran de tamaño.',optimizeStoredImages,'rendimiento comprimir'],
+ ['v111-inventory-value-4','Descargar exportación operativa segura','system','⇩','Genera JSON de operación sin hashes de contraseñas para análisis o archivo.',downloadSafeExport,'privacidad respaldo'],
+ ['v111-inventory-value-5','Compartir exportación operativa segura','system','📤','Comparte JSON sin hashes de contraseña mediante el menú nativo de Android.',shareSafeExport,'privacidad android'],
+ ['v111-inventory-value-6','Centro AppCreator24','system','📱','Abre pruebas y accesos para compartir, imprimir, cámara, micrófono y descargas.',renderMobileCenter,'android movil'],
+ ['v111-inventory-value-7','Probar descarga dinámica','system','⇩','Genera un archivo de prueba Blob/Data URL para validar descargas en la app.',()=>ac?.dynamicDownload?.(`prueba-novaprime-${Date.now()}.txt`,'CRULOX · descarga dinámica correcta','text/plain')||notify('Módulo AppCreator24 no disponible.','warn'),'blob data url'],
+ ['v111-inventory-value-8','Probar compartir Android','system','↗','Abre el menú nativo con un texto de prueba para validar navigator.share().',()=>ac?.shareText?.('CRULOX','Prueba de compartir nativo desde CRULOX.')||notify('Compartir no disponible.','warn'),'navigator share'],
+ ['v111-inventory-value-9','Probar impresión Android','system','🖨️','Abre una hoja de prueba mediante window.print() para validar impresión nativa.',()=>ac?.nativePrint?.('CRULOX · Prueba de impresión','<p>Si ves esta hoja, la integración de impresión está respondiendo.</p>')||notify('Impresión no disponible.','warn'),'window print'],
+ ['v111-inventory-value-10','Captura multimedia móvil','system','📷','Acceso rápido a cámara y grabación temporal de voz sin llenar localStorage.',renderMediaCaptureCenter,'camara microfono voz']
+ ];
+ R.forEach(x=>replaceTool(...x));
+ const full=tools.find(t=>t.id==='system-backup');if(full){full.title='Respaldo completo para restaurar · privado';full._np110BaseTitle=full.title;full.desc='Descarga el respaldo restaurable completo. Puede contener hashes de acceso; no lo compartas públicamente.'}
+ const shareOld=tools.find(t=>t.id==='v111-order-value-3');if(shareOld){shareOld.title='Compartir exportación segura';shareOld._np110BaseTitle=shareOld.title;shareOld.desc='Comparte datos operativos sin hashes de contraseñas ni credenciales internas.';shareOld.action=shareSafeExport;shareOld._np116Wrapped=false}
+ const fullMobile=tools.find(t=>t.id==='v111-order-value-4');if(fullMobile){fullMobile.title='Descar

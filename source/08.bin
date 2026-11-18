@@ -1,0 +1,1382 @@
+admin-summary-head"><div><h2>Resumen operativo</h2><p>Indicadores esenciales, sin mezclar herramientas de edición.</p></div></div><div class="admin-grid">${metric('Productos',state.products.length)}${metric('Combos',state.combos.length)}${metric('Categorías',categories().length)}${metric('Clientes',state.users.length)}${metric('Pedidos',state.orders.length)}${metric('Ventas registradas',money(sales))}${metric('Stock bajo',low)}${metric('Agotados',out)}${metric('FAQ',state.faqs.length)}</div><div class="np-admin-summary-row"><section class="admin-card"><div class="admin-card-head"><div><h2>Atención requerida</h2><p class="admin-card-sub">Elementos que pueden necesitar una acción administrativa.</p></div></div><div class="admin-mini-list">${low?`<article class="admin-mini-item"><div><b>${low} productos con stock bajo</b><small>Conviene revisar inventario antes de quedarte sin existencias.</small></div><span class="admin-badge warn">Revisar</span></article>`:''}${out?`<article class="admin-mini-item"><div><b>${out} productos agotados</b><small>No están disponibles para nuevas compras.</small></div><span class="admin-badge bad">Agotado</span></article>`:''}${!low&&!out?`<article class="admin-mini-item"><div><b>Inventario estable</b><small>No hay alertas críticas en este momento.</small></div><span class="admin-badge ok">Correcto</span></article>`:''}</div></section><section class="admin-card"><div class="admin-card-head"><div><h2>Actividad reciente</h2><p class="admin-card-sub">Últimos movimientos administrativos.</p></div></div>${typeof activityPreview==='function'?activityPreview():'<div class="empty">Consulta el menú Sistema → Actividad.</div>'}</section></div>`;
+    $('adminContent').querySelectorAll('[data-metric-target]').forEach(card=>{const open=()=>renderAdminSection(card.dataset.metricTarget);card.onclick=open;card.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();open()}}});
+  };
+
+  const baseOpenAdmin=openAdmin;
+  openAdmin=function(section='home'){
+    if(state.session?.role!=='admin')return;
+    const wasOpen=$('adminOverlay').classList.contains('open');
+    $('adminOverlay').classList.add('open');document.body.classList.add('lock');ensureAdminChrome();
+    if(!wasOpen && section==='dashboard')section='home';
+    renderAdminSection(section||'home');
+  };
+
+  // Mantener acciones superiores pequeñas y claras.
+  ensureAdminChrome();
+  if($('adminStoreBtn'))$('adminStoreBtn').textContent='Tienda';
+  if($('adminLogout'))$('adminLogout').textContent='Salir';
+})();
+
+</script>
+
+
+<script>
+/* CRULOX v10.0 — Panel administrativo Pro, modular y extensible */
+(function(){
+  const NP_ADMIN_PREFS_KEY='jm_digital_v1_admin_workspace';
+  const NP_ADMIN_NOTES_KEY='jm_digital_v1_admin_notes';
+  const NP_ADMIN_TAGS_KEY='jm_digital_v1_admin_tags';
+  const readLocal=(key,fallback)=>{try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):fallback}catch(e){return fallback}};
+  const writeLocal=(key,value)=>{try{localStorage.setItem(key,JSON.stringify(value));return true}catch(e){console.warn(e);return false}};
+  const prefs={favorites:[],recent:[],...readLocal(NP_ADMIN_PREFS_KEY,{})};
+  const adminNotes=readLocal(NP_ADMIN_NOTES_KEY,{});
+  const adminTags=readLocal(NP_ADMIN_TAGS_KEY,{});
+  const savePrefs=()=>writeLocal(NP_ADMIN_PREFS_KEY,prefs);
+  const saveNotes=()=>writeLocal(NP_ADMIN_NOTES_KEY,adminNotes);
+  const saveTags=()=>writeLocal(NP_ADMIN_TAGS_KEY,adminTags);
+
+  const GROUPS={
+    home:{label:'Inicio',icon:'⌂',desc:'Menú principal y accesos esenciales.'},
+    catalog:{label:'Catálogo',icon:'▦',desc:'Productos, combos, categorías, medios y edición masiva.'},
+    operations:{label:'Operación',icon:'↗',desc:'Pedidos, ventas, inventario y flujo diario.'},
+    customers:{label:'Clientes',icon:'◎',desc:'Perfiles, segmentación y relación con clientes.'},
+    growth:{label:'Crecimiento',icon:'✦',desc:'Promociones, contenido, destacados y experiencia comercial.'},
+    analytics:{label:'Analítica',icon:'◫',desc:'Informes, métricas, rendimiento y detección de problemas.'},
+    system:{label:'Sistema',icon:'⚙',desc:'Herramientas, respaldo, auditoría y entorno local.'}
+  };
+
+  const MODULES={
+    catalog:[
+      ['products','📦','Productos','Crear, editar, duplicar y revisar todo el catálogo.'],
+      ['combos','🎁','Combos','Administrar paquetes comerciales y su contenido.'],
+      ['categories','🏷️','Categorías','Ordenar el catálogo y revisar cada agrupación.'],
+      ['inventory','📋','Inventario','Existencias, stock bajo y productos agotados.'],
+      ['np-media','🖼️','Multimedia','Auditar imágenes, videos y recursos del catálogo.'],
+      ['np-bulk','⚡','Edición masiva','Cambios controlados en precios, stock y etiquetas.']
+    ],
+    operations:[
+      ['orders','🧾','Pedidos','Seguimiento detallado de solicitudes y estados.'],
+      ['np-sales','💰','Ventas','Ingresos registrados, ticket promedio y desglose.'],
+      ['promotions','🎟️','Promociones','Códigos, descuentos, vigencia y uso.'],
+      ['metric-low-stock','⚠️','Stock bajo','Productos que necesitan reposición.'],
+      ['metric-out-stock','⛔','Agotados','Artículos sin existencia disponibles.'],
+      ['np-fulfillment','🚚','Preparación','Herramientas para organizar la atención de pedidos.']
+    ],
+    customers:[
+      ['users','👥','Clientes','Perfiles registrados y datos de entrega.'],
+      ['np-segments','◉','Segmentos','Agrupaciones automáticas por comportamiento.'],
+      ['np-customer-health','✓','Calidad de datos','Perfiles incompletos, repetidos o con incidencias.'],
+      ['np-customer-notes','✎','Notas internas','Notas administrativas por cliente.']
+    ],
+    growth:[
+      ['promotions','🎟️','Promociones','Crear y controlar incentivos comerciales.'],
+      ['faqs','❓','Preguntas frecuentes','Ayuda pública y respuestas importantes.'],
+      ['settings','🏪','Tienda','Identidad, textos, redes y configuración comercial.'],
+      ['bots','💬','Atención','Canal público de consultas y soporte.'],
+      ['np-featured','★','Destacados','Control de productos resaltados en la tienda.'],
+      ['np-content-audit','✦','Auditoría de contenido','Revisar textos incompletos o inconsistentes.']
+    ],
+    analytics:[
+      ['dashboard','📊','Resumen','Indicadores clave de toda la operación.'],
+      ['np-product-analytics','📈','Rendimiento de productos','Stock, precios, ventas y calidad de catálogo.'],
+      ['np-order-analytics','🧮','Rendimiento de pedidos','Estados, ingresos, descuentos y ticket promedio.'],
+      ['np-customer-analytics','👤','Rendimiento de clientes','Compras, ubicaciones y recurrencia.'],
+      ['np-inventory-analytics','📦','Analítica de inventario','Valor, cobertura y riesgos de existencias.'],
+      ['np-audit-center','🛡️','Centro de auditoría','Detecta datos incompletos, duplicados o inválidos.']
+    ],
+    system:[
+      ['np-toolbox','⌘','Centro de herramientas','Buscador de todas las funciones administrativas.'],
+      ['backup','💾','Respaldos','Exportar, importar y restaurar información.'],
+      ['activity','🕘','Actividad','Historial de acciones administrativas.'],
+      ['np-data-health','🩺','Salud de datos','Comprobar integridad del almacenamiento local.'],
+      ['np-storage','▤','Almacenamiento','Uso estimado y limpieza controlada.'],
+      ['np-local-access','🔐','Acceso temporal','Estado del acceso administrativo local.']
+    ]
+  };
+
+
+  /* v10.5 · Equipo, permisos y seguimiento interno */
+  GROUPS.team={label:'Equipo',icon:'👤',desc:'Agentes, permisos, asignaciones y seguimiento directo de pedidos.'};
+  MODULES.team=[
+    ['np-agents','👥','Agentes','Crear agentes, activar accesos y revisar responsabilidades.'],
+    ['np-permissions','🔐','Roles y permisos','Autorizar áreas, módulos y herramientas específicas.'],
+    ['np-order-chat','💬','Seguimiento directo','Conversaciones de pedido, guía, estado y mensajes al cliente.'],
+    ['np-assignments','📌','Asignaciones','Asignar pedidos a empaque, atención, ventas u otros responsables.'],
+    ['np-team-activity','🕘','Actividad del equipo','Historial de acciones realizadas por cada agente.'],
+    ['np-team-load','⚖️','Carga de trabajo','Pedidos asignados y pendientes por responsable.']
+  ];
+  const SECTION_GROUP={dashboard:'analytics',products:'catalog',combos:'catalog',categories:'catalog',inventory:'catalog',orders:'operations',promotions:'growth',users:'customers',faqs:'growth',settings:'growth',bots:'growth',backup:'system',activity:'system','metric-low-stock':'operations','metric-out-stock':'operations','metric-sales':'operations','metric-products':'catalog','metric-combos':'catalog','metric-categories':'catalog','metric-users':'customers','metric-orders':'operations','metric-faqs':'growth'};
+  Object.entries(MODULES).forEach(([g,items])=>items.forEach(([s])=>SECTION_GROUP[s]=g));
+  ['np-agents','np-permissions','np-order-chat','np-assignments','np-team-activity','np-team-load'].forEach(s=>SECTION_GROUP[s]='team');
+
+  const css=document.createElement('style');
+  css.id='np-admin-pro-v10-css';
+  css.textContent=`
+    .admin-overlay{background:#020712!important}
+    .admin-shell{background:#020712!important}
+    .admin-sidebar{background:linear-gradient(180deg,#06121f,#030b15)!important;border-bottom:1px solid rgba(129,195,255,.07)!important}
+    .admin-brand-row{padding:11px 16px 7px!important;max-width:1320px!important}
+    .admin-brand{width:185px!important;height:44px!important}
+    .admin-brand-meta{font-size:.58rem!important;color:#6f8ba7!important}
+    .admin-nav{max-width:1320px!important;padding:6px 16px 12px!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;gap:7px!important}
+    .admin-nav button{min-height:46px!important;padding:8px 7px!important;border-radius:14px!important;font-size:.61rem!important;background:rgba(255,255,255,.018)!important;border-color:rgba(127,194,255,.06)!important;color:#91abc6!important}
+    .admin-nav button.active{background:linear-gradient(135deg,#18d8ff,#2387ff)!important;color:#03101c!important;box-shadow:0 8px 20px rgba(0,174,255,.18)!important}
+    .admin-top{min-height:54px!important;padding:7px 16px!important;background:rgba(2,7,18,.95)!important}
+    .admin-top .section-kicker{font-size:.54rem!important;color:#5d7895!important;letter-spacing:.12em!important}
+    .admin-top h1{font-size:.92rem!important;margin-top:2px!important}
+    .admin-top .toolbar{gap:6px!important}
+    .admin-top .btn{min-height:34px!important;padding:6px 10px!important;font-size:.56rem!important;border-radius:11px!important}
+    .admin-content{max-width:1320px!important;padding:12px 16px 34px!important}
+    .np-admin-breadcrumb{max-width:1320px!important;padding:8px 16px 0!important;font-size:.56rem!important;color:#58728d!important}
+    .np-admin-subnav-wrap{max-width:1320px!important;padding:7px 16px 0!important}
+    .np-admin-subnav{padding:5px!important;border-radius:13px!important;gap:4px!important;background:#06111d!important;border-color:rgba(125,194,255,.06)!important}
+    .np-admin-subnav button{min-height:31px!important;padding:6px 9px!important;font-size:.54rem!important;border-radius:9px!important}
+    .np-v10-home{display:grid;gap:12px}
+    .np-v10-commandbar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:11px;border:1px solid rgba(121,194,255,.08);background:linear-gradient(145deg,#081725,#06111d);border-radius:18px}
+    .np-v10-search{position:relative;min-width:0}
+    .np-v10-search input{width:100%;height:45px;border-radius:13px;border:1px solid rgba(137,200,255,.09);background:#030b14;color:#ecf6ff;padding:0 42px 0 14px;outline:none;font-size:.72rem}
+    .np-v10-search input:focus{border-color:rgba(0,211,255,.3);box-shadow:0 0 0 3px rgba(0,211,255,.06)}
+    .np-v10-search kbd{position:absolute;right:10px;top:50%;transform:translateY(-50%);padding:4px 7px;border-radius:7px;background:#0b1b2e;border:1px solid rgba(255,255,255,.06);color:#6e8ba8;font-size:.48rem}
+    .np-v10-commandbar .btn{height:45px;border-radius:13px!important;white-space:nowrap}
+    .np-v10-section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:2px 0 0}
+    .np-v10-section-head h2{font-size:.87rem;margin:0;color:#f4f9ff}.np-v10-section-head p{font-size:.56rem;color:#6e89a5;margin-top:3px;line-height:1.5}
+    .np-v10-section-head span{font-size:.52rem;color:#5f7894}
+    .np-v10-modules{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+    .np-v10-module{min-height:128px;padding:13px;border-radius:17px;border:1px solid rgba(126,194,255,.075);background:linear-gradient(145deg,#081828,#06121e);color:#edf7ff;text-align:left;display:flex;flex-direction:column;justify-content:space-between;gap:10px;box-shadow:0 10px 26px rgba(0,0,0,.1)}
+    .np-v10-module:hover{border-color:rgba(23,212,255,.2);transform:translateY(-1px)}
+    .np-v10-module-top{display:flex;align-items:center;justify-content:space-between;gap:8px}.np-v10-module-icon{width:39px;height:39px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,rgba(0,211,255,.13),rgba(65,102,255,.12));border:1px solid rgba(120,196,255,.08);font-size:.95rem}.np-v10-module-count{font-size:.48rem;color:#66819d;background:rgba(255,255,255,.025);padding:5px 7px;border-radius:999px}
+    .np-v10-module h3{font-size:.72rem;margin:0 0 4px}.np-v10-module p{font-size:.54rem;color:#7993ad;line-height:1.5;margin:0}.np-v10-module-go{font-size:.52rem;color:#21d8ff;font-weight:800}
+    .np-v10-home-bottom{display:grid;grid-template-columns:1fr 1fr;gap:9px}.np-v10-compact-card{padding:13px;border-radius:17px;background:#071522;border:1px solid rgba(124,193,255,.07)}.np-v10-compact-card h3{font-size:.72rem;margin-bottom:8px}.np-v10-compact-card p{font-size:.54rem;color:#728ca7;line-height:1.55}
+    .np-v10-chip-row{display:flex;flex-wrap:wrap;gap:6px}.np-v10-chip{border:1px solid rgba(126,194,255,.08);background:rgba(255,255,255,.025);color:#b7cbe0;border-radius:999px;padding:7px 9px;font-size:.52rem}.np-v10-chip:hover{border-color:rgba(0,211,255,.18);color:#e8faff}
+    .np-v10-module-page{display:grid;gap:11px}.np-v10-module-banner{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px;border-radius:18px;background:linear-gradient(145deg,#091c2e,#061321);border:1px solid rgba(124,195,255,.08)}.np-v10-module-banner h2{font-size:.9rem;margin:0}.np-v10-module-banner p{font-size:.57rem;color:#7d98b3;line-height:1.55;margin-top:4px}.np-v10-module-banner .np-v10-big-icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:rgba(0,211,255,.08);font-size:1.05rem}
+    .np-v10-module-links{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.np-v10-module-link{min-height:100px;padding:12px;border-radius:15px;border:1px solid rgba(124,194,255,.07);background:rgba(255,255,255,.018);color:#e6f1ff;text-align:left;display:grid;grid-template-columns:36px 1fr auto;align-items:center;gap:9px}.np-v10-module-link i{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;background:rgba(0,211,255,.07);font-style:normal}.np-v10-module-link b{display:block;font-size:.66rem}.np-v10-module-link small{display:block;font-size:.51rem;color:#718ba5;line-height:1.45;margin-top:3px}.np-v10-module-link em{font-style:normal;color:#20d8ff}
+    .np-v10-tools-head{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:9px}.np-v10-tools-head h2{font-size:.86rem}.np-v10-tools-head p{font-size:.54rem;color:#6f89a4;margin-top:3px}.np-v10-tool-search{display:flex;gap:7px;flex-wrap:wrap}.np-v10-tool-search input,.np-v10-tool-search select{height:38px;border-radius:11px;border:1px solid rgba(127,195,255,.08);background:#06121f;color:#eaf4ff;padding:0 10px;font-size:.58rem;outline:none}.np-v10-tool-search input{min-width:220px}
+    .np-v10-tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}.np-v10-tool{position:relative;min-height:102px;padding:11px;border-radius:14px;border:1px solid rgba(124,193,255,.065);background:#071522;color:#eaf4ff;text-align:left;display:flex;flex-direction:column;gap:7px}.np-v10-tool:hover{border-color:rgba(0,211,255,.2);background:#081a2b}.np-v10-tool-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}.np-v10-tool-icon{width:31px;height:31px;border-radius:9px;background:rgba(0,211,255,.07);display:grid;place-items:center;font-size:.72rem}.np-v10-tool-fav{width:27px;height:27px;border:0;border-radius:8px;background:rgba(255,255,255,.03);color:#6e88a2;font-size:.62rem}.np-v10-tool-fav.on{color:#ffc84f;background:rgba(255,200,79,.08)}.np-v10-tool b{font-size:.61rem}.np-v10-tool p{font-size:.49rem;color:#6f88a2;line-height:1.45}.np-v10-tool-tag{margin-top:auto;font-size:.46rem;color:#3edcff;text-transform:uppercase;letter-spacing:.07em}
+    .np-v10-report{display:grid;gap:10px}.np-v10-report-summary{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 13px;border-radius:15px;background:#081827;border:1px solid rgba(126,194,255,.07)}.np-v10-report-summary h2{font-size:.8rem}.np-v10-report-summary p{font-size:.52rem;color:#738da8;margin-top:3px}.np-v10-report-count{font-size:1.2rem;color:#19d9ff;font-weight:900}.np-v10-records{display:grid;gap:7px}.np-v10-record{padding:11px;border-radius:14px;border:1px solid rgba(126,194,255,.065);background:#071522;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:start}.np-v10-record h3{font-size:.64rem;margin:0}.np-v10-record p{font-size:.5rem;color:#748ca6;line-height:1.5;margin-top:4px}.np-v10-record aside{font-size:.55rem;color:#19d9ff;font-weight:850;text-align:right}.np-v10-record-actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px}.np-v10-record-actions button{padding:5px 7px;border-radius:8px;border:1px solid rgba(124,193,255,.08);background:rgba(255,255,255,.025);color:#c5d6e8;font-size:.48rem}
+    .np-v10-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.np-v10-kpi{padding:12px;border-radius:15px;background:#071522;border:1px solid rgba(124,194,255,.065)}.np-v10-kpi small{font-size:.5rem;color:#69849f}.np-v10-kpi strong{display:block;margin-top:6px;color:#19d9ff;font-size:1.05rem}.np-v10-kpi span{display:block;margin-top:3px;font-size:.46rem;color:#5f7893}
+    .np-v10-audit-list{display:grid;gap:7px}.np-v10-audit{padding:11px;border-radius:14px;background:#071522;border:1px solid rgba(124,194,255,.065);display:flex;justify-content:space-between;gap:10px}.np-v10-audit b{font-size:.6rem}.np-v10-audit p{font-size:.49rem;color:#718aa4;margin-top:3px;line-height:1.45}.np-v10-audit span{font-size:.55rem;font-weight:900;color:#19d9ff}.np-v10-audit.warn span{color:#ffc45d}.np-v10-audit.bad span{color:#ff7699}
+    .np-v10-palette{position:fixed;inset:0;z-index:99999;background:rgba(0,4,10,.74);backdrop-filter:blur(12px);display:none;align-items:flex-start;justify-content:center;padding:9vh 14px 20px}.np-v10-palette.open{display:flex}.np-v10-palette-box{width:min(720px,100%);max-height:80vh;overflow:hidden;border-radius:20px;border:1px solid rgba(125,195,255,.12);background:#06111d;box-shadow:0 30px 80px rgba(0,0,0,.55)}.np-v10-palette-search{padding:11px;border-bottom:1px solid rgba(124,194,255,.07)}.np-v10-palette-search input{width:100%;height:45px;border-radius:12px;border:1px solid rgba(124,194,255,.08);background:#020913;color:#eef7ff;padding:0 13px;font-size:.72rem;outline:none}.np-v10-palette-results{max-height:62vh;overflow:auto;padding:7px}.np-v10-palette-item{width:100%;padding:9px 10px;border:0;border-radius:11px;background:transparent;color:#e7f2ff;text-align:left;display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center}.np-v10-palette-item:hover{background:rgba(0,211,255,.055)}.np-v10-palette-item i{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(0,211,255,.07);font-style:normal}.np-v10-palette-item b{font-size:.6rem}.np-v10-palette-item small{display:block;font-size:.48rem;color:#68829d;margin-top:2px}.np-v10-palette-item em{font-style:normal;font-size:.47rem;color:#4edfff;text-transform:uppercase}
+    .np-v10-empty{padding:24px 14px;text-align:center;color:#66809b;font-size:.58rem}
+    @media(max-width:1000px){.admin-nav{grid-template-columns:repeat(4,minmax(0,1fr))!important}.np-v10-modules{grid-template-columns:repeat(3,minmax(0,1fr))}.np-v10-tool-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.np-v10-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+    @media(max-width:680px){.admin-brand-row{padding:9px 11px 5px!important}.admin-brand{width:155px!important;height:38px!important}.admin-brand-meta{display:none!important}.admin-nav{padding:5px 11px 9px!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:5px!important}.admin-nav button{min-height:41px!important;font-size:.51rem!important;padding:6px 3px!important;gap:4px!important}.admin-content{padding:10px 11px 28px!important}.admin-top{padding:6px 11px!important}.np-admin-breadcrumb,.np-admin-subnav-wrap{padding-left:11px!important;padding-right:11px!important}.np-v10-commandbar{grid-template-columns:1fr;padding:8px}.np-v10-commandbar .btn{width:100%}.np-v10-modules{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}.np-v10-module{min-height:116px;padding:11px}.np-v10-home-bottom{grid-template-columns:1fr}.np-v10-module-links{grid-template-columns:1fr 1fr}.np-v10-tool-grid{grid-template-columns:1fr}.np-v10-tool-search{width:100%}.np-v10-tool-search input,.np-v10-tool-search select{width:100%;min-width:0}.np-v10-kpis{grid-template-columns:1fr 1fr}}
+    @media(max-width:380px){.admin-nav{grid-template-columns:repeat(3,minmax(0,1fr))!important}.np-v10-modules{grid-template-columns:1fr 1fr}.np-v10-module-links{grid-template-columns:1fr}.np-v10-kpis{grid-template-columns:1fr 1fr}}
+  `;
+  document.head.appendChild(css);
+
+  // ---------- Utilidades ----------
+  const fmtDate=v=>{if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('es-GT')};
+  const num=v=>Number(v||0);
+  const safeArr=v=>Array.isArray(v)?v:[];
+  const escapeCsv=v=>`"${String(v??'').replace(/"/g,'""')}"`;
+  const bytesText=n=>n<1024?`${n} B`:n<1048576?`${(n/1024).toFixed(1)} KB`:`${(n/1048576).toFixed(2)} MB`;
+  function storageEstimate(){let total=0;for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i)||'';const v=localStorage.getItem(k)||'';total+=(k.length+v.length)*2}return total}
+  function persistProducts(){write(KEYS.products,state.products);renderStore();logActivity('Catálogo actualizado','Herramienta administrativa')}
+  function persistOrders(){write(KEYS.orders,state.orders);logActivity('Pedidos actualizados','Herramienta administrativa')}
+  function persistUsers(){write(KEYS.users,state.users);logActivity('Clientes actualizados','Herramienta administrativa')}
+  function removeInvalidCommerceRefs(){
+    const ids=new Set(state.products.map(p=>p.id));const comboIds=new Set(state.combos.map(c=>c.id));
+    const beforeCart=state.cart.length,beforeFav=state.favorites.length;
+    state.cart=state.cart.filter(i=>(i.type||'product')==='combo'?comboIds.has(i.id):ids.has(i.id)&&num(state.products.find(p=>p.id===i.id)?.stock)>0);
+    state.favorites=state.favorites.filter(id=>ids.has(id));
+    write(KEYS.cart,state.cart);write(KEYS.favorites,state.favorites);renderHeader();renderCart();renderFavorites();
+    return {cart:beforeCart-state.cart.length,fav:beforeFav-state.favorites.length};
+  }
+
+  // ---------- Catálogo de herramientas ----------
+  const TOOLS=window.NP_ADMIN_TOOLS_V105=[];
+  const addTool=(tool)=>{if(!TOOLS.some(t=>t.id===tool.id))TOOLS.push(tool)};
+  const route=(id,title,section,group,icon='↗',desc='Abrir sección administrativa.')=>addTool({id,title,section,group,icon,desc,action:()=>renderAdminSection(section)});
+  const action=(id,title,group,icon,desc,fn)=>addTool({id,title,group,icon,desc,action:fn});
+
+  // Navegación principal
+  [
+    ['go-products','Productos','products','catalog','📦'],['go-combos','Combos','combos','catalog','🎁'],['go-categories','Categorías','categories','catalog','🏷️'],['go-inventory','Inventario','inventory','catalog','📋'],
+    ['go-orders','Pedidos','orders','operations','🧾'],['go-promos','Promociones','promotions','growth','🎟️'],['go-users','Clientes','users','customers','👥'],['go-faq','Preguntas frecuentes','faqs','growth','❓'],
+    ['go-store','Configuración de tienda','settings','growth','🏪'],['go-attention','Atención al cliente','bots','growth','💬'],['go-backup','Respaldos','backup','system','💾'],['go-activity','Actividad','activity','system','🕘'],
+    ['go-dashboard','Resumen operativo','dashboard','analytics','📊']
+  ].forEach(x=>route(...x));
+
+  // Reportes genéricos
+  function productMeta(p){return `${p.category||'Sin categoría'} · Stock ${num(p.stock)} · ${money(num(p.price))}${p.featured?' · Destacado':''}`}
+  function renderProductReport(title,description,predicate=()=>true,sorter=null){
+    let list=state.products.filter(predicate);if(sorter)list=list.slice().sort(sorter);
+    state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;
+    $('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(description)}</p></div><strong class="np-v10-report-count">${list.length}</strong></div><div class="np-v10-records">${list.map(p=>`<article class="np-v10-record"><div><h3>${esc(p.name)}</h3><p>${esc(productMeta(p))}</p><div class="np-v10-record-actions"><button data-v10-edit-product="${esc(p.id)}">Editar</button><button data-v10-stock-product="${esc(p.id)}">Stock</button></div></div><aside>${money(num(p.price))}</aside></article>`).join('')||'<div class="np-v10-empty">No hay resultados para este informe.</div>'}</div></section>`;
+    $('adminContent').querySelectorAll('[data-v10-edit-product]').forEach(b=>b.onclick=()=>openProductEditor(b.dataset.v10EditProduct));
+    $('adminContent').querySelectorAll('[data-v10-stock-product]').forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>x.id===b.dataset.v10StockProduct);const v=await npPrompt(`Nuevo stock para ${p.name}`,p.stock);if(v===null)return;const n=Math.max(0,Math.floor(Number(v)));if(!Number.isFinite(n))return toast('Stock inválido.','warn');p.stock=n;persistProducts();removeInvalidCommerceRefs();renderProductReport(title,description,predicate,sorter)});
+  }
+  function renderComboReport(title,description,predicate=()=>true,sorter=null){let list=state.combos.filter(predicate);if(sorter)list=list.slice().sort(sorter);state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(description)}</p></div><strong class="np-v10-report-count">${list.length}</strong></div><div class="np-v10-records">${list.map(c=>`<article class="np-v10-record"><div><h3>${esc(c.name)}</h3><p>${esc((c.includes||[]).join(', ')||'Sin contenido especificado')}</p><div class="np-v10-record-actions"><button data-v10-edit-combo="${esc(c.id)}">Editar</button></div></div><aside>${money(num(c.price))}</aside></article>`).join('')||'<div class="np-v10-empty">No hay resultados.</div>'}</div></section>`;$('adminContent').querySelectorAll('[data-v10-edit-combo]').forEach(b=>b.onclick=()=>openComboEditor(b.dataset.v10EditCombo))}
+  function renderOrderReport(title,description,predicate=()=>true,sorter=null){let list=state.orders.filter(predicate);if(sorter)list=list.slice().sort(sorter);const total=list.reduce((s,o)=>s+num(o.total),0);state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(description)} · Total: ${money(total)}</p></div><strong class="np-v10-report-count">${list.length}</strong></div><div class="np-v10-records">${list.map(o=>`<article class="np-v10-record"><div><h3>${esc(o.id)}</h3><p>${esc(o.customer?.fullName||'Cliente')} · ${esc(o.status||'Nuevo')} · ${fmtDate(o.createdAt)}</p><div class="np-v10-record-actions"><button data-v10-open-order="${esc(o.id)}">Abrir pedidos</button><button data-v10-copy-order="${esc(o.id)}">Copiar resumen</button></div></div><aside>${money(num(o.total))}</aside></article>`).join('')||'<div class="np-v10-empty">No hay pedidos en este informe.</div>'}</div></section>`;$('adminContent').querySelectorAll('[data-v10-open-order]').forEach(b=>b.onclick=()=>renderAdminSection('orders'));$('adminContent').querySelectorAll('[data-v10-copy-order]').forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>x.id===b.dataset.v10CopyOrder);navigator.clipboard?.writeText(`${o.id} · ${o.customer?.fullName||'Cliente'} · ${money(o.total)} · ${o.status||'Nuevo'}`);toast('Resumen copiado.','success')})}
+  function renderUserReport(title,description,predicate=()=>true,sorter=null){let ordersByUser={};state.orders.forEach(o=>{ordersByUser[o.userId]=(ordersByUser[o.userId]||0)+num(o.total)});let list=state.users.filter(predicate);if(sorter)list=list.slice().sort(sorter);state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(description)}</p></div><strong class="np-v10-report-count">${list.length}</strong></div><div class="np-v10-records">${list.map(u=>`<article class="np-v10-record"><div><h3>${esc(u.fullName||u.username||'Cliente')}</h3><p>${esc(u.email||'Sin correo')} · ${esc(u.department||'Sin departamento')} / ${esc(u.municipality||'Sin municipio')}</p><div class="np-v10-record-actions"><button data-v10-note-user="${esc(u.id)}">Nota interna</button><button data-v10-tag-user="${esc(u.id)}">Etiqueta</button></div></div><aside>${money(ordersByUser[u.id]||0)}</aside></article>`).join('')||'<div class="np-v10-empty">No hay clientes en este informe.</div>'}</div></section>`;bindUserInternalTools()}
+  function bindUserInternalTools(){
+    $('adminContent').querySelectorAll('[data-v10-note-user]').forEach(b=>b.onclick=async()=>{const id=b.dataset.v10NoteUser;const v=await npPrompt('Nota interna del cliente',adminNotes[id]||'');if(v===null)return;adminNotes[id]=String(v).slice(0,1000);saveNotes();toast('Nota guardada.','success')});
+    $('adminContent').querySelectorAll('[data-v10-tag-user]').forEach(b=>b.onclick=async()=>{const id=b.dataset.v10TagUser;const v=await npPrompt('Etiqueta interna del cliente',adminTags[id]||'');if(v===null)return;adminTags[id]=String(v).slice(0,80);saveTags();toast('Etiqueta guardada.','success')});
+  }
+  function renderPromoReport(title,description,predicate=()=>true){const list=safeArr(state.promos).filter(predicate);state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(description)}</p></div><strong class="np-v10-report-count">${list.length}</strong></div><div class="np-v10-records">${list.map(p=>`<article class="np-v10-record"><div><h3>${esc(p.code)}</h3><p>${esc(p.description||'Sin descripción')} · ${p.active?'Activo':'Inactivo'} · Usos ${num(p.uses)}</p></div><aside>${p.type==='percent'?`${num(p.value)}%`:money(num(p.value))}</aside></article>`).join('')||'<div class="np-v10-empty">No hay promociones en este informe.</div>'}</div></section>`}
+
+  // Herramientas de producto: informes
+  const lowLimit=()=>num(state.settings.lowStock||5);
+  const productReports=[
+    ['products-all','Todos los productos','Catálogo completo.',()=>true],
+    ['products-featured','Productos destacados','Productos marcados como destacados.',p=>!!p.featured],
+    ['products-not-featured','Productos no destacados','Productos sin marca de destacado.',p=>!p.featured],
+    ['products-in-stock','Productos disponibles','Productos con existencias.',p=>num(p.stock)>0],
+    ['products-low','Productos con stock bajo','Productos por debajo del límite de reposición.',p=>num(p.stock)>0&&num(p.stock)<=lowLimit()],
+    ['products-out','Productos agotados','Productos con stock en cero.',p=>num(p.stock)<=0],
+    ['products-high-stock','Productos con stock alto','Productos con más de 20 unidades.',p=>num(p.stock)>20],
+    ['products-no-image','Productos sin imagen','Registros sin imagen principal.',p=>!p.image],
+    ['products-two-images','Productos con dos imágenes','Productos que usan la capacidad multimedia completa.',p=>safeArr(p.images).filter(Boolean).length>=2||!!p.image2],
+    ['products-one-image','Productos con una imagen','Productos con una sola imagen.',p=>safeArr(p.images).filter(Boolean).length===1&&!p.image2],
+    ['products-video','Productos con video','Productos con enlace de video configurado.',p=>!!p.videoUrl],
+    ['products-no-video','Productos sin video','Productos sin presentación en video.',p=>!p.videoUrl],
+    ['products-sale','Productos con precio anterior','Productos que muestran comparación de precio.',p=>num(p.oldPrice)>num(p.price)],
+    ['products-bad-oldprice','Precio anterior inconsistente','Precio anterior menor o igual al actual.',p=>p.oldPrice!=null&&num(p.oldPrice)<=num(p.price)],
+    ['products-no-description','Productos sin descripción','Contenido incompleto para el cliente.',p=>!String(p.description||'').trim()],
+    ['products-short-description','Descripciones demasiado cortas','Descripciones menores a 40 caracteres.',p=>String(p.description||'').trim().length<40],
+    ['products-no-reviews','Productos sin reseñas','Productos con cero reseñas.',p=>num(p.reviews)<=0],
+    ['products-rating-low','Productos con valoración baja','Valoración menor de 4 estrellas.',p=>num(p.rating)<4],
+    ['products-no-badge','Productos sin etiqueta','Productos sin etiqueta comercial.',p=>!p.badgeText],
+    ['products-with-badge','Productos con etiqueta','Productos con Nuevo, Oferta u otra etiqueta.',p=>!!p.badgeText]
+  ];
+  productReports.forEach(([id,title,desc,pred])=>action(id,title,'catalog','📦',desc,()=>renderProductReport(title,desc,pred)));
+  action('products-price-high','Productos de mayor precio','analytics','💰','Ordenar catálogo de mayor a menor precio.',()=>renderProductReport('Productos de mayor precio','Ordenados de mayor a menor precio.',()=>true,(a,b)=>num(b.price)-num(a.price)));
+  action('products-price-low','Productos de menor precio','analytics','💸','Ordenar catálogo de menor a mayor precio.',()=>renderProductReport('Productos de menor precio','Ordenados de menor a mayor precio.',()=>true,(a,b)=>num(a.price)-num(b.price)));
+  action('products-stock-high-sort','Mayor stock','analytics','📦','Ordenar por existencias disponibles.',()=>renderProductReport('Productos con mayor stock','Ordenados por existencias.',()=>true,(a,b)=>num(b.stock)-num(a.stock)));
+  action('products-rating-high','Mejor valorados','analytics','★','Productos ordenados por valoración.',()=>renderProductReport('Productos mejor valorados','Ordenados por valoración.',()=>true,(a,b)=>num(b.rating)-num(a.rating)));
+  action('products-reviews-high','Más reseñados','analytics','✦','Productos con más reseñas.',()=>renderProductReport('Productos más reseñados','Ordenados por cantidad de reseñas.',()=>true,(a,b)=>num(b.reviews)-num(a.reviews)));
+
+  // Herramientas de productos: acciones masivas
+  action('product-new','Crear producto','catalog','＋','Abrir formulario para crear un producto.',()=>openProductEditor());
+  action('product-price-up-percent','Aumentar precios por porcentaje','catalog','↗','Incrementa todos los precios tras confirmación.',async()=>{const v=Number(await npPrompt('Porcentaje de aumento para todos los productos','5'));if(!Number.isFinite(v)||v<=0)return; if(!await npConfirm(`¿Aumentar todos los precios ${v}%?`))return;state.products.forEach(p=>p.price=+(num(p.price)*(1+v/100)).toFixed(2));persistProducts();toast('Precios actualizados.','success')});
+  action('product-price-down-percent','Reducir precios por porcentaje','catalog','↘','Reduce todos los precios tras confirmación.',async()=>{const v=Number(await npPrompt('Porcentaje de reducción','5'));if(!Number.isFinite(v)||v<=0||v>=100)return toast('Porcentaje inválido.','warn');if(!await npConfirm(`¿Reducir todos los precios ${v}%?`))return;state.products.forEach(p=>p.price=+(num(p.price)*(1-v/100)).toFixed(2));persistProducts();toast('Precios actualizados.','success')});
+  action('product-stock-add','Sumar stock masivamente','inventory','＋','Añade una cantidad a todas las existencias.',async()=>{const v=Math.floor(Number(await npPrompt('Unidades a sumar a cada producto','1')));if(!Number.isFinite(v)||v<=0)return;if(!await npConfirm(`¿Sumar ${v} unidades a todos los productos?`))return;state.products.forEach(p=>p.stock=Math.max(0,num(p.stock)+v));persistProducts();toast('Inventario actualizado.','success')});
+  action('product-stock-subtract','Restar stock masivamente','inventory','−','Resta una cantidad sin permitir valores negativos.',async()=>{const v=Math.floor(Number(await npPrompt('Unidades a restar a cada producto','1')));if(!Number.isFinite(v)||v<=0)return;if(!await npConfirm(`¿Restar ${v} unidades a todos los productos?`))return;state.products.forEach(p=>p.stock=Math.max(0,num(p.stock)-v));persistProducts();removeInvalidCommerceRefs();toast('Inventario actualizado.','success')});
+  action('product-low-limit','Cambiar límite de stock bajo','inventory','⚠️','Define cuándo el panel marca pocas unidades.',async()=>{const v=Math.floor(Number(await npPrompt('Nuevo límite de stock bajo',state.settings.lowStock||5)));if(!Number.isFinite(v)||v<0)return;state.settings.lowStock=v;write(KEYS.settings,state.settings);toast('Límite actualizado.','success')});
+  action('product-feature-all','Marcar todos como destacados','catalog','★','Activa destacado para todo el catálogo.',async()=>{if(!await npConfirm('¿Marcar todos los productos como destacados?'))return;state.products.forEach(p=>p.featured=true);persistProducts();toast('Destacados actualizados.','success')});
+  action('product-unfeature-all','Quitar destacados masivamente','catalog','☆','Desactiva destacado para todo el catálogo.',async()=>{if(!await npConfirm('¿Quitar destacado de todos los productos?'))return;state.products.forEach(p=>p.featured=false);persistProducts();toast('Destacados actualizados.','success')});
+  action('product-set-badge-all','Asignar etiqueta masiva','catalog','🏷️','Coloca una etiqueta comercial a todos los productos.',async()=>{const v=await npPrompt('Etiqueta para todos los productos','OFERTA');if(v===null||!v.trim())return;if(!await npConfirm(`¿Aplicar “${v.trim()}” a todos los productos?`))return;state.products.forEach(p=>{p.badgeText=v.trim();p.badge='custom'});persistProducts();toast('Etiquetas aplicadas.','success')});
+  action('product-clear-badges','Eliminar etiquetas masivamente','catalog','⌫','Quita todas las etiquetas comerciales.',async()=>{if(!await npConfirm('¿Eliminar todas las etiquetas de producto?'))return;state.products.forEach(p=>{p.badgeText=null;p.badge=null});persistProducts();toast('Etiquetas eliminadas.','success')});
+  action('product-normalize-media','Normalizar multimedia','system','🖼️','Sincroniza image, image2 e images sin perder archivos.',()=>{state.products.forEach(p=>{const imgs=[...(safeArr(p.images)),p.image,p.image2].filter(Boolean);p.images=[...new Set(imgs)].slice(0,2);p.image=p.images[0]||'';p.image2=p.images[1]||''});persistProducts();toast('Multimedia normalizada.','success')});
+  action('product-normalize-numbers','Normalizar campos numéricos','system','🧮','Corrige números negativos o no válidos en catálogo.',()=>{state.products.forEach(p=>{p.price=Math.max(0,num(p.price));p.stock=Math.max(0,Math.floor(num(p.stock)));p.rating=Math.min(5,Math.max(0,num(p.rating)));p.reviews=Math.max(0,Math.floor(num(p.reviews)));if(p.oldPrice!=null)p.oldPrice=Math.max(0,num(p.oldPrice))});persistProducts();toast('Campos numéricos normalizados.','success')});
+  action('product-export-json','Exportar productos JSON','system','⇩','Descarga el catálogo completo en JSON.',()=>downloadFile(`novaprime-productos-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.products,null,2)));
+  action('product-export-csv','Exportar productos CSV','system','⇩','Descarga productos en CSV.',()=>exportCsv('productos',state.products));
+
+  // Combos
+  action('combo-new','Crear combo','catalog','＋','Crear un nuevo combo.',()=>openComboEditor());
+  action('combos-all','Todos los combos','catalog','🎁','Listado completo de combos.',()=>renderComboReport('Todos los combos','Paquetes publicados actualmente.'));
+  action('combos-sale','Combos con ahorro','catalog','%','Combos cuyo precio anterior supera el actual.',()=>renderComboReport('Combos con ahorro','Combos con comparación de precio.',c=>num(c.oldPrice)>num(c.price)));
+  action('combos-no-image','Combos sin imagen','catalog','🖼️','Detecta combos sin imagen propia.',()=>renderComboReport('Combos sin imagen','Registros que requieren material visual.',c=>!c.image));
+  action('combos-no-details','Combos sin información ampliada','catalog','✎','Detecta combos con información insuficiente.',()=>renderComboReport('Combos sin detalles','Combos con detalles incompletos.',c=>!String(c.details||'').trim()));
+  action('combos-empty-includes','Combos sin contenido definido','catalog','⚠️','Detecta paquetes sin elementos incluidos.',()=>renderComboReport('Combos sin contenido','Combos sin lista de incluidos.',c=>!safeArr(c.includes).length));
+  action('combos-price-high','Combos de mayor precio','analytics','💰','Ordena combos de mayor a menor.',()=>renderComboReport('Combos de mayor precio','Ordenados por precio.',()=>true,(a,b)=>num(b.price)-num(a.price)));
+  action('combos-export-json','Exportar combos JSON','system','⇩','Descarga combos en JSON.',()=>downloadFile(`novaprime-combos-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.combos,null,2)));
+  action('combos-export-csv','Exportar combos CSV','system','⇩','Descarga combos en CSV.',()=>exportCsv('combos',state.combos));
+
+  // Categorías dinámicas
+  action('category-report','Informe por categoría','catalog','🏷️','Selecciona una categoría y revisa sus productos.',async()=>{const cats=categories();const v=await npPrompt(`Categoría:\n${cats.join('\n')}`,cats[0]||'');if(!v)return;renderProductReport(`Categoría: ${v}`,`Productos clasificados como ${v}.`,p=>norm(p.category)===norm(v))});
+  action('category-rename','Renombrar categoría','catalog','✎','Cambia el nombre de una categoría en todos sus productos.',async()=>{const cats=categories();const from=await npPrompt(`Categoría actual:\n${cats.join('\n')}`,cats[0]||'');if(!from)return;const to=await npPrompt('Nuevo nombre de categoría',from);if(!to||norm(to)===norm(from))return;if(!await npConfirm(`¿Cambiar “${from}” por “${to}”?`))return;state.products.forEach(p=>{if(norm(p.category)===norm(from))p.category=to.trim()});persistProducts();toast('Categoría renombrada.','success')});
+  action('category-merge','Fusionar categorías','catalog','⇄','Mueve una categoría completa dentro de otra.',async()=>{const cats=categories();const from=await npPrompt(`Categoría a fusionar:\n${cats.join('\n')}`,cats[0]||'');if(!from)return;const to=await npPrompt(`Categoría destino:\n${cats.join('\n')}`,cats.find(c=>norm(c)!==norm(from))||'');if(!to||norm(to)===norm(from))return;if(!await npConfirm(`¿Mover todos los productos de “${from}” a “${to}”?`))return;state.products.forEach(p=>{if(norm(p.category)===norm(from))p.category=to.trim()});persistProducts();toast('Categorías fusionadas.','success')});
+
+  // Inventario
+  action('inventory-value','Valor de inventario','analytics','💰','Calcula precio × existencias de todo el catálogo.',()=>npRenderInventoryAnalytics());
+  action('inventory-zero','Stock en cero','inventory','⛔','Productos agotados.',()=>renderProductReport('Agotados','Productos con stock en cero.',p=>num(p.stock)<=0));
+  action('inventory-one','Una unidad restante','inventory','1','Productos con exactamente una unidad.',()=>renderProductReport('Solo una unidad','Productos con una unidad disponible.',p=>num(p.stock)===1));
+  action('inventory-two','Dos unidades restantes','inventory','2','Productos con exactamente dos unidades.',()=>renderProductReport('Solo dos unidades','Productos con dos unidades disponibles.',p=>num(p.stock)===2));
+  action('inventory-low','Stock bajo','inventory','⚠️','Productos dentro del límite de stock bajo.',()=>renderProductReport('Stock bajo','Productos que conviene reponer.',p=>num(p.stock)>0&&num(p.stock)<=lowLimit()));
+  action('inventory-over20','Más de 20 unidades','inventory','📦','Productos con inventario alto.',()=>renderProductReport('Inventario alto','Más de 20 unidades.',p=>num(p.stock)>20));
+  action('inventory-clean-cart','Limpiar carrito inválido','system','🧹','Elimina del carrito productos inexistentes o agotados.',()=>{const r=removeInvalidCommerceRefs();toast(`Carrito: ${r.cart} eliminados · Favoritos: ${r.fav} corregidos.`,'success')});
+
+  // Pedidos: informes
+  const orderStatuses=['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'];
+  orderStatuses.forEach(status=>action(`orders-${norm(status).replace(/\s+/g,'-')}`,`Pedidos: ${status}`,'operations','🧾',`Muestra pedidos con estado ${status}.`,()=>renderOrderReport(`Pedidos: ${status}`,`Pedidos actualmente en estado ${status}.`,o=>norm(o.status)===norm(status),(a,b)=>new Date(b.createdAt)-new Date(a.createdAt))));
+  action('orders-all','Todos los pedidos','operations','🧾','Listado completo de pedidos.',()=>renderOrderReport('Todos los pedidos','Historial completo.',()=>true,(a,b)=>new Date(b.createdAt)-new Date(a.createdAt)));
+  action('orders-today','Pedidos de hoy','analytics','◷','Pedidos registrados hoy.',()=>{const d=new Date();const k=d.toISOString().slice(0,10);renderOrderReport('Pedidos de hoy','Pedidos registrados durante el día actual.',o=>String(o.createdAt||'').slice(0,10)===k)});
+  action('orders-7d','Pedidos últimos 7 días','analytics','7','Actividad comercial de la última semana.',()=>{const t=Date.now()-7*86400000;renderOrderReport('Pedidos últimos 7 días','Pedidos registrados en los últimos siete días.',o=>new Date(o.createdAt).getTime()>=t)});
+  action('orders-30d','Pedidos últimos 30 días','analytics','30','Actividad comercial del último mes.',()=>{const t=Date.now()-30*86400000;renderOrderReport('Pedidos últimos 30 días','Pedidos registrados en los últimos treinta días.',o=>new Date(o.createdAt).getTime()>=t)});
+  action('orders-with-discount','Pedidos con descuento','analytics','%','Pedidos donde se aplicó una promoción.',()=>renderOrderReport('Pedidos con descuento','Pedidos con descuento mayor que cero.',o=>num(o.discount)>0));
+  action('orders-no-discount','Pedidos sin descuento','analytics','○','Pedidos sin descuento aplicado.',()=>renderOrderReport('Pedidos sin descuento','Pedidos con descuento igual a cero.',o=>num(o.discount)<=0));
+  action('orders-high-value','Pedidos de mayor valor','analytics','💰','Ordena pedidos por total descendente.',()=>renderOrderReport('Pedidos de mayor valor','Ordenados por total.',()=>true,(a,b)=>num(b.total)-num(a.total)));
+  action('orders-export-json','Exportar pedidos JSON','system','⇩','Descarga historial de pedidos.',()=>downloadFile(`novaprime-pedidos-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.orders,null,2)));
+  action('orders-export-csv','Exportar pedidos CSV','system','⇩','Descarga pedidos en CSV.',()=>exportCsv('pedidos',state.orders.map(o=>({id:o.id,cliente:o.customer?.fullName,email:o.customer?.email,telefono:o.customer?.phone,estado:o.status,subtotal:o.subtotal,descuento:o.discount,total:o.total,creado:o.createdAt}))));
+  action('orders-confirm-new','Confirmar pedidos nuevos','operations','✓','Cambia todos los pedidos Nuevos a Confirmado.',async()=>{const n=state.orders.filter(o=>norm(o.status)==='nuevo').length;if(!n)return toast('No hay pedidos nuevos.','info');if(!await npConfirm(`¿Marcar ${n} pedidos como Confirmado?`))return;state.orders.forEach(o=>{if(norm(o.status)==='nuevo'){o.status='Confirmado';o.updatedAt=new Date().toISOString()}});persistOrders();toast('Pedidos confirmados.','success')});
+  action('orders-prepare-confirmed','Preparar pedidos confirmados','operations','→','Cambia Confirmado a Preparando.',async()=>{const n=state.orders.filter(o=>norm(o.status)==='confirmado').length;if(!n)return toast('No hay pedidos confirmados.','info');if(!await npConfirm(`¿Mover ${n} pedidos a Preparando?`))return;state.orders.forEach(o=>{if(norm(o.status)==='confirmado'){o.status='Preparando';o.updatedAt=new Date().toISOString()}});persistOrders();toast('Estados actualizados.','success')});
+  action('orders-deliver-sent','Marcar enviados como entregados','operations','✓','Cambia Enviado a Entregado.',async()=>{const n=state.orders.filter(o=>norm(o.status)==='enviado').length;if(!n)return toast('No hay pedidos enviados.','info');if(!await npConfirm(`¿Marcar ${n} como Entregado?`))return;state.orders.forEach(o=>{if(norm(o.status)==='enviado'){o.status='Entregado';o.updatedAt=new Date().toISOString()}});persistOrders();toast('Pedidos entregados.','success')});
+
+  // Clientes
+  action('users-all','Todos los clientes','customers','👥','Listado completo de clientes.',()=>renderUserReport('Todos los clientes','Perfiles registrados actualmente.'));
+  action('users-no-orders','Clientes sin pedidos','customers','○','Clientes que todavía no registran compras.',()=>{const ids=new Set(state.orders.map(o=>o.userId));renderUserReport('Clientes sin pedidos','Perfiles sin pedidos asociados.',u=>!ids.has(u.id))});
+  action('users-with-orders','Clientes con pedidos','customers','✓','Clientes con al menos un pedido.',()=>{const ids=new Set(state.orders.map(o=>o.userId));renderUserReport('Clientes con pedidos','Perfiles con actividad de compra.',u=>ids.has(u.id))});
+  action('users-incomplete','Perfiles incompletos','customers','⚠️','Detecta datos de entrega faltantes.',()=>renderUserReport('Perfiles incompletos','Clientes con datos importantes faltantes.',u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())));
+  action('users-duplicate-email','Correos duplicados','customers','⚠️','Detecta más de un cliente con el mismo correo.',()=>{const c={};state.users.forEach(u=>{const k=norm(u.email);if(k)c[k]=(c[k]||0)+1});renderUserReport('Correos duplicados','Clientes cuyo correo aparece más de una vez.',u=>(c[norm(u.email)]||0)>1)});
+  action('users-duplicate-phone','Teléfonos duplicados','customers','⚠️','Detecta teléfonos repetidos.',()=>{const c={};state.users.forEach(u=>{const k=String(u.phone||'').replace(/\D/g,'');if(k)c[k]=(c[k]||0)+1});renderUserReport('Teléfonos duplicados','Clientes cuyo teléfono aparece más de una vez.',u=>(c[String(u.phone||'').replace(/\D/g,'')]||0)>1)});
+  action('users-top-spend','Clientes por mayor compra','analytics','💰','Ordena clientes por total acumulado.',()=>{const spend={};state.orders.forEach(o=>spend[o.userId]=(spend[o.userId]||0)+num(o.total));renderUserReport('Clientes por mayor compra','Ordenados por importe registrado.',()=>true,(a,b)=>(spend[b.id]||0)-(spend[a.id]||0))});
+  action('users-export-json','Exportar clientes JSON','system','⇩','Descarga perfiles sin mostrar contraseñas.',()=>downloadFile(`novaprime-clientes-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.users.map(({passwordHash,...u})=>u),null,2)));
+  action('users-export-csv','Exportar clientes CSV','system','⇩','Descarga perfiles en CSV sin credenciales.',()=>exportCsv('clientes',state.users.map(({passwordHash,...u})=>u)));
+
+  // Promociones
+  action('promos-all','Todas las promociones','growth','🎟️','Listado completo de códigos.',()=>renderPromoReport('Todas las promociones','Códigos promocionales registrados.'));
+  action('promos-active','Promociones activas','growth','✓','Códigos actualmente habilitados.',()=>renderPromoReport('Promociones activas','Códigos habilitados.',p=>p.active!==false));
+  action('promos-inactive','Promociones inactivas','growth','○','Códigos deshabilitados.',()=>renderPromoReport('Promociones inactivas','Códigos no disponibles.',p=>p.active===false));
+  action('promos-expired','Promociones vencidas','growth','⌛','Códigos cuya fecha ya pasó.',()=>renderPromoReport('Promociones vencidas','Códigos con fecha de vencimiento superada.',p=>p.expiresAt&&new Date(`${p.expiresAt}T23:59:59`).getTime()<Date.now()));
+  action('promos-used','Promociones utilizadas','analytics','↗','Códigos con al menos un uso.',()=>renderPromoReport('Promociones utilizadas','Códigos con uno o más usos.',p=>num(p.uses)>0));
+  action('promos-unused','Promociones sin uso','analytics','0','Códigos sin utilización registrada.',()=>renderPromoReport('Promociones sin uso','Códigos con cero usos.',p=>num(p.uses)<=0));
+  action('promos-disable-expired','Desactivar promociones vencidas','growth','⌛','Desactiva automáticamente códigos expirados.',async()=>{const expired=safeArr(state.promos).filter(p=>p.active!==false&&p.expiresAt&&new Date(`${p.expiresAt}T23:59:59`).getTime()<Date.now());if(!expired.length)return toast('No hay promociones vencidas activas.','info');if(!await npConfirm(`¿Desactivar ${expired.length} promociones vencidas?`))return;expired.forEach(p=>p.active=false);write(NP_PROMOS_KEY,state.promos);toast('Promociones vencidas desactivadas.','success')});
+  action('promos-export-json','Exportar promociones JSON','system','⇩','Descarga promociones.',()=>downloadFile(`novaprime-promociones-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.promos,null,2)));
+
+  // FAQ / contenido
+  action('faq-all','Todas las FAQ','content','❓','Abrir gestión de preguntas frecuentes.',()=>renderAdminSection('faqs'));
+  action('faq-new','Crear pregunta frecuente','content','＋','Nueva pregunta de ayuda.',()=>openFaqEditor());
+  action('faq-short','FAQ con respuesta corta','content','⚠️','Detecta respuestas menores a 50 caracteres.',()=>{const list=state.faqs.filter(f=>String(f.a||'').trim().length<50);npRenderSimpleList('FAQ con respuesta corta','Respuestas que podrían necesitar más contexto.',list.map(f=>({title:f.q,meta:`${String(f.a||'').length} caracteres`,detail:f.a}))) });
+  action('faq-long','FAQ con respuesta extensa','content','↔','Detecta respuestas mayores a 300 caracteres.',()=>{const list=state.faqs.filter(f=>String(f.a||'').trim().length>300);npRenderSimpleList('FAQ con respuesta extensa','Respuestas que podrían simplificarse.',list.map(f=>({title:f.q,meta:`${String(f.a||'').length} caracteres`,detail:f.a}))) });
+  action('faq-export-json','Exportar FAQ JSON','system','⇩','Descarga preguntas y respuestas.',()=>downloadFile(`novaprime-faq-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.faqs,null,2)));
+  route('content-store-settings','Editar identidad y textos','settings','growth','✎','Nombre, slogan, correo, redes y textos.');
+  route('content-attention','Configurar atención','bots','growth','💬','Canal de consultas del cliente.');
+
+  // Analítica
+  action('analytics-overview','Resumen ejecutivo','analytics','📊','Indicadores generales de operación.',()=>renderAdminSection('dashboard'));
+  action('analytics-sales','Analítica de ventas','analytics','💰','Ingresos, ticket y pedidos por estado.',()=>npRenderSalesAnalytics());
+  action('analytics-inventory','Analítica de inventario','analytics','📦','Valor y riesgo del inventario.',()=>npRenderInventoryAnalytics());
+  action('analytics-products','Analítica de productos','analytics','📈','Calidad y rendimiento del catálogo.',()=>npRenderProductAnalytics());
+  action('analytics-customers','Analítica de clientes','analytics','👥','Clientes, recurrencia y ubicaciones.',()=>npRenderCustomerAnalytics());
+  action('analytics-promos','Analítica de promociones','analytics','🎟️','Uso y rendimiento de códigos.',()=>npRenderPromoAnalytics());
+
+  // Sistema / datos
+  action('system-backup','Crear respaldo completo','system','💾','Descarga una copia completa JSON.',()=>exportBackup());
+  action('system-storage','Ver uso de almacenamiento','system','▤','Calcula uso aproximado de localStorage.',()=>npRenderStorage());
+  action('system-data-health','Auditar salud de datos','system','🩺','Comprueba integridad de registros.',()=>npRenderDataHealth());
+  action('system-clean-commerce','Limpiar referencias inválidas','system','🧹','Corrige carrito y favoritos obsoletos.',()=>{const r=removeInvalidCommerceRefs();toast(`Limpieza: ${r.cart} carrito, ${r.fav} favoritos.`,'success')});
+  action('system-export-activity','Exportar actividad JSON','system','⇩','Descarga historial administrativo.',()=>downloadFile(`novaprime-actividad-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.activity,null,2)));
+  action('system-export-settings','Exportar configuración JSON','system','⇩','Descarga configuración comercial.',()=>downloadFile(`novaprime-configuracion-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(state.settings,null,2)));
+  action('system-copy-summary','Copiar resumen técnico','system','⧉','Copia métricas básicas del panel.',()=>{const txt=`CRULOX\nProductos: ${state.products.length}\nCombos: ${state.combos.length}\nClientes: ${state.users.length}\nPedidos: ${state.orders.length}\nAlmacenamiento: ${bytesText(storageEstimate())}`;navigator.clipboard?.writeText(txt);toast('Resumen copiado.','success')});
+  action('system-clear-activity','Vaciar actividad administrativa','system','⌫','Elimina historial local tras confirmación.',async()=>{if(!await npConfirm('¿Vaciar todo el historial de actividad local?'))return;state.activity=[];write(KEYS.activity,[]);toast('Actividad vaciada.','success')});
+
+  // Generar herramientas por estado/categoría adicionales para ampliar el centro sin saturar UI
+  const productThresholds=[1,2,3,5,10,15,20,25,50];
+  productThresholds.forEach(n=>action(`stock-at-most-${n}`,`Stock ≤ ${n}`,'inventory','📦',`Productos con ${n} unidades o menos.`,()=>renderProductReport(`Stock ≤ ${n}`,`Productos con hasta ${n} unidades disponibles.`,p=>num(p.stock)<=n)));
+  [10,20,30,40,50,75,100,150,200,250,500].forEach(n=>action(`price-at-least-${n}`,`Precio ≥ Q${n}`,'analytics','💰',`Productos con precio igual o superior a Q${n}.`,()=>renderProductReport(`Precio ≥ Q${n}`,`Productos con precio desde Q${n}.`,p=>num(p.price)>=n,(a,b)=>num(b.price)-num(a.price))));
+  [3,3.5,4,4.5].forEach(n=>action(`rating-at-least-${String(n).replace('.','-')}`,`Valoración ≥ ${n}`,'analytics','★',`Productos con valoración mínima ${n}.`,()=>renderProductReport(`Valoración ≥ ${n}`,`Productos con al menos ${n} estrellas.`,p=>num(p.rating)>=n,(a,b)=>num(b.rating)-num(a.rating))));
+  [0,1,5,10,25,50,100].forEach(n=>action(`reviews-at-least-${n}`,`Reseñas ≥ ${n}`,'analytics','✦',`Productos con al menos ${n} reseñas.`,()=>renderProductReport(`Reseñas ≥ ${n}`,`Productos con ${n} reseñas o más.`,p=>num(p.reviews)>=n,(a,b)=>num(b.reviews)-num(a.reviews))));
+  [50,100,200,300,500,1000].forEach(n=>action(`orders-at-least-${n}`,`Pedidos ≥ Q${n}`,'analytics','🧾',`Pedidos con total mínimo Q${n}.`,()=>renderOrderReport(`Pedidos ≥ Q${n}`,`Pedidos con total igual o superior a Q${n}.`,o=>num(o.total)>=n,(a,b)=>num(b.total)-num(a.total))));
+
+  // ---------- Vistas auxiliares ----------
+  function npRenderSimpleList(title,desc,items){state.adminSection='np-report';npRenderNav('analytics');npRenderBreadcrumb('Informe',title);npClearSubnav();$('adminTitle').textContent=title;$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>${esc(title)}</h2><p>${esc(desc)}</p></div><strong class="np-v10-report-count">${items.length}</strong></div><div class="np-v10-records">${items.map(i=>`<article class="np-v10-record"><div><h3>${esc(i.title)}</h3><p>${esc(i.detail||'')}</p></div><aside>${esc(i.meta||'')}</aside></article>`).join('')||'<div class="np-v10-empty">No hay resultados.</div>'}</div></section>`}
+  function npRenderSalesAnalytics(){const orders=state.orders;const sales=orders.reduce((s,o)=>s+num(o.total),0),discount=orders.reduce((s,o)=>s+num(o.discount),0),avg=orders.length?sales/orders.length:0,delivered=orders.filter(o=>norm(o.status)==='entregado').length;const statuses=orderStatuses.map(s=>({title:s,meta:orders.filter(o=>norm(o.status)===norm(s)).length}));state.adminSection='np-order-analytics';npRenderNav('analytics');npRenderBreadcrumb('Analítica','Ventas y pedidos');npClearSubnav();$('adminTitle').textContent='Analítica de ventas';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Ventas registradas</small><strong>${money(sales)}</strong><span>Total histórico local</span></div><div class="np-v10-kpi"><small>Ticket promedio</small><strong>${money(avg)}</strong><span>Promedio por pedido</span></div><div class="np-v10-kpi"><small>Descuentos</small><strong>${money(discount)}</strong><span>Total aplicado</span></div><div class="np-v10-kpi"><small>Entregados</small><strong>${delivered}</strong><span>Pedidos completados</span></div></div><div class="admin-card" style="margin-top:10px"><div class="admin-card-head"><div><h2>Distribución por estado</h2><p class="admin-card-sub">Cantidad actual de pedidos en cada fase.</p></div></div><div class="np-v10-audit-list">${statuses.map(s=>`<div class="np-v10-audit"><div><b>${s.title}</b><p>Pedidos actualmente registrados con este estado.</p></div><span>${s.meta}</span></div>`).join('')}</div></div>`}
+  function npRenderInventoryAnalytics(){const value=state.products.reduce((s,p)=>s+num(p.price)*num(p.stock),0),units=state.products.reduce((s,p)=>s+num(p.stock),0),low=state.products.filter(p=>num(p.stock)>0&&num(p.stock)<=lowLimit()).length,out=state.products.filter(p=>num(p.stock)<=0).length;state.adminSection='np-inventory-analytics';npRenderNav('analytics');npRenderBreadcrumb('Analítica','Inventario');npClearSubnav();$('adminTitle').textContent='Analítica de inventario';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Valor estimado</small><strong>${money(value)}</strong><span>Precio × stock</span></div><div class="np-v10-kpi"><small>Unidades</small><strong>${units}</strong><span>Existencias totales</span></div><div class="np-v10-kpi"><small>Stock bajo</small><strong>${low}</strong><span>Reponer pronto</span></div><div class="np-v10-kpi"><small>Agotados</small><strong>${out}</strong><span>Sin existencia</span></div></div><div style="margin-top:10px">${npAuditMarkup(npBuildDataAudit().filter(x=>['stock','price','catalog'].includes(x.area)))}</div>`}
+  function npRenderProductAnalytics(){const withVideo=state.products.filter(p=>p.videoUrl).length,twoImages=state.products.filter(p=>safeArr(p.images).filter(Boolean).length>=2||p.image2).length,featured=state.products.filter(p=>p.featured).length,avgRating=state.products.length?state.products.reduce((s,p)=>s+num(p.rating),0)/state.products.length:0;state.adminSection='np-product-analytics';npRenderNav('analytics');npRenderBreadcrumb('Analítica','Productos');npClearSubnav();$('adminTitle').textContent='Analítica de productos';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Productos</small><strong>${state.products.length}</strong><span>Catálogo actual</span></div><div class="np-v10-kpi"><small>Con video</small><strong>${withVideo}</strong><span>Presentación multimedia</span></div><div class="np-v10-kpi"><small>Con 2 imágenes</small><strong>${twoImages}</strong><span>Galería completa</span></div><div class="np-v10-kpi"><small>Valoración media</small><strong>${avgRating.toFixed(1)}</strong><span>Promedio del catálogo</span></div></div><div class="admin-card" style="margin-top:10px"><div class="admin-card-head"><div><h2>Calidad del catálogo</h2><p class="admin-card-sub">Destacados: ${featured}</p></div></div>${npAuditMarkup(npBuildDataAudit().filter(x=>['catalog','media','price'].includes(x.area)))}</div>`}
+  function npRenderCustomerAnalytics(){const ids=new Set(state.orders.map(o=>o.userId)),buyers=state.users.filter(u=>ids.has(u.id)).length,noOrders=state.users.length-buyers,incomplete=state.users.filter(u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())).length;const dept={};state.users.forEach(u=>{const d=u.department||'Sin departamento';dept[d]=(dept[d]||0)+1});state.adminSection='np-customer-analytics';npRenderNav('analytics');npRenderBreadcrumb('Analítica','Clientes');npClearSubnav();$('adminTitle').textContent='Analítica de clientes';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Clientes</small><strong>${state.users.length}</strong><span>Perfiles registrados</span></div><div class="np-v10-kpi"><small>Con pedidos</small><strong>${buyers}</strong><span>Clientes compradores</span></div><div class="np-v10-kpi"><small>Sin pedidos</small><strong>${noOrders}</strong><span>Aún sin compra</span></div><div class="np-v10-kpi"><small>Datos incompletos</small><strong>${incomplete}</strong><span>Requieren revisión</span></div></div><div class="admin-card" style="margin-top:10px"><div class="admin-card-head"><h2>Clientes por departamento</h2></div><div class="np-v10-audit-list">${Object.entries(dept).sort((a,b)=>b[1]-a[1]).map(([d,n])=>`<div class="np-v10-audit"><div><b>${esc(d)}</b><p>Perfiles registrados.</p></div><span>${n}</span></div>`).join('')}</div></div>`}
+  function npRenderPromoAnalytics(){const promos=safeArr(state.promos),active=promos.filter(p=>p.active!==false).length,uses=promos.reduce((s,p)=>s+num(p.uses),0),used=promos.filter(p=>num(p.uses)>0).length,expired=promos.filter(p=>p.expiresAt&&new Date(`${p.expiresAt}T23:59:59`).getTime()<Date.now()).length;state.adminSection='np-promo-analytics';npRenderNav('analytics');npRenderBreadcrumb('Analítica','Promociones');npClearSubnav();$('adminTitle').textContent='Analítica de promociones';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Códigos</small><strong>${promos.length}</strong><span>Total registrados</span></div><div class="np-v10-kpi"><small>Activos</small><strong>${active}</strong><span>Disponibles</span></div><div class="np-v10-kpi"><small>Usos</small><strong>${uses}</strong><span>Aplicaciones registradas</span></div><div class="np-v10-kpi"><small>Vencidos</small><strong>${expired}</strong><span>Revisar vigencia</span></div></div><div style="margin-top:10px">${npAuditMarkup([{area:'promos',title:'Promociones utilizadas',detail:'Códigos con al menos un uso.',count:used,kind:''},{area:'promos',title:'Promociones sin uso',detail:'Códigos que todavía no se han aplicado.',count:promos.length-used,kind:''}])}</div>`}
+
+  function npBuildDataAudit(){
+    const ids=state.products.map(p=>p.id), idDup=ids.length-new Set(ids).size;
+    const comboIds=state.combos.map(c=>c.id), comboDup=comboIds.length-new Set(comboIds).size;
+    const userIds=state.users.map(u=>u.id), userDup=userIds.length-new Set(userIds).size;
+    const orderIds=state.orders.map(o=>o.id), orderDup=orderIds.length-new Set(orderIds).size;
+    return [
+      {area:'catalog',title:'Productos sin descripción',detail:'No tienen texto descriptivo.',count:state.products.filter(p=>!String(p.description||'').trim()).length,kind:'warn'},
+      {area:'media',title:'Productos sin imagen',detail:'No tienen imagen principal.',count:state.products.filter(p=>!p.image).length,kind:'bad'},
+      {area:'media',title:'Productos sin video',detail:'No tienen video configurado.',count:state.products.filter(p=>!p.videoUrl).length,kind:''},
+      {area:'price',title:'Precios negativos o inválidos',detail:'Deben corregirse antes de publicar.',count:state.products.filter(p=>!Number.isFinite(Number(p.price))||num(p.price)<0).length,kind:'bad'},
+      {area:'price',title:'Precio anterior inconsistente',detail:'Precio anterior menor o igual al actual.',count:state.products.filter(p=>p.oldPrice!=null&&num(p.oldPrice)<=num(p.price)).length,kind:'warn'},
+      {area:'stock',title:'Stock bajo',detail:`Entre 1 y ${lowLimit()} unidades.`,count:state.products.filter(p=>num(p.stock)>0&&num(p.stock)<=lowLimit()).length,kind:'warn'},
+      {area:'stock',title:'Agotados',detail:'Stock igual a cero.',count:state.products.filter(p=>num(p.stock)<=0).length,kind:'bad'},
+      {area:'catalog',title:'IDs de producto duplicados',detail:'Los identificadores deben ser únicos.',count:idDup,kind:idDup?'bad':''},
+      {area:'catalog',title:'IDs de combo duplicados',detail:'Los identificadores deben ser únicos.',count:comboDup,kind:comboDup?'bad':''},
+      {area:'customers',title:'IDs de cliente duplicados',detail:'Los identificadores deben ser únicos.',count:userDup,kind:userDup?'bad':''},
+      {area:'orders',title:'IDs de pedido duplicados',detail:'Los identificadores deben ser únicos.',count:orderDup,kind:orderDup?'bad':''},
+      {area:'customers',title:'Perfiles incompletos',detail:'Faltan datos importantes de entrega.',count:state.users.filter(u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())).length,kind:'warn'},
+      {area:'orders',title:'Pedidos sin cliente',detail:'Pedidos con información de cliente incompleta.',count:state.orders.filter(o=>!o.customer?.fullName||!o.customer?.email).length,kind:'bad'}
+    ];
+  }
+  function npAuditMarkup(items){return `<div class="np-v10-audit-list">${items.map(x=>`<div class="np-v10-audit ${x.kind||''}"><div><b>${esc(x.title)}</b><p>${esc(x.detail)}</p></div><span>${num(x.count)}</span></div>`).join('')}</div>`}
+  function npRenderDataHealth(){const audit=npBuildDataAudit(),issues=audit.reduce((s,x)=>s+num(x.count),0);state.adminSection='np-data-health';npRenderNav('system');npRenderBreadcrumb('Sistema','Salud de datos');npClearSubnav();$('adminTitle').textContent='Salud de datos';$('adminContent').innerHTML=`<section class="np-v10-report"><div class="np-v10-report-summary"><div><h2>Auditoría de integridad</h2><p>Comprueba catálogo, clientes, pedidos e inventario sin modificar datos.</p></div><strong class="np-v10-report-count">${issues}</strong></div>${npAuditMarkup(audit)}</section>`}
+  function npRenderStorage(){const used=storageEstimate(),keys=[];for(let i=0;i<localStorage.length;i++){const k=localStorage.key(i),v=localStorage.getItem(k)||'';keys.push({k,size:(k.length+v.length)*2})}keys.sort((a,b)=>b.size-a.size);state.adminSection='np-storage';npRenderNav('system');npRenderBreadcrumb('Sistema','Almacenamiento');npClearSubnav();$('adminTitle').textContent='Almacenamiento local';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Uso estimado</small><strong>${bytesText(used)}</strong><span>Datos guardados localmente</span></div><div class="np-v10-kpi"><small>Claves</small><strong>${localStorage.length}</strong><span>Registros de almacenamiento</span></div><div class="np-v10-kpi"><small>Productos</small><strong>${state.products.length}</strong><span>Catálogo cargado</span></div><div class="np-v10-kpi"><small>Pedidos</small><strong>${state.orders.length}</strong><span>Historial local</span></div></div><div class="admin-card" style="margin-top:10px"><div class="admin-card-head"><h2>Elementos de mayor tamaño</h2></div><div class="np-v10-audit-list">${keys.slice(0,12).map(x=>`<div class="np-v10-audit"><div><b>${esc(x.k)}</b><p>Uso aproximado dentro del navegador.</p></div><span>${bytesText(x.size)}</span></div>`).join('')}</div></div>`}
+  function npRenderMediaAudit(){const noImg=state.products.filter(p=>!p.image).length,noVideo=state.products.filter(p=>!p.videoUrl).length,two=state.products.filter(p=>safeArr(p.images).filter(Boolean).length>=2||p.image2).length;state.adminSection='np-media';npRenderNav('catalog');npRenderBreadcrumb('Catálogo','Multimedia');npRenderSubnav('catalog','np-media');$('adminTitle').textContent='Multimedia';$('adminContent').innerHTML=`<div class="np-v10-kpis"><div class="np-v10-kpi"><small>Sin imagen</small><strong>${noImg}</strong><span>Requieren recurso visual</span></div><div class="np-v10-kpi"><small>Sin video</small><strong>${noVideo}</strong><span>Video opcional</span></div><div class="np-v10-kpi"><small>Con dos imágenes</small><strong>${two}</strong><span>Galería completa</span></div><div class="np-v10-kpi"><small>Total productos</small><strong>${state.products.length}</strong><span>Catálogo actual</span></div></div><div class="np-v10-module-links" style="margin-top:10px"><button class="np-v10-module-link" data-v10-tool="products-no-image"><i>🖼️</i><span><b>Sin imagen</b><small>Revisar productos sin imagen principal.</small></span><em>›</em></button><button class="np-v10-module-link" data-v10-tool="products-no-video"><i>▶</i><span><b>Sin video</b><small>Productos sin presentación en video.</small></span><em>›</em></button><button class="np-v10-module-link" data-v10-tool="products-two-images"><i>▣</i><span><b>Dos imágenes</b><small>Productos con galería completa.</small></span><em>›</em></button></div>`;npBindToolButtons()}
+  function npRenderBulk(){state.adminSection='np-bulk';npRenderNav('catalog');npRenderBreadcrumb('Catálogo','Edición masiva');npRenderSubnav('catalog','np-bulk');$('adminTitle').textContent='Edición masiva';const ids=['product-price-up-percent','product-price-down-percent','product-stock-add','product-stock-subtract','product-low-limit','product-feature-all','product-unfeature-all','product-set-badge-all','product-clear-badges','product-normalize-media','product-normalize-numbers'];$('adminContent').innerHTML=`<div class="np-v10-tools-head"><div><h2>Edición masiva controlada</h2><p>Todas las acciones sensibles solicitan confirmación antes de modificar datos.</p></div></div><div class="np-v10-tool-grid">${ids.map(id=>npToolCard(TOOLS.find(t=>t.id===id))).join('')}</div>`;npBindToolButtons()}
+  function npRenderFeatured(){state.adminSection='np-featured';npRenderNav('growth');npRenderBreadcrumb('Crecimiento','Destacados');npRenderSubnav('growth','np-featured');$('adminTitle').textContent='Productos destacados';renderProductReport('Productos destacados','Productos resaltados actualmente.',p=>!!p.featured)}
+  function npRenderContentAudit(){const items=[{title:'Productos sin descripción',meta:state.products.filter(p=>!String(p.description||'').trim()).length,detail:'Contenido de producto incompleto.'},{title:'FAQ con respuesta corta',meta:state.faqs.filter(f=>String(f.a||'').trim().length<50).length,detail:'Respuestas con menos de 50 caracteres.'},{title:'Combos sin detalles',meta:state.combos.filter(c=>!String(c.details||'').trim()).length,detail:'Combos sin información ampliada.'}];npRenderSimpleList('Auditoría de contenido','Elementos públicos que conviene revisar.',items)}
+  function npRenderSegments(){const ids=new Set(state.orders.map(o=>o.userId)),spend={};state.orders.forEach(o=>spend[o.userId]=(spend[o.userId]||0)+num(o.total));const segments=[{title:'Compradores',meta:state.users.filter(u=>ids.has(u.id)).length,detail:'Clientes con al menos un pedido.'},{title:'Sin compra',meta:state.users.filter(u=>!ids.has(u.id)).length,detail:'Clientes sin pedidos.'},{title:'Clientes de alto valor',meta:state.users.filter(u=>(spend[u.id]||0)>=500).length,detail:'Compra acumulada igual o superior a Q500.'},{title:'Perfiles incompletos',meta:state.users.filter(u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())).length,detail:'Datos de entrega incompletos.'}];npRenderSimpleList('Segmentos de clientes','Agrupaciones automáticas para análisis.',segments)}
+  function npRenderCustomerNotes(){state.adminSection='np-customer-notes';npRenderNav('customers');npRenderBreadcrumb('Clientes','Notas internas');npRenderSubnav('customers','np-customer-notes');$('adminTitle').textContent='Notas internas';const list=state.users.map(u=>({title:u.fullName||u.username||'Cliente',meta:adminTags[u.id]||'Sin etiqueta',detail:adminNotes[u.id]||'Sin nota interna',id:u.id}));$('adminContent').innerHTML=`<div class="np-v10-records">${list.map(u=>`<article class="np-v10-record"><div><h3>${esc(u.title)}</h3><p>${esc(u.detail)}</p><div class="np-v10-record-actions"><button data-v10-note-user="${esc(u.id)}">Editar nota</button><button data-v10-tag-user="${esc(u.id)}">Etiqueta</button></div></div><aside>${esc(u.meta)}</aside></article>`).join('')||'<div class="np-v10-empty">No hay clientes.</div>'}</div>`;bindUserInternalTools()}
+  function npRenderCustomerHealth(){const ids=new Set(state.orders.map(o=>o.userId));npRenderSimpleList('Calidad de datos de clientes','Indicadores de integridad de perfiles.',[{title:'Perfiles incompletos',meta:state.users.filter(u=>![u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())).length,detail:'Falta al menos un dato importante.'},{title:'Clientes sin pedidos',meta:state.users.filter(u=>!ids.has(u.id)).length,detail:'No tienen pedidos asociados.'},{title:'Clientes con pedidos',meta:state.users.filter(u=>ids.has(u.id)).length,detail:'Tienen actividad comercial registrada.'}])}
+  function npRenderSales(){npRenderSalesAnalytics()}
+  function npRenderFulfillment(){const statuses=orderStatuses.map(s=>({title:s,meta:state.orders.filter(o=>norm(o.status)===norm(s)).length,detail:'Pedidos en esta etapa.'}));npRenderSimpleList('Preparación y seguimiento','Visión operativa del flujo de pedidos.',statuses)}
+  function npRenderAuditCenter(){npRenderDataHealth()}
+  function npRenderLocalAccess(){const temp=readLocal(NP_TEMP_ADMIN_KEY,null);state.adminSection='np-local-access';npRenderNav('system');npRenderBreadcrumb('Sistema','Acceso temporal');npRenderSubnav('system','np-local-access');$('adminTitle').textContent='Acceso administrativo temporal';$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><div><h2>Estado de acceso</h2><p class="admin-card-sub">Acceso habilitado solamente para la fase local de desarrollo.</p></div></div><div class="np-v10-audit-list"><div class="np-v10-audit"><div><b>Modo</b><p>Autenticación administrativa temporal almacenada localmente.</p></div><span>${temp?'Activo':'No disponible'}</span></div><div class="np-v10-audit"><div><b>Sesión actual</b><p>${esc(state.session?.email||'Sin sesión')}</p></div><span>${state.session?.role==='admin'?'Admin':'—'}</span></div><div class="np-v10-audit"><div><b>Persistencia</b><p>La sesión permanece en este navegador hasta cerrar sesión manualmente.</p></div><span>Local</span></div></div></section>`}
+
+  // ---------- Toolbox / buscador ----------
+  function npToolCard(t){if(!t)return'';const fav=prefs.favorites.includes(t.id);return `<article class="np-v10-tool" data-v10-tool="${esc(t.id)}"><div class="np-v10-tool-head"><span class="np-v10-tool-icon">${t.icon||'•'}</span><button type="button" class="np-v10-tool-fav ${fav?'on':''}" data-v10-fav="${esc(t.id)}" aria-label="Favorito">★</button></div><b>${esc(t.title)}</b><p>${esc(t.desc||'')}</p><span class="np-v10-tool-tag">${esc(GROUPS[t.group]?.label||t.group)}</span></article>`}
+  const NP_TOOL_SYNONYMS={
+    pedidos:'orden ordenes compra compras venta ventas',orden:'pedido pedidos compra',inventario:'stock existencias unidades bodega',stock:'inventario existencias unidades bodega',
+    productos:'producto catalogo articulo articulos mercancia',producto:'productos catalogo articulo',clientes:'cliente usuario usuarios compradores comprador',cliente:'clientes usuario comprador',
+    promociones:'promocion descuento descuentos cupon cupones codigo codigos oferta ofertas',promocion:'descuento cupon codigo oferta',ventas:'venta ingresos facturacion pedidos',venta:'ventas ingreso pedido',
+    respaldo:'backup copia seguridad exportar importar restaurar',auditoria:'auditar revision revisar control integridad diagnostico',equipo:'agente agentes personal permisos roles',agente:'equipo personal usuario interno',
+    envio:'enviado despacho entrega guia tracking transporte',entrega:'envio enviado despacho guia tracking',configuracion:'ajustes tienda preferencias',herramienta:'funcion utilidad opcion accion'
+  };
+  function npEditDistance(a,b){a=String(a||'');b=String(b||'');if(a===b)return 0;if(!a.length)return b.length;if(!b.length)return a.length;const row=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let prev=row[0];row[0]=i;for(let j=1;j<=b.length;j++){const old=row[j],cost=a[i-1]===b[j-1]?0:1;row[j]=Math.min(row[j]+1,row[j-1]+1,prev+cost);prev=old}}return row[b.length]}
+  function npToolSearchScore(t,query=''){const raw=String(query||'').trim();if(!raw)return 1;const rankMatch=raw.match(/^#?\s*(\d{1,3})\s*$/);if(rankMatch){const wanted=Number(rankMatch[1]);return Number(t.rank)===wanted?100000:-1}const q=norm(raw).replace(/[^a-z0-9%]+/g,' ').trim();if(!q)return 1;const hay=norm(`${t.title||''} ${t.desc||''} ${t.group||''} ${t.id||''} ${GROUPS[t.group]?.label||''}`).replace(/[^a-z0-9%]+/g,' ').trim();if(hay.includes(q))return 9000-q.length;const words=hay.split(/\s+/).filter(Boolean),tokens=q.split(/\s+/).filter(Boolean);let score=0;for(const token of tokens){const synonymText=NP_TOOL_SYNONYMS[token]||'';const alts=[token,...norm(synonymText).split(/\s+/).filter(Boolean)];let best=-1;for(const alt of alts){if(words.includes(alt)){best=Math.max(best,alt===token?1200:1080);continue}if(alt===token&&words.some(w=>w.includes(alt)||(w.length>=4&&alt.includes(w)))){best=Math.max(best,850);continue}if(alt===token&&token.length>=4){let dist=99;for(const w of words){if(Math.abs(w.length-token.length)>2)continue;dist=Math.min(dist,npEditDistance(token,w));if(dist<=1)break}if(dist<=1)best=Math.max(best,620);else if(dist===2&&token.length>=6)best=Math.max(best,420)}}if(best<0)return -1;score+=best}return score}
+  function npFilteredTools(query='',group='all'){return TOOLS.filter(t=>group==='all'||t.group===group).map(t=>({t,score:npToolSearchScore(t,query)})).filter(x=>x.score>=0).sort((a,b)=>b.score-a.score||(num(a.t.rank)||9999)-(num(b.t.rank)||9999)).map(x=>x.t)}
+  window.NP_TOOL_SEARCH_V111={score:npToolSearchScore,matches:(t,q)=>npToolSearchScore(t,q)>=0};
+  const NP_TOOL_PURPOSES={
+    attention:{label:'Mensajes y atención',icon:'💬',desc:'Conversaciones, soporte, bandeja, respuestas y seguimiento del cliente.'},
+    orders:{label:'Pedidos y entregas',icon:'🧾',desc:'Pedidos, estados, preparación, envío, entrega y seguimiento operativo.'},
+    products:{label:'Productos y catálogo',icon:'📦',desc:'Crear, revisar, editar, destacar y controlar la calidad de los productos.'},
+    inventory:{label:'Inventario y stock',icon:'📋',desc:'Existencias, agotados, stock bajo, reposición y movimientos masivos.'},
+    pricing:{label:'Precios y rentabilidad',icon:'💰',desc:'Precios, rangos de valor, ticket, márgenes y cambios masivos de precio.'},
+    combos:{label:'Combos y paquetes',icon:'🎁',desc:'Creación, revisión, precios, contenido y calidad de los combos.'},
+    categories:{label:'Categorías del catálogo',icon:'🏷️',desc:'Clasificación, informes, renombrado y fusión de categorías.'},
+    customers:{label:'Clientes y segmentos',icon:'👥',desc:'Perfiles, datos de entrega, compras, recurrencia y segmentación.'},
+    promotions:{label:'Promociones y crecimiento',icon:'🎟️',desc:'Promociones, códigos, descuentos, vigencia y acciones comerciales.'},
+    analytics:{label:'Analítica y reportes',icon:'📊',desc:'Indicadores, rankings, comparaciones, resúmenes y detección de oportunidades.'},
+    team:{label:'Equipo y permisos',icon:'👤',desc:'Agentes, roles, permisos, responsables, carga de trabajo y asignaciones.'},
+    content:{label:'Tienda y contenido',icon:'🏪',desc:'Configuración comercial, FAQ, textos, identidad y contenido público.'},
+    mobile:{label:'AppCreator24 y dispositivo',icon:'📱',desc:'Compartir, imprimir, cámara, micrófono y funciones nativas del dispositivo.'},
+    system:{label:'Sistema, datos y respaldos',icon:'⚙',desc:'Respaldos, exportaciones, auditoría, almacenamiento, limpieza y mantenimiento.'}
+  };
+  function npToolPurpose(t){
+    const id=norm(t?.id||''),title=norm(t?.title||''),desc=norm(t?.desc||''),group=norm(t?.group||'');
+    const s=`${id} ${title} ${desc}`;
+    if(/mensaje|atencion|chat|soporte|convers|bandeja|responder/.test(s))return'attention';
+    if(/agente|equipo|permiso|rol|responsable|asignacion|asignar pedido|carga de trabajo/.test(s))return'team';
+    if(/appcreator|camara|microfono|nota de voz|grabar|impres|compartir|navigator\.share|capturar foto/.test(s))return'mobile';
+    if(/respaldo|backup|restaur|export|import|auditor|diagnost|almacenamiento|integridad|normalizar|limpiar|actividad|salud de datos|referencias huerf|seguridad|acceso temporal/.test(s))return'system';
+    if(/\bcombo|combos|paquete/.test(s))return'combos';
+    if(/categor/.test(s))return'categories';
+    if(/stock|inventario|agotad|existencia|unidades restantes|reponer|reposicion/.test(s))return'inventory';
+    if(/pedido|pedidos|entrega|enviado|envio|preparando|confirmado|cancelado|ticket|venta|ventas|fulfillment/.test(s))return'orders';
+    if(/promoc|codigo|cupon|oferta|descuento|ahorro/.test(s))return'promotions';
+    if(/precio|precios|valor monetario|rentabilidad|margen/.test(s))return'pricing';
+    if(/cliente|clientes|usuario|usuarios|perfil|segment|recurren|correo|municipio|departamento|ubicacion/.test(s))return'customers';
+    if(/faq|pregunta frecuente|configuracion de tienda|tienda|contenido|texto|redes sociales|identidad comercial/.test(s))return'content';
+    if(/producto|productos|catalogo|destacad|valoracion|resena|imagen|video|multimedia/.test(s))return'products';
+    if(/analit|resumen|informe|reporte|ranking|indicador|metrica|mayor|menor|top |rendimiento|estadistica/.test(s))return'analytics';
+    if(group==='operations')return'orders';
+    if(group==='catalog')return'products';
+    if(group==='customers')return'customers';
+    if(group==='growth')return'promotions';
+    if(group==='analytics')return'analytics';
+    if(group==='team')return'team';
+    return'system';
+  }
+  function npPurposeTools(purpose='all',group='all',query=''){
+    return npFilteredTools(query,group).filter(t=>purpose==='all'||npToolPurpose(t)===purpose);
+  }
+  function npPurposeCard(key,group='all'){
+    const p=NP_TOOL_PURPOSES[key];if(!p)return'';
+    const related=TOOLS.filter(t=>(group==='all'||t.group===group)&&npToolPurpose(t)===key).sort((a,b)=>(num(a.rank)||9999)-(num(b.rank)||9999));
+    if(!related.length)return'';
+    const examples=related.slice(0,3).map(t=>esc(t.title)).join(' · ');
+    return `<button type="button" class="np-v132-purpose-card" data-v132-purpose="${key}"><span class="np-v132-purpose-icon">${p.icon}</span><span class="np-v132-purpose-copy"><b>${esc(p.label)}</b><small>${esc(p.desc)}</small>${examples?`<em>${examples}</em>`:''}</span><span class="np-v132-purpose-go">Abrir →</span></button>`;
+  }
+  function npRenderToolbox(query='',group='all',purpose='all'){
+    state.adminSection='np-toolbox';npRenderNav('system');npRenderBreadcrumb('Sistema','Herramientas');npRenderSubnav('system','np-toolbox');$('adminTitle').textContent='Herramientas';
+    const BATCH=60;let visible=0,current=[];let io=null;let searchTimer=0;
+    $('adminContent').innerHTML=`<section class="np-v132-toolbox"><div class="np-v10-tools-head np-v132-tools-head"><div><h2>Herramientas por categoría</h2><p>Entra por propósito para ver únicamente las funciones relacionadas. También puedes buscar directamente por nombre o número.</p></div><div class="np-v10-tool-search"><input id="npV10ToolSearch" placeholder="Buscar #, nombre o función…" value="${esc(query)}"><select id="npV10ToolGroup" aria-label="Filtrar por área"><option value="all">Todas las áreas</option>${Object.entries(GROUPS).filter(([k])=>k!=='home').map(([k,g])=>`<option value="${k}" ${group===k?'selected':''}>${g.label}</option>`).join('')}</select><select id="npV132ToolPurpose" hidden>${['all',...Object.keys(NP_TOOL_PURPOSES)].map(k=>`<option value="${k}" ${purpose===k?'selected':''}>${k}</option>`).join('')}</select></div></div><div id="npV132PurposeHeader"></div><div id="npV132CategoryGrid" class="np-v132-category-grid"></div><div class="np-v118-tool-progress"><span id="npV118ToolCount"></span></div><div class="np-v10-tool-grid" id="npV10ToolGrid"></div><div id="npV118ToolSentinel" class="np-v118-tool-sentinel"><button type="button" id="npV118ToolMore">Cargar más</button></div></section>`;
+    const grid=$('npV10ToolGrid'),catGrid=$('npV132CategoryGrid'),purposeHeader=$('npV132PurposeHeader'),sentinel=$('npV118ToolSentinel'),more=$('npV118ToolMore'),counter=$('npV118ToolCount'),purposeSelect=$('npV132ToolPurpose');
+    const enhance=root=>{npBindToolButtons(root);try{window.NP_V110_ENHANCE?.(root)}catch(e){};try{window.NP_V116?.enhanceToolCards?.(root)}catch(e){}};
+    const setPurpose=value=>{purposeSelect.value=value;renderView()};
+    const updateMeta=()=>{counter.textContent=current.length?(visible<current.length?'Más resultados disponibles':'Funciones relacionadas'):'Sin resultados';sentinel.hidden=visible>=current.length};
+    const appendBatch=()=>{if(visible>=current.length)return;const from=visible,to=Math.min(current.length,visible+BATCH),box=document.createElement('div');box.innerHTML=current.slice(from,to).map(npToolCard).join('');const frag=document.createDocumentFragment();while(box.firstChild)frag.appendChild(box.firstChild);grid.appendChild(frag);visible=to;enhance(grid);updateMeta()};
+    const renderCategories=(g)=>{const keys=Object.keys(NP_TOOL_PURPOSES).filter(k=>TOOLS.some(t=>(g==='all'||t.group===g)&&npToolPurpose(t)===k));catGrid.innerHTML=keys.map(k=>npPurposeCard(k,g)).join('')||'<div class="np-v10-empty">No hay categorías disponibles en esta área.</div>';catGrid.hidden=false;catGrid.querySelectorAll('[data-v132-purpose]').forEach(b=>b.onclick=()=>setPurpose(b.dataset.v132Purpose));};
+    function renderView(){
+      const q=$('npV10ToolSearch').value.trim(),g=$('npV10ToolGroup').value,p=purposeSelect.value||'all';
+      visible=0;grid.innerHTML='';counter.textContent='';sentinel.hidden=true;
+      if(!q&&p==='all'){
+        purposeHeader.innerHTML='';grid.hidden=true;renderCategories(g);return;
+      }
+      catGrid.hidden=true;grid.hidden=false;
+      if(p!=='all'){
+        const meta=NP_TOOL_PURPOSES[p];purposeHeader.innerHTML=`<div class="np-v132-purpose-head"><button type="button" id="npV132BackCategories">← Categorías</button><span class="np-v132-purpose-head-icon">${meta?.icon||'⌘'}</span><div><b>${esc(meta?.label||'Categoría')}</b><small>${esc(meta?.desc||'Funciones relacionadas.')}</small></div></div>`;
+        $('npV132BackCategories').onclick=()=>{purposeSelect.value='all';$('npV10ToolSearch').value='';renderView()};
+      }else purposeHeader.innerHTML='<div class="np-v132-search-label">Resultados de búsqueda en todas las categorías</div>';
+      current=npPurposeTools(p,g,q);if(!current.length){grid.innerHTML='<div class="np-v10-empty">No encontramos herramientas con ese filtro.</div>';updateMeta();return}appendBatch();
+    }
+    const onInput=()=>{clearTimeout(searchTimer);searchTimer=setTimeout(renderView,90)};
+    $('npV10ToolSearch').oninput=onInput;
+    $('npV10ToolGroup').onchange=()=>{purposeSelect.value='all';clearTimeout(searchTimer);renderView()};
+    purposeSelect.onchange=renderView;
+    more.onclick=appendBatch;
+    if('IntersectionObserver'in window){const scrollRoot=$('adminOverlay')||null;io=new IntersectionObserver(entries=>{if(scrollRoot&&!scrollRoot.classList.contains('open'))return;if(entries.some(x=>x.isIntersecting))appendBatch()},{root:scrollRoot,rootMargin:'420px 0px'});io.observe(sentinel)}
+    renderView();
+  }
+  function npRunTool(id){const t=TOOLS.find(x=>x.id===id);if(!t)return toast('Herramienta no encontrada.','warn');prefs.recent=[id,...prefs.recent.filter(x=>x!==id)].slice(0,12);savePrefs();try{t.action()}catch(err){console.error(err);toast('La herramienta encontró un error y no realizó cambios.','error')}}
+  function npBindToolButtons(root=document){root.querySelectorAll?.('[data-v10-tool]').forEach(el=>{el.onclick=e=>{if(e.target.closest('[data-v10-fav]'))return;npRunTool(el.dataset.v10Tool)}});root.querySelectorAll?.('[data-v10-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();const id=b.dataset.v10Fav;const on=prefs.favorites.includes(id);prefs.favorites=on?prefs.favorites.filter(x=>x!==id):[id,...prefs.favorites].slice(0,24);savePrefs();b.classList.toggle('on',!on)})}
+
+  // ---------- Navegación jerárquica v10 ----------
+  function currentGroup(section=state.adminSection){if(String(section||'').startsWith('np-group:'))return String(section).slice(9);return SECTION_GROUP[section]||'home'}
+  function npRenderNav(active=currentGroup()){$('adminNav').innerHTML=Object.entries(GROUPS).map(([key,g])=>`<button type="button" data-v10-group="${key}" class="${key===active?'active':''}"><span class="np-admin-menu-icon">${g.icon}</span><span>${g.label}</span></button>`).join('');$('adminNav').onclick=e=>{const b=e.target.closest('[data-v10-group]');if(b)npOpenGroup(b.dataset.v10Group)}}
+  function npRenderBreadcrumb(group,label){const el=$('adminBreadcrumb');if(!el)return;el.innerHTML=`<span>Administración</span><span>›</span><span>${esc(GROUPS[group]?.label||group)}</span>${label?`<span>›</span><b>${esc(label)}</b>`:''}`}
+  function npClearSubnav(){const el=$('adminSubnavWrap');if(el)el.innerHTML=''}
+  function npRenderSubnav(group,activeSection){const el=$('adminSubnavWrap');if(!el)return;const items=MODULES[group]||[];el.innerHTML=`<nav class="np-admin-subnav">${items.map(([s,i,l])=>`<button type="button" data-v10-sub="${s}" class="${s===activeSection?'active':''}">${i} ${l}</button>`).join('')}</nav>`;el.onclick=e=>{const b=e.target.closest('[data-v10-sub]');if(b)renderAdminSection(b.dataset.v10Sub)}}
+  function npOpenGroup(group){if(group==='home')return npRenderHome();const items=MODULES[group]||[];state.adminSection=`np-group:${group}`;npRenderNav(group);npRenderBreadcrumb(group,'Menú');npClearSubnav();$('adminTitle').textContent=GROUPS[group].label;$('adminContent').innerHTML=`<section class="np-v10-module-page"><div class="np-v10-module-banner"><div><h2>${GROUPS[group].icon} ${GROUPS[group].label}</h2><p>${esc(GROUPS[group].desc)}</p></div><span class="np-v10-big-icon">${GROUPS[group].icon}</span></div><div class="np-v10-module-links">${items.map(([s,i,l,d])=>`<button type="button" class="np-v10-module-link" data-v10-section="${s}"><i>${i}</i><span><b>${esc(l)}</b><small>${esc(d)}</small></span><em>›</em></button>`).join('')}</div><div class="np-v10-compact-card"><h3>Herramientas de esta área</h3><p>Accede únicamente a las herramientas relacionadas con esta área.</p><div class="np-v10-chip-row" style="margin-top:8px"><button class="np-v10-chip" data-open-tools-group="${group}">Abrir herramientas</button></div></div></section>`;$('adminContent').onclick=e=>{const s=e.target.closest('[data-v10-section]');if(s)return renderAdminSection(s.dataset.v10Section);const t=e.target.closest('[data-open-tools-group]');if(t)return npRenderToolbox('',t.dataset.openToolsGroup)}}
+  function npRenderHome(){state.adminSection='home';npRenderNav('home');npRenderBreadcrumb('home','Inicio');npClearSubnav();$('adminTitle').textContent='Administración';const modules=Object.entries(GROUPS).filter(([k])=>k!=='home');const favTools=prefs.favorites.map(id=>TOOLS.find(t=>t.id===id)).filter(Boolean).slice(0,8),recentTools=prefs.recent.map(id=>TOOLS.find(t=>t.id===id)).filter(Boolean).slice(0,8);$('adminContent').innerHTML=`<section class="np-v10-home"><div class="np-v10-commandbar"><div class="np-v10-search"><input id="npV10HomeSearch" placeholder="¿Qué quieres administrar?"><kbd>Ctrl K</kbd></div><button class="btn btn-primary" id="npV10OpenTools">Herramientas</button></div><div class="np-v10-section-head"><div><h2>Menú principal</h2><p>Primero eliges un área; después aparecen únicamente sus funciones y subfunciones.</p></div><span>${modules.length} áreas principales</span></div><div class="np-v10-modules">${modules.map(([key,g])=>`<button class="np-v10-module" data-v10-home-group="${key}"><div class="np-v10-module-top"><span class="np-v10-module-icon">${g.icon}</span><span class="np-v10-module-count">Área</span></div><div><h3>${esc(g.label)}</h3><p>${esc(g.desc)}</p></div><span class="np-v10-module-go">Abrir →</span></button>`).join('')}</div><div class="np-v10-home-bottom"><section class="np-v10-compact-card"><h3>Favoritos</h3>${favTools.length?`<div class="np-v10-chip-row">${favTools.map(t=>`<button class="np-v10-chip" data-v10-tool="${t.id}">${esc(t.title)}</button>`).join('')}</div>`:'<p>Marca herramientas con ★ para tenerlas aquí.</p>'}</section><section class="np-v10-compact-card"><h3>Usadas recientemente</h3>${recentTools.length?`<div class="np-v10-chip-row">${recentTools.map(t=>`<button class="np-v10-chip" data-v10-tool="${t.id}">${esc(t.title)}</button>`).join('')}</div>`:'<p>Tus herramientas recientes aparecerán aquí automáticamente.</p>'}</section></div></section>`;$('adminContent').querySelectorAll('[data-v10-home-group]').forEach(b=>b.onclick=()=>npOpenGroup(b.dataset.v10HomeGroup));$('npV10OpenTools').onclick=()=>npRenderToolbox();$('npV10HomeSearch').onfocus=npOpenPalette;$('npV10HomeSearch').onclick=npOpenPalette;npBindToolButtons($('adminContent'))}
+
+
+  // =====================================================================
+  // v10.5 · Equipo, permisos granulares, chat de pedidos y base heredada de 300 herramientas
+  // =====================================================================
+  const NP_AGENT_KEY='jm_digital_v1_agents';
+  const NP_ORDER_CHAT_KEY='jm_digital_v1_order_chat';
+  const NP_ASSIGN_KEY='jm_digital_v1_assignments';
+  const NP_TEAM_ACTIVITY_KEY='jm_digital_v1_team_activity';
+  let npAgents=readLocal(NP_AGENT_KEY,[]);
+  let npOrderChats=readLocal(NP_ORDER_CHAT_KEY,{});
+  let npAssignments=readLocal(NP_ASSIGN_KEY,{});
+  let npTeamActivity=readLocal(NP_TEAM_ACTIVITY_KEY,[]);
+  const npSaveAgents=()=>writeLocal(NP_AGENT_KEY,npAgents);
+  const npSaveChats=()=>writeLocal(NP_ORDER_CHAT_KEY,npOrderChats);
+  const npSaveAssignments=()=>writeLocal(NP_ASSIGN_KEY,npAssignments);
+  const npSaveTeamActivity=()=>writeLocal(NP_TEAM_ACTIVITY_KEY,npTeamActivity.slice(0,1200));
+  const npNow=()=>new Date().toISOString();
+  const npAgentById=id=>npAgents.find(a=>String(a.id)===String(id));
+  const npSessionAgent=()=>state.session?.role==='agent'?npAgentById(state.session.agentId):null;
+  const npIsOwner=()=>state.session?.role==='admin';
+  const npSessionLabel=()=>npIsOwner()?'Administrador':(npSessionAgent()?.name||'Agente');
+  function npTeamLog(action,detail=''){
+    npTeamActivity.unshift({id:uid('ta'),agentId:state.session?.agentId||'owner',actor:npSessionLabel(),action,detail,createdAt:npNow()});
+    npSaveTeamActivity();
+  }
+  function npPermissionSet(agent){return new Set([...(agent?.permissions?.tools||[]),...(agent?.permissions?.sections||[])]);}
+  function npCanUseSection(section){
+    if(npIsOwner())return true;
+    const agent=npSessionAgent();if(!agent||agent.active===false)return false;
+    if(section==='home'||section==='np-toolbox')return true;
+    const perms=npPermissionSet(agent);
+    if(perms.has('*')||perms.has(section))return true;
+    const group=SECTION_GROUP[section];
+    return !!(group&&(agent.permissions?.groups||[]).includes(group));
+  }
+  function npCanUseTool(tool){
+    if(npIsOwner())return true;
+    const agent=npSessionAgent();if(!agent||agent.active===false)return false;
+    const p=agent.permissions||{};
+    return (p.tools||[]).includes('*')||(p.tools||[]).includes(tool.id)||(p.groups||[]).includes(tool.group)||(tool.section&&npCanUseSection(tool.section));
+  }
+  function npAuthorizedGroups(){
+    if(npIsOwner())return Object.keys(GROUPS);
+    const agent=npSessionAgent();const allowed=new Set(['home']);
+    (agent?.permissions?.groups||[]).forEach(g=>allowed.add(g));
+    (agent?.permissions?.sections||[]).forEach(s=>{if(SECTION_GROUP[s])allowed.add(SECTION_GROUP[s])});
+    (agent?.permissions?.tools||[]).forEach(id=>{const t=TOOLS.find(x=>x.id===id);if(t?.group)allowed.add(t.group)});
+    if(allowed.size===1)allowed.add('team');
+    return [...allowed];
+  }
+  function npAccessDenied(title='Acceso no autorizado'){
+    $('adminTitle').textContent=title;
+    $('adminContent').innerHTML=`<section class="np-v105-denied"><span>🔐</span><h2>${esc(title)}</h2><p>Tu cuenta no tiene permiso para esta herramienta. El administrador puede habilitarla desde Equipo → Roles y permisos.</p><button type="button" class="btn btn-secondary" id="npDeniedHome">Volver al inicio</button></section>`;
+    $('npDeniedHome').onclick=()=>renderAdminSection('home');
+  }
+  function npApplyAgentNav(){
+    const allowed=new Set(npAuthorizedGroups());
+    document.querySelectorAll('#adminNav [data-v10-group]').forEach(b=>{b.style.display=allowed.has(b.dataset.v10Group)?'':'none'});
+  }
+
+  const NP_ROLE_PRESETS={
+    packing:{label:'Empaque',groups:['operations'],sections:['orders','np-fulfillment','inventory','metric-low-stock','metric-out-stock','np-order-chat','np-assignments']},
+    support:{label:'Atención',groups:['customers','operations'],sections:['users','orders','np-customer-notes','np-order-chat','np-assignments']},
+    catalog:{label:'Catálogo',groups:['catalog'],sections:['products','combos','categories','inventory','np-media']},
+    sales:{label:'Ventas',groups:['operations','growth','analytics'],sections:['orders','promotions','np-sales','np-order-analytics','np-customer-analytics','np-order-chat']},
+    supervisor:{label:'Supervisor',groups:['catalog','operations','customers','growth','analytics','team'],sections:['products','combos','categories','inventory','orders','users','promotions','faqs','settings','np-order-chat','np-assignments','np-team-load']},
+    custom:{label:'Personalizado',groups:[],sections:[]}
+  };
+  const npAgentRoleLabel=a=>NP_ROLE_PRESETS[a?.preset]?.label||a?.area||'Personalizado';
+  function npAgentCard(a){
+    const granted=(a.permissions?.tools||[]).length+(a.permissions?.sections||[]).length;
+    return `<article class="np-v105-agent-card"><div class="np-v105-agent-avatar">${esc((a.name||'A').slice(0,1).toUpperCase())}</div><div class="np-v105-agent-main"><div class="np-v105-agent-head"><div><h3>${esc(a.name)}</h3><p>${esc(a.email||a.username||'')} · ${esc(npAgentRoleLabel(a))}</p></div><span class="np-v105-pill ${a.active===false?'off':'on'}">${a.active===false?'Suspendido':'Activo'}</span></div><div class="np-v105-agent-meta"><span>${granted} permisos directos</span><span>${(a.permissions?.groups||[]).length} áreas</span><span>Último acceso: ${a.lastLoginAt?new Date(a.lastLoginAt).toLocaleString('es-GT'):'Nunca'}</span></div><div class="np-v105-agent-actions"><button type="button" data-agent-perms="${esc(a.id)}">Permisos</button><button type="button" data-agent-edit="${esc(a.id)}">Editar</button><button type="button" class="${a.active===false?'success':'warn'}" data-agent-toggle="${esc(a.id)}">${a.active===false?'Activar':'Suspender'}</button><button type="button" class="danger" data-agent-delete="${esc(a.id)}">Eliminar</button></div></div></article>`;
+  }
+  function npBindAgentList(){
+    $('adminContent').querySelectorAll('[data-agent-perms]').forEach(b=>b.onclick=()=>npOpenPermissions(b.dataset.agentPerms));
+    $('adminContent').querySelectorAll('[data-agent-edit]').forEach(b=>b.onclick=()=>npOpenAgentEditor(b.dataset.agentEdit));
+    $('adminContent').querySelectorAll('[data-agent-toggle]').forEach(b=>b.onclick=async()=>{const a=npAgentById(b.dataset.agentToggle);if(!a)return;a.active=a.active===false;npSaveAgents();npTeamLog(a.active?'Agente activado':'Agente suspendido',a.email);npRenderAgents();toast('Estado del agente actualizado.','success')});
+    $('adminContent').querySelectorAll('[data-agent-delete]').forEach(b=>b.onclick=async()=>{const a=npAgentById(b.dataset.agentDelete);if(!a||!await npConfirm(`¿Eliminar el acceso de ${a.name}?`))return;npAgents=npAgents.filter(x=>x.id!==a.id);npSaveAgents();npTeamLog('Agente eliminado',a.email);npRenderAgents();toast('Agente eliminado.','success')});
+  }
+  function npRenderAgents(){
+    if(!npIsOwner())return npAccessDenied('Gestión de agentes');
+    state.adminSection='np-agents';npRenderNav('team');npRenderBreadcrumb('team','Agentes');npRenderSubnav('team','np-agents');$('adminTitle').textContent='Equipo y agentes';
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Agentes con acceso</h2><p>Crea cuentas internas y limita exactamente lo que cada persona puede consultar o modificar.</p></div><button type="button" class="btn btn-primary" id="npAddAgent">+ Agregar agente</button></header><div class="np-v105-kpis"><div><small>Agentes</small><b>${npAgents.length}</b></div><div><small>Activos</small><b>${npAgents.filter(a=>a.active!==false).length}</b></div><div><small>Suspendidos</small><b>${npAgents.filter(a=>a.active===false).length}</b></div><div><small>Áreas</small><b>${new Set(npAgents.flatMap(a=>a.permissions?.groups||[])).size}</b></div></div><div class="np-v105-agent-list">${npAgents.length?npAgents.map(npAgentCard).join(''):'<div class="np-v105-empty"><b>No hay agentes creados.</b><span>Agrega primero al personal de empaque, atención, ventas o catálogo.</span></div>'}</div></section>`;
+    $('npAddAgent').onclick=()=>npOpenAgentEditor();npBindAgentList();npApplyAgentNav();
+  }
+  function npAgentFormMarkup(a={}){
+    const preset=a.preset||'custom';
+    const selectedTools=new Set(a.permissions?.tools||[]);
+    const selectedSections=new Set(a.permissions?.sections||[]);
+    const customSections=(MODULES.team||[]).filter(([s])=>!['np-agents','np-permissions'].includes(s));
+    const sectionRows=customSections.map(([s,i,l,d])=>`<label class="np-v107-custom-item" data-agent-perm-row><input type="checkbox" data-agent-section="${esc(s)}" ${selectedSections.has(s)?'checked':''}><i>${i}</i><span><b>${esc(l)}</b><small>${esc(d||'Módulo administrativo')}</small></span><em>Módulo</em></label>`).join('');
+    const toolRows=TOOLS.filter(t=>t.group!=='team').map(t=>`<label class="np-v107-custom-item" data-agent-perm-row><input type="checkbox" data-agent-tool="${esc(t.id)}" ${selectedTools.has(t.id)?'checked':''}><i>${t.icon||'⌘'}</i><span><b>${esc(t.title)}</b><small>${esc(t.desc||'Herramienta administrativa')}</small></span><em>${esc(GROUPS[t.group]?.label||t.group)}</em></label>`).join('');
+    return `<form id="npAgentForm" class="np-v105-form np-v107-agent-form"><div class="form-grid"><div class="field"><label>Nombre completo</label><input id="npAgentName" value="${esc(a.name||'')}" required maxlength="80"></div><div class="field"><label>Área / puesto</label><input id="npAgentArea" value="${esc(a.area||'')}" placeholder="Empaque, Atención, Ventas…" required maxlength="60"></div><div class="field"><label>Usuario</label><input id="npAgentUser" value="${esc(a.username||'')}" required maxlength="40" autocomplete="off"></div><div class="field"><label>Correo</label><input id="npAgentEmail" type="email" value="${esc(a.email||'')}" required maxlength="120"></div><div class="field"><label>Plantilla de permisos</label><select id="npAgentPreset">${Object.entries(NP_ROLE_PRESETS).map(([k,v])=>`<option value="${k}" ${preset===k?'selected':''}>${esc(v.label)}</option>`).join('')}</select></div><div class="field"><label>${a.id?'Nueva contraseña (opcional)':'Contraseña temporal'}</label><div class="np-v105-pass"><input id="npAgentPass" type="password" ${a.id?'':'required'} minlength="8" autocomplete="new-password"><button type="button" id="npAgentPassToggle">Ver</button></div></div></div>
+    <section class="np-v107-custom-perms" id="npAgentCustomPerms" ${preset==='custom'?'':'hidden'}>
+      <div class="np-v107-custom-head"><div><span>ACCESO PERSONALIZADO</span><h3>Selecciona exactamente qué puede utilizar</h3><p>Busca por nombre, área o propósito. El agente solo verá lo que autorices aquí.</p></div><strong id="npAgentPermCount">${selectedTools.size+selectedSections.size}</strong></div>
+      <div class="np-v107-custom-search"><span>⌕</span><input id="npAgentToolSearch" type="search" placeholder="Buscar herramienta o módulo…" autocomplete="off"><button type="button" id="npSelectVisibleAgentTools">Seleccionar visibles</button><button type="button" id="npClearAgentTools">Limpiar</button></div>
+      <div class="np-v107-custom-list" id="npAgentToolList">${sectionRows}${toolRows}</div>
+      <div class="np-v107-custom-foot"><span>Los permisos de agentes se guardan localmente durante esta fase.</span><b>Acceso granular</b></div>
+    </section>
+    <div class="np-v105-note">La cuenta queda guardada solo en este dispositivo durante la fase local. La contraseña se almacena como hash, no como texto visible.</div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar agente</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`;
+  }
+  function npOpenAgentEditor(id=null){
+    if(!npIsOwner())return npAccessDenied('Gestión de agentes');
+    const a=id?npAgentById(id):null;
+    $('crudTitle').textContent=a?'Editar agente':'Agregar agente';
+    $('crudBody').innerHTML=npAgentFormMarkup(a||{});openModal('crudModal');if(typeof window.upgradeAdminControls==='function')window.upgradeAdminControls($('crudBody'));
+    const form=$('npAgentForm'),presetEl=$('npAgentPreset'),customBox=$('npAgentCustomPerms'),list=$('npAgentToolList'),search=$('npAgentToolSearch'),count=$('npAgentPermCount');
+    $('npAgentPassToggle').onclick=()=>{const i=$('npAgentPass');i.type=i.type==='password'?'text':'password';$('npAgentPassToggle').textContent=i.type==='password'?'Ver':'Ocultar'};
+    const checkedCount=()=>form.querySelectorAll('[data-agent-tool]:checked,[data-agent-section]:checked').length;
+    const refreshCount=()=>{if(count)count.textContent=String(checkedCount())};
+    const refreshFilter=()=>{if(!list||!search)return;const q=norm(search.value);list.querySelectorAll('[data-agent-perm-row]').forEach(row=>{row.hidden=!!q&&!norm(row.textContent).includes(q)})};
+    const toggleCustom=()=>{const custom=presetEl.value==='custom';customBox.hidden=!custom;if(custom){requestAnimationFrame(()=>search?.focus())}refreshCount()};
+    presetEl.onchange=toggleCustom;
+    if(search)search.oninput=refreshFilter;
+    if(list)list.onchange=refreshCount;
+    if($('npSelectVisibleAgentTools'))$('npSelectVisibleAgentTools').onclick=()=>{list.querySelectorAll('[data-agent-perm-row]:not([hidden]) input[type="checkbox"]').forEach(x=>x.checked=true);refreshCount()};
+    if($('npClearAgentTools'))$('npClearAgentTools').onclick=()=>{list.querySelectorAll('input[type="checkbox"]').forEach(x=>x.checked=false);refreshCount()};
+    toggleCustom();
+    form.onsubmit=async e=>{
+      e.preventDefault();
+      const name=$('npAgentName').value.trim(),area=$('npAgentArea').value.trim(),username=$('npAgentUser').value.trim(),email=$('npAgentEmail').value.trim(),preset=presetEl.value,pass=$('npAgentPass').value;
+      if(!name||!area||!username||!email)return showModalNotice('Completa todos los datos obligatorios.','warn','crudModal');
+      if(!/^\S+@\S+\.\S+$/.test(email))return showModalNotice('Escribe un correo válido.','warn','crudModal');
+      if(npAgents.some(x=>x.id!==a?.id&&(norm(x.email)===norm(email)||norm(x.username)===norm(username))))return showModalNotice('Ese usuario o correo ya pertenece a otro agente.','warn','crudModal');
+      if(!a&&pass.length<8)return showModalNotice('La contraseña debe tener al menos 8 caracteres.','warn','crudModal');
+      const presetData=NP_ROLE_PRESETS[preset]||NP_ROLE_PRESETS.custom;
+      let permissions;
+      if(preset==='custom'){
+        const tools=[...form.querySelectorAll('[data-agent-tool]:checked')].map(x=>x.dataset.agentTool);
+        const sections=[...form.querySelectorAll('[data-agent-section]:checked')].map(x=>x.dataset.agentSection);
+        if(!tools.length&&!sections.length)return showModalNotice('Selecciona al menos una herramienta o módulo para el acceso personalizado.','warn','crudModal');
+        permissions={groups:[],sections:[...new Set(sections)],tools:[...new Set(tools)]};
+      }else{
+        permissions={groups:[...presetData.groups],sections:[...presetData.sections],tools:[]};
+      }
+      const base={name,area,username,email,preset,active:a?.active!==false,permissions,updatedAt:npNow()};
+      if(pass)base.passwordHash=await sha256(pass);else if(a?.passwordHash)base.passwordHash=a.passwordHash;
+      if(a)Object.assign(a,base);else npAgents.unshift({id:uid('agt'),...base,createdAt:npNow(),lastLoginAt:null});
+      npSaveAgents();npTeamLog(a?'Agente editado':'Agente creado',email);closeModal('crudModal');npRenderAgents();toast('Agente guardado correctamente.','success');
+    };
+  }
+  function npPermissionToolRow(t,selected){return `<label class="np-v105-perm-tool"><input type="checkbox" data-perm-tool="${esc(t.id)}" ${selected?'checked':''}><span><b>${esc(t.title)}</b><small>${esc(t.desc||'')}</small></span><em>${esc(GROUPS[t.group]?.label||t.group)}</em></label>`}
+  function npOpenPermissions(id){
+    if(!npIsOwner())return npAccessDenied('Roles y permisos');const a=npAgentById(id);if(!a)return;state.adminSection='np-permissions';npRenderNav('team');npRenderBreadcrumb('team','Permisos');npRenderSubnav('team','np-permissions');$('adminTitle').textContent=`Permisos · ${a.name}`;const selected=new Set(a.permissions?.tools||[]),groups=new Set(a.permissions?.groups||[]),sections=new Set(a.permissions?.sections||[]);
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>${esc(a.name)}</h2><p>Autoriza por área, por módulo o herramienta individual. Un permiso más específico puede convivir con los demás.</p></div><button type="button" class="btn btn-secondary" id="npBackAgents">Volver</button></header><div class="np-v105-perm-groups">${Object.entries(GROUPS).filter(([k])=>!['home','team'].includes(k)).map(([k,g])=>`<label><input type="checkbox" data-perm-group="${k}" ${groups.has(k)?'checked':''}><span>${g.icon} ${esc(g.label)}</span></label>`).join('')}</div><div class="np-v105-perm-search"><input id="npPermSearch" placeholder="Buscar entre Herramientas"><span id="npPermCount">${selected.size} herramientas seleccionadas</span></div><div class="np-v105-perm-list" id="npPermList">${TOOLS.filter(t=>t.group!=='team').map(t=>npPermissionToolRow(t,selected.has(t.id))).join('')}</div><div class="np-v105-sticky-actions"><button class="btn btn-primary" id="npSavePermissions">Guardar permisos</button><button class="btn btn-secondary" id="npSelectRoleModules">Aplicar módulos del rol</button></div></section>`;
+    $('npBackAgents').onclick=npRenderAgents;const repaintCount=()=>{$('npPermCount').textContent=`${$('adminContent').querySelectorAll('[data-perm-tool]:checked').length} herramientas seleccionadas`};$('npPermSearch').oninput=e=>{const q=norm(e.target.value);$('npPermList').querySelectorAll('.np-v105-perm-tool').forEach(row=>row.hidden=!!q&&!norm(row.textContent).includes(q))};$('npPermList').onchange=repaintCount;$('npSelectRoleModules').onclick=()=>{const preset=NP_ROLE_PRESETS[a.preset]||NP_ROLE_PRESETS.custom;const sec=new Set(preset.sections);$('adminContent').querySelectorAll('[data-perm-group]').forEach(x=>x.checked=preset.groups.includes(x.dataset.permGroup));$('adminContent').querySelectorAll('[data-perm-tool]').forEach(x=>{const t=TOOLS.find(z=>z.id===x.dataset.permTool);x.checked=!!(t&&(preset.groups.includes(t.group)||(t.section&&sec.has(t.section))))});repaintCount()};$('npSavePermissions').onclick=()=>{a.permissions={groups:[...$('adminContent').querySelectorAll('[data-perm-group]:checked')].map(x=>x.dataset.permGroup),sections:[...sections],tools:[...$('adminContent').querySelectorAll('[data-perm-tool]:checked')].map(x=>x.dataset.permTool)};a.updatedAt=npNow();npSaveAgents();npTeamLog('Permisos actualizados',a.email);toast('Permisos guardados.','success');npRenderAgents()};npApplyAgentNav();
+  }
+  function npRenderPermissions(){if(!npIsOwner())return npAccessDenied('Roles y permisos');npRenderAgents()}
+
+  const npChatOf=orderId=>safeArr(npOrderChats[String(orderId)]);
+  function npSendOrderMessage(orderId,text,meta={}){
+    text=String(text||'').trim();if(!text)return false;const key=String(orderId);const arr=npChatOf(key);const msg={id:uid('msg'),orderId:key,senderRole:state.session?.role||'admin',senderId:state.session?.agentId||'owner',senderName:npSessionLabel(),text:text.slice(0,1600),kind:meta.kind||'message',createdAt:npNow(),readByClient:false};arr.push(msg);npOrderChats[key]=arr;npSaveChats();npTeamLog('Mensaje de seguimiento',`${key} · ${text.slice(0,80)}`);return msg;
+  }
+  function npOrderThreadMarkup(order){const messages=npChatOf(order.id);return `<div class="np-v105-thread" id="npThread">${messages.length?messages.map(m=>`<div class="np-v105-msg ${m.senderRole==='client'?'client':'staff'}"><div><b>${esc(m.senderName||'CRULOX')}</b><time>${new Date(m.createdAt).toLocaleString('es-GT')}</time></div><p>${esc(m.text)}</p></div>`).join(''):'<div class="np-v105-empty small"><b>Aún no hay mensajes.</b><span>Envía el primer avance de este pedido.</span></div>'}</div>`}
+  function npRenderOrderConversation(orderId){
+    if(!npCanUseSection('np-order-chat')&&!npCanUseSection('orders'))return npAccessDenied('Seguimiento directo');const o=state.orders.find(x=>String(x.id)===String(orderId));if(!o)return npRenderOrderChat();state.adminSection='np-order-chat';npRenderNav('team');npRenderBreadcrumb('team','Seguimiento directo');npRenderSubnav('team','np-order-chat');$('adminTitle').textContent=`Pedido ${o.id}`;const assigned=npAssignments[o.id]||'';const agent=npAgentById(assigned);
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>${esc(o.customer?.fullName||'Cliente')}</h2><p>${esc(o.id)} · ${money(o.total)} · ${esc(o.status||'Nuevo')}</p></div><button class="btn btn-secondary" id="npBackChat">Bandeja</button></header><div class="np-v105-order-layout"><aside class="np-v105-order-summary"><h3>Pedido</h3><dl><div><dt>Cliente</dt><dd>${esc(o.customer?.fullName||'')}</dd></div><div><dt>Teléfono</dt><dd>${esc(o.customer?.phone||'')}</dd></div><div><dt>Entrega</dt><dd>${esc(`${o.customer?.department||''}, ${o.customer?.municipality||''}`)}</dd></div><div><dt>Estado</dt><dd>${esc(o.status||'')}</dd></div><div><dt>Responsable</dt><dd>${esc(agent?.name||'Sin asignar')}</dd></div><div><dt>Guía</dt><dd>${esc(o.trackingNumber||'Pendiente')}</dd></div></dl><div class="np-v105-items">${safeArr(o.items).map(i=>`<span>${esc(i.name)} × ${Number(i.qty||1)}</span>`).join('')}</div><button class="btn btn-secondary btn-block" id="npAssignHere">Asignar responsable</button></aside><main class="np-v105-chatbox"><div class="np-v105-chat-head"><div><h3>Seguimiento con el cliente</h3><p>Los mensajes aparecen dentro de “Mis pedidos” del cliente en esta fase local.</p></div></div>${npOrderThreadMarkup(o)}<form id="npOrderChatForm" class="np-v105-chat-form"><div class="np-v105-quick"><button type="button" data-qmsg="Tu pedido ya fue confirmado y está en preparación.">Confirmado</button><button type="button" data-qmsg="Tu pedido ya está empacado y listo para despacho.">Empacado</button><button type="button" data-qmsg="Tu pedido ya fue despachado. En breve recibirás el número de guía.">Despachado</button></div><div class="np-v105-track-row"><input id="npTracking" value="${esc(o.trackingNumber||'')}" placeholder="Número de guía"><input id="npCarrier" value="${esc(o.carrier||'')}" placeholder="Empresa de entrega"></div><textarea id="npChatText" placeholder="Escribe un avance, número de guía o información importante…" maxlength="1600" required></textarea><button class="btn btn-primary" type="submit">Enviar al seguimiento</button></form></main></div></section>`;
+    $('npBackChat').onclick=npRenderOrderChat;$('adminContent').querySelectorAll('[data-qmsg]').forEach(b=>b.onclick=()=>{$('npChatText').value=b.dataset.qmsg});$('npAssignHere').onclick=()=>npOpenAssignment(o.id);$('npOrderChatForm').onsubmit=e=>{e.preventDefault();const tracking=$('npTracking').value.trim(),carrier=$('npCarrier').value.trim(),text=$('npChatText').value.trim();if(tracking){o.trackingNumber=tracking;o.carrier=carrier;o.updatedAt=npNow();write(KEYS.orders,state.orders)}const composed=tracking?`${text}${text?'\n\n':''}Guía: ${tracking}${carrier?` · ${carrier}`:''}`:text;if(!composed)return toast('Escribe un mensaje o número de guía.','warn');npSendOrderMessage(o.id,composed,{kind:tracking?'tracking':'message'});toast('Seguimiento enviado.','success');npRenderOrderConversation(o.id)};npApplyAgentNav();
+  }
+  function npRenderOrderChat(){
+    if(!npCanUseSection('np-order-chat')&&!npCanUseSection('orders'))return npAccessDenied('Seguimiento directo');state.adminSection='np-order-chat';npRenderNav('team');npRenderBreadcrumb('team','Seguimiento directo');npRenderSubnav('team','np-order-chat');$('adminTitle').textContent='Seguimiento directo';
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Bandeja de pedidos</h2><p>Abre cualquier pedido para enviar estados, guía y mensajes sin salir de CRULOX.</p></div><div class="np-v105-search"><input id="npChatSearch" placeholder="Buscar pedido o cliente"></div></header><div class="np-v105-order-inbox" id="npChatInbox"></div></section>`;
+    const draw=()=>{const q=norm($('npChatSearch').value);const list=state.orders.filter(o=>!q||norm(`${o.id} ${o.customer?.fullName} ${o.customer?.email} ${o.trackingNumber||''}`).includes(q));$('npChatInbox').innerHTML=list.map(o=>{const msgs=npChatOf(o.id),last=msgs[msgs.length-1],a=npAgentById(npAssignments[o.id]);return `<button type="button" class="np-v105-inbox-row" data-chat-order="${esc(o.id)}"><div class="np-v105-inbox-icon">${msgs.length?'💬':'📦'}</div><div><b>${esc(o.customer?.fullName||'Cliente')}</b><small>${esc(o.id)} · ${esc(o.status||'Nuevo')} · ${money(o.total)}</small><p>${last?esc(last.text.slice(0,100)):'Sin mensajes de seguimiento todavía.'}</p></div><aside><span>${msgs.length} mensajes</span><small>${esc(a?.name||'Sin asignar')}</small></aside></button>`}).join('')||'<div class="np-v105-empty"><b>No hay pedidos.</b><span>La bandeja se llenará cuando entren pedidos.</span></div>';$('npChatInbox').querySelectorAll('[data-chat-order]').forEach(b=>b.onclick=()=>npRenderOrderConversation(b.dataset.chatOrder))};$('npChatSearch').oninput=draw;draw();npApplyAgentNav();
+  }
+  function npOpenAssignment(orderId){
+    const o=state.orders.find(x=>String(x.id)===String(orderId));if(!o)return;const options=npAgents.filter(a=>a.active!==false);$('crudTitle').textContent=`Asignar pedido ${o.id}`;$('crudBody').innerHTML=`<form id="npAssignForm"><div class="field full"><label>Responsable</label><select id="npAssignAgent"><option value="">Sin asignar</option>${options.map(a=>`<option value="${esc(a.id)}" ${npAssignments[o.id]===a.id?'selected':''}>${esc(a.name)} · ${esc(a.area||'')}</option>`).join('')}</select></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar asignación</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`;openModal('crudModal');if(typeof window.upgradeAdminControls==='function')window.upgradeAdminControls($('crudBody'));$('npAssignForm').onsubmit=e=>{e.preventDefault();const id=$('npAssignAgent').value;if(id)npAssignments[o.id]=id;else delete npAssignments[o.id];npSaveAssignments();npTeamLog('Asignación de pedido',`${o.id} → ${npAgentById(id)?.name||'Sin asignar'}`);closeModal('crudModal');toast('Asignación actualizada.','success');npRenderOrderConversation(o.id)}}
+  function npRenderAssignments(){
+    if(!npCanUseSection('np-assignments')&&!npCanUseSection('orders'))return npAccessDenied('Asignaciones');state.adminSection='np-assignments';npRenderNav('team');npRenderBreadcrumb('team','Asignaciones');npRenderSubnav('team','np-assignments');$('adminTitle').textContent='Asignaciones';
+    $('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Responsables por pedido</h2><p>Distribuye trabajo entre empaque, atención, ventas y supervisión.</p></div></header><div class="np-v105-order-inbox">${state.orders.map(o=>{const a=npAgentById(npAssignments[o.id]);return `<article class="np-v105-assignment"><div><b>${esc(o.id)} · ${esc(o.customer?.fullName||'Cliente')}</b><small>${esc(o.status||'Nuevo')} · ${money(o.total)}</small></div><span>${esc(a?.name||'Sin asignar')}</span><button type="button" data-assign="${esc(o.id)}">Asignar</button></article>`}).join('')||'<div class="np-v105-empty"><b>No hay pedidos.</b></div>'}</div></section>`;$('adminContent').querySelectorAll('[data-assign]').forEach(b=>b.onclick=()=>npOpenAssignment(b.dataset.assign));npApplyAgentNav();
+  }
+  function npRenderTeamActivity(){
+    if(!npCanUseSection('np-team-activity')&&!npIsOwner())return npAccessDenied('Actividad del equipo');state.adminSection='np-team-activity';npRenderNav('team');npRenderBreadcrumb('team','Actividad');npRenderSubnav('team','np-team-activity');$('adminTitle').textContent='Actividad del equipo';const visible=npIsOwner()?npTeamActivity:npTeamActivity.filter(x=>x.agentId===state.session?.agentId);$('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Registro interno</h2><p>Acciones administrativas realizadas por el equipo en este dispositivo.</p></div></header><div class="np-v105-timeline">${visible.slice(0,250).map(x=>`<article><span>${esc((x.actor||'A').slice(0,1))}</span><div><b>${esc(x.action)}</b><p>${esc(x.detail||'')}</p><time>${new Date(x.createdAt).toLocaleString('es-GT')}</time></div></article>`).join('')||'<div class="np-v105-empty"><b>Sin actividad registrada.</b></div>'}</div></section>`;npApplyAgentNav();
+  }
+  function npRenderTeamLoad(){
+    if(!npCanUseSection('np-team-load')&&!npIsOwner())return npAccessDenied('Carga de trabajo');state.adminSection='np-team-load';npRenderNav('team');npRenderBreadcrumb('team','Carga de trabajo');npRenderSubnav('team','np-team-load');$('adminTitle').textContent='Carga de trabajo';const rows=npAgents.filter(a=>a.active!==false).map(a=>{const orders=state.orders.filter(o=>npAssignments[o.id]===a.id);return {a,orders,pending:orders.filter(o=>!['Entregado','Cancelado'].includes(o.status)).length}});$('adminContent').innerHTML=`<section class="np-v105-page"><header class="np-v105-pagehead"><div><h2>Distribución del equipo</h2><p>Pedidos asignados y pendientes por responsable.</p></div></header><div class="np-v105-load-grid">${rows.map(r=>`<article><div class="np-v105-agent-avatar">${esc(r.a.name.slice(0,1))}</div><h3>${esc(r.a.name)}</h3><p>${esc(r.a.area||'')}</p><strong>${r.pending}</strong><small>pendientes · ${r.orders.length} asignados</small></article>`).join('')||'<div class="np-v105-empty"><b>Agrega agentes para medir la carga.</b></div>'}</div></section>`;npApplyAgentNav();
+  }
+
+  function npCustomerReport(title,desc,predicate){const list=state.users.filter(predicate);npRenderSimpleList(title,desc,list.map(u=>({title:u.fullName||u.username||u.email,meta:u.department||'—',detail:`${u.email||''}${u.phone?` · ${u.phone}`:''}`})))}
+  function npPromoReport(title,desc,predicate){const promos=safeArr(state.promos).filter(predicate);npRenderSimpleList(title,desc,promos.map(p=>({title:p.code||'Promoción',meta:p.active===false?'Inactiva':'Activa',detail:`${num(p.percent||p.discount||0)}% · usos ${num(p.uses)}`})))}
+  function npOperationalAudit(title,desc,items){npRenderSimpleList(title,desc,items)}
+
+  // ---- Conservar la base original en exactamente 300 herramientas antes de ampliar a 400 ----
+  const npCandidates=[];
+  const npCandidate=(id,title,group,icon,desc,fn)=>npCandidates.push({id,title,group,icon,desc,fn});
+  // Inventario y catálogo
+  for(let n=0;n<=20;n++)npCandidate(`v105-stock-exact-${n}`,`Stock exacto: ${n}`,'catalog','📦',`Productos con exactamente ${n} unidades.`,()=>renderProductReport(`Stock exacto: ${n}`,`Productos con ${n} unidades físicas.`,p=>num(p.stock)===n));
+  [5,10,15,20,30,40,50,75,100,150,200,300,500,750,1000].forEach(n=>npCandidate(`v105-price-max-${n}`,`Precio ≤ Q${n}`,'analytics','💰',`Productos con precio máximo Q${n}.`,()=>renderProductReport(`Precio ≤ Q${n}`,`Productos cuyo precio no supera Q${n}.`,p=>num(p.price)<=n,(a,b)=>num(b.price)-num(a.price))));
+  [[0,25],[25,50],[50,100],[100,150],[150,250],[250,500],[500,1000],[1000,2500],[2500,5000]].forEach(([a,b])=>npCandidate(`v105-price-range-${a}-${b}`,`Precio Q${a}–Q${b}`,'analytics','↔',`Productos dentro del rango Q${a} a Q${b}.`,()=>renderProductReport(`Precio Q${a}–Q${b}`,`Rango comercial de productos.`,p=>num(p.price)>=a&&num(p.price)<=b,(x,y)=>num(x.price)-num(y.price))));
+  [5,10,15,20,25,30,40,50,60].forEach(n=>npCandidate(`v105-discount-${n}`,`Descuento ≥ ${n}%`,'growth','％',`Productos con descuento de al menos ${n}%.`,()=>renderProductReport(`Descuento ≥ ${n}%`,`Productos con rebaja igual o superior al ${n}%.`,p=>p.oldPrice&&((1-num(p.price)/num(p.oldPrice))*100)>=n)));
+  [1,2,3,5,7,14,30,60].forEach(days=>npCandidate(`v105-orders-days-${days}`,`Pedidos últimos ${days} días`,'operations','🧾',`Pedidos creados durante los últimos ${days} días.`,()=>renderOrderReport(`Pedidos últimos ${days} días`,`Actividad reciente de pedidos.`,o=>Date.now()-new Date(o.createdAt).getTime()<=days*86400000,(a,b)=>new Date(b.createdAt)-new Date(a.createdAt))));
+  ['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].forEach(s=>npCandidate(`v105-order-status-${norm(s)}`,`Pedidos: ${s}`,'operations','◉',`Todos los pedidos en estado ${s}.`,()=>renderOrderReport(`Pedidos · ${s}`,`Pedidos actualmente en ${s}.`,o=>norm(o.status)===norm(s))));
+  [50,100,200,300,500,750,1000,1500,2500,5000].forEach(n=>npCandidate(`v105-order-max-${n}`,`Pedidos ≤ Q${n}`,'analytics','🧮',`Pedidos con total igual o menor a Q${n}.`,()=>renderOrderReport(`Pedidos ≤ Q${n}`,`Pedidos dentro del límite indicado.`,o=>num(o.total)<=n,(a,b)=>num(b.total)-num(a.total))));
+  [0,100,250,500,750,1000,1500,2500,5000].forEach(n=>npCandidate(`v105-customer-spend-${n}`,`Clientes con compra ≥ Q${n}`,'customers','👤',`Clientes cuyo total histórico alcanza Q${n}.`,()=>{const spend={};state.orders.forEach(o=>spend[o.userId]=(spend[o.userId]||0)+num(o.total));npCustomerReport(`Clientes con compra ≥ Q${n}`,`Clientes clasificados por valor acumulado.`,u=>(spend[u.id]||0)>=n)}));
+  const customerChecks=[['sin-telefono','Clientes sin teléfono',u=>!String(u.phone||'').trim()],['sin-direccion','Clientes sin dirección',u=>!String(u.address||'').trim()],['sin-referencia','Clientes sin referencia',u=>!String(u.reference||'').trim()],['sin-municipio','Clientes sin municipio',u=>!String(u.municipality||'').trim()],['sin-departamento','Clientes sin departamento',u=>!String(u.department||'').trim()],['correo-invalido','Correos a revisar',u=>!/^\S+@\S+\.\S+$/.test(String(u.email||''))],['perfil-completo','Perfiles completos',u=>[u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())]];
+  customerChecks.forEach(([id,title,pred])=>npCandidate(`v105-customer-${id}`,title,'customers','✓',`Filtro de calidad: ${title.toLowerCase()}.`,()=>npCustomerReport(title,'Revisión de perfiles de clientes.',pred)));
+  const productChecks=[['sin-descripcion','Productos sin descripción',p=>!String(p.description||'').trim()],['sin-categoria','Productos sin categoría',p=>!String(p.category||'').trim()],['sin-imagen','Productos sin imagen',p=>!String(p.image||'').trim()],['sin-video','Productos sin video',p=>!String(p.videoUrl||'').trim()],['sin-precio-anterior','Productos sin precio anterior',p=>!num(p.oldPrice)],['destacados','Productos destacados',p=>!!p.featured],['no-destacados','Productos no destacados',p=>!p.featured],['con-dos-imagenes','Productos con 2 imágenes',p=>safeArr(p.images).filter(Boolean).length>=2||!!p.image2],['con-video','Productos con video',p=>!!p.videoUrl]];
+  productChecks.forEach(([id,title,pred])=>npCandidate(`v105-product-${id}`,title,'catalog','🖼️',`Revisión rápida: ${title.toLowerCase()}.`,()=>renderProductReport(title,'Control de calidad del catálogo.',pred)));
+  const promoChecks=[['activas','Promociones activas',p=>p.active!==false],['inactivas','Promociones inactivas',p=>p.active===false],['usadas','Promociones con uso',p=>num(p.uses)>0],['sin-uso','Promociones sin uso',p=>num(p.uses)===0],['vencidas','Promociones vencidas',p=>p.expiresAt&&new Date(`${p.expiresAt}T23:59:59`).getTime()<Date.now()],['sin-vencimiento','Promociones sin vencimiento',p=>!p.expiresAt]];
+  promoChecks.forEach(([id,title,pred])=>npCandidate(`v105-promo-${id}`,title,'growth','🎟️',`Informe: ${title.toLowerCase()}.`,()=>npPromoReport(title,'Control de códigos y promociones.',pred)));
+  const dataAudits=[
+    ['audit-product-ids','Auditar IDs de productos','IDs duplicados o vacíos.',()=>{const seen=new Set(),bad=[];state.products.forEach(p=>{if(!p.id||seen.has(p.id))bad.push({title:p.name||'Producto',meta:p.id||'Sin ID',detail:'Revisar identificador.'});seen.add(p.id)});npOperationalAudit('Auditoría de IDs de productos','Control de integridad.',bad)}],
+    ['audit-order-ids','Auditar IDs de pedidos','IDs duplicados o vacíos.',()=>{const seen=new Set(),bad=[];state.orders.forEach(o=>{if(!o.id||seen.has(o.id))bad.push({title:o.customer?.fullName||'Pedido',meta:o.id||'Sin ID',detail:'Revisar identificador.'});seen.add(o.id)});npOperationalAudit('Auditoría de IDs de pedidos','Control de integridad.',bad)}],
+    ['audit-negative-stock','Detectar stock negativo','Encuentra existencias inválidas.',()=>renderProductReport('Stock negativo','Productos con stock menor a cero.',p=>num(p.stock)<0)],
+    ['audit-zero-price','Detectar precios en cero','Encuentra productos sin precio real.',()=>renderProductReport('Precio en cero','Productos con precio igual o menor a cero.',p=>num(p.price)<=0)],
+    ['audit-order-customer','Pedidos sin cliente completo','Pedidos con datos de entrega incompletos.',()=>renderOrderReport('Pedidos con datos incompletos','Pedidos que requieren revisión de datos.',o=>![o.customer?.fullName,o.customer?.phone,o.customer?.address].every(v=>String(v||'').trim()))],
+    ['audit-unassigned-orders','Pedidos sin responsable','Pedidos sin asignación interna.',()=>npOperationalAudit('Pedidos sin responsable','Distribuye la carga del equipo.',state.orders.filter(o=>!npAssignments[o.id]).map(o=>({title:o.id,meta:o.status,detail:o.customer?.fullName||'Cliente'})))],
+    ['audit-unread-chat','Seguimientos sin mensajes','Pedidos sin comunicación registrada.',()=>npOperationalAudit('Pedidos sin seguimiento','Pedidos que aún no tienen mensajes.',state.orders.filter(o=>npChatOf(o.id).length===0).map(o=>({title:o.id,meta:o.status,detail:o.customer?.fullName||'Cliente'})))],
+    ['audit-tracking','Enviados sin guía','Pedidos enviados que no tienen número de guía.',()=>npOperationalAudit('Enviados sin guía','Completa los datos de entrega.',state.orders.filter(o=>norm(o.status)==='enviado'&&!o.trackingNumber).map(o=>({title:o.id,meta:'Sin guía',detail:o.customer?.fullName||'Cliente'})))],
+    ['audit-agent-access','Agentes suspendidos','Revisar accesos internos suspendidos.',()=>npOperationalAudit('Agentes suspendidos','Cuentas internas sin acceso.',npAgents.filter(a=>a.active===false).map(a=>({title:a.name,meta:a.area,detail:a.email})))],
+    ['audit-storage','Revisar almacenamiento local','Abre diagnóstico de almacenamiento.',()=>npRenderStorage()]
+  ];
+  dataAudits.forEach(([id,title,desc,fn])=>npCandidate(`v105-${id}`,title,'system','🛡️',desc,fn));
+  const teamTools=[
+    ['agents','Abrir agentes',()=>npRenderAgents()],['permissions','Administrar permisos',()=>npRenderPermissions()],['chat','Abrir seguimiento directo',()=>npRenderOrderChat()],['assign','Asignar pedidos',()=>npRenderAssignments()],['activity','Actividad del equipo',()=>npRenderTeamActivity()],['load','Carga de trabajo',()=>npRenderTeamLoad()],
+    ['unassigned','Pedidos sin asignar',()=>npOperationalAudit('Pedidos sin asignar','Pedidos que necesitan responsable.',state.orders.filter(o=>!npAssignments[o.id]).map(o=>({title:o.id,meta:o.status,detail:o.customer?.fullName||''})))],
+    ['packing','Pedidos en preparación',()=>renderOrderReport('Pedidos en preparación','Flujo de empaque.',o=>norm(o.status)==='preparando')],['shipping','Pedidos enviados',()=>renderOrderReport('Pedidos enviados','Flujo de despacho.',o=>norm(o.status)==='enviado')],['new','Pedidos nuevos',()=>renderOrderReport('Pedidos nuevos','Solicitudes recién recibidas.',o=>norm(o.status)==='nuevo')]
+  ];
+  teamTools.forEach(([id,title,fn])=>npCandidate(`v105-team-${id}`,title,'team','👤',`${title} dentro del flujo de equipo.`,fn));
+  for(const spec of npCandidates){if(TOOLS.length>=300)break;action(spec.id,spec.title,spec.group,spec.icon,spec.desc,spec.fn)}
+  // Último nivel de QA solo si la base previa tenía menos herramientas de lo esperado.
+  const qaFields=[['producto nombre','catalog',()=>renderProductReport('Productos con nombre','Registros con nombre definido.',p=>!!String(p.name||'').trim())],['producto stock','catalog',()=>renderProductReport('Productos con stock válido','Stock numérico no negativo.',p=>Number.isFinite(Number(p.stock))&&Number(p.stock)>=0)],['pedido total','operations',()=>renderOrderReport('Pedidos con total válido','Pedidos con total numérico.',o=>Number.isFinite(Number(o.total))&&Number(o.total)>=0)],['pedido teléfono','operations',()=>renderOrderReport('Pedidos con teléfono','Pedidos con contacto disponible.',o=>!!String(o.customer?.phone||'').trim())],['cliente correo','customers',()=>npCustomerReport('Clientes con correo','Perfiles con correo registrado.',u=>!!String(u.email||'').trim())],['cliente entrega','customers',()=>npCustomerReport('Clientes con dirección','Perfiles con dirección de entrega.',u=>!!String(u.address||'').trim())]];
+  let qaIndex=0;while(TOOLS.length<300){const [label,group,fn]=qaFields[qaIndex%qaFields.length];qaIndex++;action(`v105-qa-${qaIndex}`,`Control ${label} ${Math.ceil(qaIndex/qaFields.length)}`,group,'✓',`Comprobación operativa de ${label}.`,fn)}
+  if(TOOLS.length>300)TOOLS.splice(300);
+
+  // v11.1 · 100 herramientas adicionales reales (301–400 antes de la priorización global).
+  // Son informes/controles de solo lectura para ampliar análisis sin introducir acciones destructivas.
+  const npV111Add=(id,title,group,icon,desc,fn)=>action(`v111-${id}`,title,group,icon,desc,fn);
+  const npRange=(v,a,b)=>num(v)>=a&&(b===Infinity||num(v)<=b);
+  const npOrdersByUser=()=>{const m={};state.orders.forEach(o=>{const k=String(o.userId||'');if(!k)return;(m[k]||(m[k]=[])).push(o)});return m};
+  const npSpendByUser=()=>{const m={};state.orders.forEach(o=>{const k=String(o.userId||'');if(k)m[k]=(m[k]||0)+num(o.total)});return m};
+  const npDaysOld=o=>Math.max(0,(Date.now()-new Date(o.createdAt||0).getTime())/86400000);
+
+  // 1–10: valor monetario inmovilizado en inventario.
+  [[0,100],[100,250],[250,500],[500,1000],[1000,2500],[2500,5000],[5000,10000],[10000,25000],[25000,50000],[50000,Infinity]].forEach(([a,b],i)=>npV111Add(`inventory-value-${i+1}`,`Valor de inventario ${b===Infinity?`≥ Q${a}`:`Q${a}–Q${b}`}`,'analytics','💎','Productos clasificados por valor aproximado precio × stock.',()=>renderProductReport(`Valor de inventario ${b===Infinity?`≥ Q${a}`:`Q${a}–Q${b}`}`,'Valor aproximado de existencias por producto.',p=>npRange(num(p.price)*num(p.stock),a,b),(x,y)=>(num(y.price)*num(y.stock))-(num(x.price)*num(x.stock)))));
+
+  // 11–20: salud comercial del catálogo.
+  const npProductExtra=[
+    ['name-short','Nombres de producto muy cortos',p=>String(p.name||'').trim().length>0&&String(p.name||'').trim().length<8],
+    ['name-long','Nombres de producto extensos',p=>String(p.name||'').trim().length>55],
+    ['desc-short','Descripciones demasiado cortas',p=>String(p.description||'').trim().length>0&&String(p.description||'').trim().length<45],
+    ['desc-long','Descripciones extensas',p=>String(p.description||'').trim().length>500],
+    ['featured-low','Destacados con stock bajo',p=>!!p.featured&&num(p.stock)>0&&num(p.stock)<=lowLimit()],
+    ['featured-out','Destacados agotados',p=>!!p.featured&&num(p.stock)<=0],
+    ['sale-out','Ofertas agotadas',p=>num(p.oldPrice)>num(p.price)&&num(p.stock)<=0],
+    ['premium-low','Productos ≥ Q1000 con stock bajo',p=>num(p.price)>=1000&&num(p.stock)>0&&num(p.stock)<=lowLimit()],
+    ['media-complete','Productos con multimedia completa',p=>!!p.image&&(safeArr(p.images).filter(Boolean).length>=2||!!p.image2)&&!!p.videoUrl],
+    ['badge-missing','Productos sin distintivo',p=>!String(p.badgeText||p.badge||'').trim()]
+  ];
+  npProductExtra.forEach(([id,title,pred])=>npV111Add(`product-${id}`,title,'catalog','📦',`Control adicional de catálogo: ${title.toLowerCase()}.`,()=>renderProductReport(title,'Revisión avanzada del catálogo.',pred)));
+
+  // 21–30: antigüedad de pedidos por bandas no solapadas.
+  [[0,1,'Hoy / últimas 24 h'],[1,3,'Entre 1 y 3 días'],[3,7,'Entre 3 y 7 días'],[7,14,'Entre 7 y 14 días'],[14,30,'Entre 14 y 30 días'],[30,60,'Entre 30 y 60 días'],[60,90,'Entre 60 y 90 días'],[90,180,'Entre 90 y 180 días'],[180,365,'Entre 180 y 365 días'],[365,Infinity,'Más de un año']].forEach(([a,b,label],i)=>npV111Add(`order-age-${i+1}`,`Pedidos · ${label}`,'operations','🕒','Pedidos agrupados por antigüedad real.',()=>renderOrderReport(`Pedidos · ${label}`,'Antigüedad del pedido desde su fecha de creación.',o=>{const d=npDaysOld(o);return d>=a&&(b===Infinity||d<b)},(x,y)=>new Date(y.createdAt)-new Date(x.createdAt))));
+
+  // 31–40: ticket del pedido por bandas.
+  [[0,50],[50,100],[100,200],[200,350],[350,500],[500,750],[750,1000],[1000,1500],[1500,2500],[2500,Infinity]].forEach(([a,b],i)=>npV111Add(`order-value-${i+1}`,`Ticket ${b===Infinity?`≥ Q${a}`:`Q${a}–Q${b}`}`,'analytics','🧾','Pedidos clasificados por valor total.',()=>renderOrderReport(`Ticket ${b===Infinity?`≥ Q${a}`:`Q${a}–Q${b}`}`,'Segmentación de pedidos por total.',o=>npRange(o.total,a,b),(x,y)=>num(y.total)-num(x.total))));
+
+  // 41–50: controles operativos de pedidos.
+  const npOrderExtra=[
+    ['assigned','Pedidos con responsable',o=>!!npAssignments[o.id]],['unassigned-open','Pedidos abiertos sin responsable',o=>!npAssignments[o.id]&&!['entregado','cancelado'].includes(norm(o.status))],
+    ['tracking-any','Pedidos con número de guía',o=>!!String(o.trackingNumber||'').trim()],['tracking-missing-open','Pedidos activos sin guía',o=>!String(o.trackingNumber||'').trim()&&!['nuevo','cancelado','entregado'].includes(norm(o.status))],
+    ['missing-phone','Pedidos sin teléfono',o=>!String(o.customer?.phone||'').trim()],['missing-email','Pedidos sin correo',o=>!String(o.customer?.email||'').trim()],
+    ['missing-address','Pedidos sin dirección',o=>!String(o.customer?.address||'').trim()],['high-new','Pedidos nuevos ≥ Q1000',o=>norm(o.status)==='nuevo'&&num(o.total)>=1000],
+    ['cancelled-high','Cancelados ≥ Q500',o=>norm(o.status)==='cancelado'&&num(o.total)>=500],['delivered-high','Entregados ≥ Q1000',o=>norm(o.status)==='entregado'&&num(o.total)>=1000]
+  ];
+  npOrderExtra.forEach(([id,title,pred])=>npV111Add(`order-${id}`,title,'operations','🚚',`Control operativo: ${title.toLowerCase()}.`,()=>renderOrderReport(title,'Seguimiento operativo avanzado de pedidos.',pred)));
+
+  // 51–60: frecuencia de compra por cliente.
+  [[0,0,'Sin pedidos'],[1,1,'1 pedido'],[2,2,'2 pedidos'],[3,3,'3 pedidos'],[4,5,'4–5 pedidos'],[6,10,'6–10 pedidos'],[11,20,'11–20 pedidos'],[21,50,'21–50 pedidos'],[51,100,'51–100 pedidos'],[101,Infinity,'Más de 100 pedidos']].forEach(([a,b,label],i)=>npV111Add(`customer-frequency-${i+1}`,`Clientes · ${label}`,'customers','👥','Clientes segmentados por cantidad histórica de pedidos.',()=>{const by=npOrdersByUser();npCustomerReport(`Clientes · ${label}`,'Frecuencia histórica de compra.',u=>npRange((by[String(u.id)]||[]).length,a,b))}));
+
+  // 61–70: valor acumulado por cliente.
+  [[0,0,'Sin gasto'],[0.01,100,'Hasta Q100'],[100,250,'Q100–Q250'],[250,500,'Q250–Q500'],[500,1000,'Q500–Q1000'],[1000,2500,'Q1000–Q2500'],[2500,5000,'Q2500–Q5000'],[5000,10000,'Q5000–Q10000'],[10000,25000,'Q10000–Q25000'],[25000,Infinity,'Más de Q25000']].forEach(([a,b,label],i)=>npV111Add(`customer-value-${i+1}`,`Clientes · ${label}`,'customers','💰','Clientes segmentados por gasto histórico acumulado.',()=>{const spend=npSpendByUser();npCustomerReport(`Clientes · ${label}`,'Valor acumulado de compras.',u=>npRange(spend[String(u.id)]||0,a,b))}));
+
+  // 71–80: calidad y comportamiento de clientes.
+  const npCustomerExtra=[
+    ['repeat','Clientes recurrentes',u=>(npOrdersByUser()[String(u.id)]||[]).length>=2],['one-time','Clientes de una sola compra',u=>(npOrdersByUser()[String(u.id)]||[]).length===1],
+    ['no-username','Clientes sin usuario',u=>!String(u.username||'').trim()],['short-name','Nombres de cliente muy cortos',u=>String(u.fullName||'').trim().length>0&&String(u.fullName||'').trim().length<5],
+    ['phone-long','Teléfonos a revisar',u=>{const d=String(u.phone||'').replace(/\D/g,'');return !!d&&(d.length<8||d.length>15)}],['address-short','Direcciones demasiado cortas',u=>String(u.address||'').trim().length>0&&String(u.address||'').trim().length<12],
+    ['with-reference','Clientes con referencia de entrega',u=>!!String(u.reference||'').trim()],['without-reference','Clientes sin referencia de entrega',u=>!String(u.reference||'').trim()],
+    ['complete-buyers','Compradores con perfil completo',u=>[u.fullName,u.email,u.phone,u.department,u.municipality,u.address].every(v=>String(v||'').trim())&&(npOrdersByUser()[String(u.id)]||[]).length>0],
+    ['inactive-buyers','Compradores sin pedidos en 90 días',u=>{const a=npOrdersByUser()[String(u.id)]||[];return a.length>0&&!a.some(o=>npDaysOld(o)<90)}]
+  ];
+  npCustomerExtra.forEach(([id,title,pred])=>npV111Add(`customer-${id}`,title,'customers','👤',`Análisis adicional de cliente: ${title.toLowerCase()}.`,()=>npCustomerReport(title,'Calidad y comportamiento de clientes.',pred)));
+
+  // 81–90: promociones y descuentos.
+  const npPromoExtra=[
+    ['percent-low','Promociones de hasta 10%',p=>num(p.value||p.percent||p.discount)>0&&num(p.value||p.percent||p.discount)<=10],
+    ['percent-mid','Promociones de 11% a 25%',p=>npRange(p.value||p.percent||p.discount,11,25)],['percent-high','Promociones mayores a 25%',p=>num(p.value||p.percent||p.discount)>25],
+    ['popular','Promociones con 10+ usos',p=>num(p.uses)>=10],['very-popular','Promociones con 50+ usos',p=>num(p.uses)>=50],['single-use','Promociones con un uso',p=>num(p.uses)===1],
+    ['expiring-7','Promociones que vencen en 7 días',p=>{if(!p.expiresAt)return false;const d=(new Date(`${p.expiresAt}T23:59:59`).getTime()-Date.now())/86400000;return d>=0&&d<=7}],
+    ['expiring-30','Promociones que vencen en 30 días',p=>{if(!p.expiresAt)return false;const d=(new Date(`${p.expiresAt}T23:59:59`).getTime()-Date.now())/86400000;return d>=0&&d<=30}],
+    ['code-short','Códigos de promoción muy cortos',p=>String(p.code||'').trim().length>0&&String(p.code||'').trim().length<4],['code-long','Códigos de promoción extensos',p=>String(p.code||'').trim().length>18]
+  ];
+  npPromoExtra.forEach(([id,title,pred])=>npV111Add(`promo-${id}`,title,'growth','🎟️',`Análisis adicional de promociones: ${title.toLowerCase()}.`,()=>npPromoReport(title,'Revisión avanzada de promociones.',pred)));
+
+  // 91–100: auditorías de integridad cruzada.
+  const npAuditRows=(title,desc,rows)=>npOperationalAudit(title,desc,rows);
+  const npV111Audits=[
+    ['duplicate-product-names','Nombres de producto duplicados',()=>{const c={};state.products.forEach(p=>{const k=norm(p.name);if(k)c[k]=(c[k]||0)+1});return state.products.filter(p=>(c[norm(p.name)]||0)>1).map(p=>({title:p.name,meta:p.id,detail:'Nombre repetido en el catálogo.'}))}],
+    ['duplicate-customer-emails','Correos de cliente duplicados',()=>{const c={};state.users.forEach(u=>{const k=norm(u.email);if(k)c[k]=(c[k]||0)+1});return state.users.filter(u=>(c[norm(u.email)]||0)>1).map(u=>({title:u.fullName||u.username||'Cliente',meta:u.email,detail:'Correo repetido.'}))}],
+    ['duplicate-usernames','Usuarios duplicados',()=>{const c={};state.users.forEach(u=>{const k=norm(u.username);if(k)c[k]=(c[k]||0)+1});return state.users.filter(u=>(c[norm(u.username)]||0)>1).map(u=>({title:u.username||'Sin usuario',meta:u.email||'—',detail:'Nombre de usuario repetido.'}))}],
+    ['orphan-orders','Pedidos con cliente inexistente',()=>{const ids=new Set(state.users.map(u=>String(u.id)));return state.orders.filter(o=>o.userId&&!ids.has(String(o.userId))).map(o=>({title:o.id,meta:o.userId,detail:'El cliente asociado ya no existe.'}))}],
+    ['invalid-order-total','Pedidos con total inválido',()=>state.orders.filter(o=>!Number.isFinite(Number(o.total))||num(o.total)<0).map(o=>({title:o.id,meta:String(o.total),detail:'Total no válido.'}))],
+    ['invalid-product-stock','Productos con stock inválido',()=>state.products.filter(p=>!Number.isFinite(Number(p.stock))||num(p.stock)<0).map(p=>({title:p.name,meta:String(p.stock),detail:'Stock no válido.'}))],
+    ['invalid-product-price','Productos con precio inválido',()=>state.products.filter(p=>!Number.isFinite(Number(p.price))||num(p.price)<=0).map(p=>({title:p.name,meta:String(p.price),detail:'Precio no válido.'}))],
+    ['invalid-promos','Promociones con valor inválido',()=>safeArr(state.promos).filter(p=>!Number.isFinite(Number(p.value??p.percent??p.discount))||num(p.value??p.percent??p.discount)<0).map(p=>({title:p.code||'Promoción',meta:String(p.value??p.percent??p.discount),detail:'Valor de promoción no válido.'}))],
+    ['orphan-assignments','Asignaciones a pedidos inexistentes',()=>{const ids=new Set(state.orders.map(o=>String(o.id)));return Object.entries(npAssignments).filter(([id])=>!ids.has(String(id))).map(([id,agent])=>({title:id,meta:npAgentById(agent)?.name||agent||'—',detail:'Asignación sin pedido vigente.'}))}],
+    ['orphan-chats','Chats de pedidos inexistentes',()=>{const ids=new Set(state.orders.map(o=>String(o.id)));return Object.keys(npOrderChats||{}).filter(id=>!ids.has(String(id))).map(id=>({title:id,meta:`${safeArr(npOrderChats[id]).length} mensajes`,detail:'Conversación sin pedido vigente.'}))}]
+  ];
+  npV111Audits.forEach(([id,title,getRows])=>npV111Add(`audit-${id}`,title,'system','🛡️','Auditoría de integridad y consistencia de datos.',()=>npAuditRows(title,'Revisión cruzada de integridad.',getRows())));
+
+  // Garantía estructural: esta versión debe contener exactamente 400 IDs únicos.
+  if(TOOLS.length>400)TOOLS.splice(400);
+  window.NP_ADMIN_TOOL_COUNT_V105=TOOLS.length;
+
+  // ---------- Secciones personalizadas ----------
+  const CUSTOM={
+    'np-media':npRenderMediaAudit,'np-bulk':npRenderBulk,'np-sales':npRenderSales,'np-fulfillment':npRenderFulfillment,
+    'np-segments':npRenderSegments,'np-customer-health':npRenderCustomerHealth,'np-customer-notes':npRenderCustomerNotes,
+    'np-featured':npRenderFeatured,'np-content-audit':npRenderContentAudit,'np-product-analytics':npRenderProductAnalytics,
+    'np-order-analytics':npRenderSalesAnalytics,'np-customer-analytics':npRenderCustomerAnalytics,'np-inventory-analytics':npRenderInventoryAnalytics,
+    'np-audit-center':npRenderAuditCenter,'np-toolbox':()=>npRenderToolbox(),'np-data-health':npRenderDataHealth,'np-storage':npRenderStorage,'np-local-access':npRenderLocalAccess
+  };
+
+
+  CUSTOM['np-agents']=npRenderAgents;
+  CUSTOM['np-permissions']=npRenderPermissions;
+  CUSTOM['np-order-chat']=npRenderOrderChat;
+  CUSTOM['np-assignments']=npRenderAssignments;
+  CUSTOM['np-team-activity']=npRenderTeamActivity;
+  CUSTOM['np-team-load']=npRenderTeamLoad;
+
+  const baseRenderAdminSectionV10=renderAdminSection;
+  renderAdminSection=function(section){
+    if(section==='home')return npRenderHome();
+    if(String(section).startsWith('np-group:'))return npOpenGroup(String(section).slice(9));
+    if(CUSTOM[section])return CUSTOM[section]();
+    baseRenderAdminSectionV10(section);
+    const group=SECTION_GROUP[section]||'home';npRenderNav(group);npRenderBreadcrumb(group,$('adminTitle')?.textContent||section);npRenderSubnav(group,section);
+  };
+  renderAdminNav=function(){npRenderNav(currentGroup())};
+
+  const baseOpenAdminV10=openAdmin;
+  openAdmin=function(section='home'){
+    if(state.session?.role!=='admin')return;
+    $('adminOverlay').classList.add('open');document.body.classList.add('lock');
+    // Conserva el acceso temporal local ya existente; únicamente reorganiza la interfaz.
+    renderAdminSection(section==='dashboard'?'home':(section||'home'));
+  };
+
+  // ---------- Paleta global ----------
+  const palette=document.createElement('div');palette.className='np-v10-palette';palette.id='npV10Palette';palette.innerHTML=`<div class="np-v10-palette-box"><div class="np-v10-palette-search"><input id="npV10PaletteInput" placeholder="Buscar entre Herramientas…" autocomplete="off"></div><div class="np-v10-palette-results" id="npV10PaletteResults"></div></div>`;document.body.appendChild(palette);
+  function npPaletteRender(q=''){const list=npFilteredTools(q,'all').slice(0,40);$('npV10PaletteResults').innerHTML=list.map(t=>`<button class="np-v10-palette-item" data-v10-palette-tool="${t.id}"><i>${t.icon}</i><span><b>${esc(t.title)}</b><small>${esc(t.desc)}</small></span><em>${esc(GROUPS[t.group]?.label||t.group)}</em></button>`).join('')||'<div class="np-v10-empty">No encontramos una herramienta por ese número, nombre o término similar.</div>';$('npV10PaletteResults').querySelectorAll('[data-v10-palette-tool]').forEach(b=>b.onclick=()=>{npClosePalette();npRunTool(b.dataset.v10PaletteTool)})}
+  function npOpenPalette(){palette.classList.add('open');$('npV10PaletteInput').value='';npPaletteRender();setTimeout(()=>$('npV10PaletteInput').focus(),30)}
+  function npClosePalette(){palette.classList.remove('open')}
+  $('npV10PaletteInput').oninput=e=>npPaletteRender(e.target.value);palette.onclick=e=>{if(e.target===palette)npClosePalette()};
+  document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='k'&&state.session?.role==='admin'&&$('adminOverlay').classList.contains('open')){e.preventDefault();npOpenPalette()}else if(e.key==='Escape'&&palette.classList.contains('open'))npClosePalette()});
+
+  // Botón buscar en barra superior
+  if($('adminStoreBtn')&&!document.getElementById('npV10TopSearch')){const b=document.createElement('button');b.id='npV10TopSearch';b.className='btn btn-secondary btn-sm';b.type='button';b.textContent='Buscar';b.onclick=npOpenPalette;$('adminStoreBtn').parentNode.insertBefore(b,$('adminStoreBtn'))}
+
+  // Limpieza de textos visibles en administración: no exponer nombres de infraestructura futura.
+  document.querySelectorAll('.admin-overlay *').forEach(el=>{if(el.childNodes.length===1&&el.firstChild?.nodeType===3&&/firebase/i.test(el.textContent||''))el.textContent=(el.textContent||'').replace(/firebase/ig,'infraestructura final')});
+
+
+  // Permisos aplicados sobre navegación, módulos, herramientas y secciones.
+  const npBaseFilteredToolsV105=npFilteredTools;
+  npFilteredTools=function(query='',group='all'){return npBaseFilteredToolsV105(query,group).filter(npCanUseTool)};
+  const npBaseRenderNavV105=npRenderNav;
+  npRenderNav=function(group='home'){npBaseRenderNavV105(group);npApplyAgentNav()};
+  const npBaseOpenGroupV105=npOpenGroup;
+  npOpenGroup=function(group){if(group!=='home'&&!npAuthorizedGroups().includes(group))return npAccessDenied('Área no autorizada');return npBaseOpenGroupV105(group)};
+  const npBaseRunToolV105=npRunTool;
+  npRunTool=function(id){const t=TOOLS.find(x=>x.id===id);if(t&&!npCanUseTool(t))return npAccessDenied('Herramienta no autorizada');return npBaseRunToolV105(id)};
+  const npBaseRenderSectionV105=renderAdminSection;
+  renderAdminSection=function(section){if(state.session?.role==='agent'&&!npCanUseSection(section)&&!String(section).startsWith('np-group:'))return npAccessDenied('Acceso no autorizado');const r=npBaseRenderSectionV105(section);setTimeout(npApplyAgentNav,0);return r};
+  window.NP_TEAM_API_V105={agents:()=>npAgents,chats:()=>npOrderChats,assignments:()=>npAssignments,teamActivity:()=>npTeamActivity,agentById:npAgentById,sessionAgent:npSessionAgent,canUseSection:npCanUseSection,canUseTool:npCanUseTool,renderAgents:npRenderAgents,renderPermissions:npRenderPermissions,renderOrderChat:npRenderOrderChat,renderOrderConversation:npRenderOrderConversation,renderAssignments:npRenderAssignments,renderTeamActivity:npRenderTeamActivity,renderTeamLoad:npRenderTeamLoad,sendOrderMessage:npSendOrderMessage,chatOf:npChatOf,saveChats:npSaveChats,saveAgents:npSaveAgents,applyNav:npApplyAgentNav,groups:GROUPS,modules:MODULES,tools:TOOLS};
+  const npToolIds=TOOLS.map(t=>t.id);
+  window.NP_V105_SELF_TEST={
+    version:'10.5',
+    toolCount:TOOLS.length,
+    uniqueToolIds:new Set(npToolIds).size,
+    callableTools:TOOLS.filter(t=>typeof t.action==='function').length,
+    teamModules:(MODULES.team||[]).length,
+    ok:TOOLS.length===400&&new Set(npToolIds).size===400&&TOOLS.every(t=>typeof t.action==='function')&&(MODULES.team||[]).length===6
+  };
+
+  // Render inicial si el panel ya está abierto.
+  if(state.session?.role==='admin'&&$('adminOverlay').classList.contains('open'))npRenderHome();
+})();
+</script>
+
+<style id="np-v102-commerce-style">
+/* CRULOX v10.2 — navegación administrativa + reserva local de stock */
+.np-stock-limit-notice{
+  position:fixed;inset:0;z-index:20050;display:grid;place-items:center;padding:20px;
+  background:rgba(1,6,14,.36);backdrop-filter:blur(5px);opacity:0;visibility:hidden;
+  transition:opacity .2s ease,visibility .2s ease;pointer-events:none
+}
+.np-stock-limit-notice.show{opacity:1;visibility:visible}
+.np-stock-limit-card{
+  width:min(92vw,410px);padding:22px 20px;border-radius:24px;text-align:center;
+  background:linear-gradient(150deg,rgba(9,29,48,.98),rgba(5,15,27,.99));
+  border:1px solid rgba(0,217,255,.24);box-shadow:0 28px 80px rgba(0,0,0,.58),0 0 0 1px rgba(255,255,255,.025) inset
+}
+.np-stock-limit-icon{
+  width:54px;height:54px;margin:0 auto 12px;border-radius:17px;display:grid;place-items:center;
+  font-size:1.45rem;background:linear-gradient(135deg,rgba(0,217,255,.19),rgba(24,116,255,.18));
+  border:1px solid rgba(69,198,255,.22)
+}
+.np-stock-limit-card h3{margin:0;color:#f4fbff;font-size:1.08rem;letter-spacing:-.01em}
+.np-stock-limit-card p{margin:8px auto 0;max-width:330px;color:#a9bfd7;font-size:.73rem;line-height:1.6}
+.product.np-reserved-out{border-color:rgba(255,190,61,.16)!important}
+.product.np-physical-out{opacity:.72}
+.product .badge.np-stock-badge{background:#ffbd3d!important;color:#241500!important}
+.product .badge.np-stock-badge.physical{background:#ff5e78!important;color:#fff!important}
+.product-actions .add:disabled{cursor:not-allowed!important;filter:saturate(.45)!important;opacity:.55!important;transform:none!important}
+.np-cart-expiry{display:block;margin-top:4px;color:#7493b4;font-size:.55rem;line-height:1.35}
+.np-cart-expiry strong{color:#9ec8e8;font-weight:800}
+.np-admin-session-hint{
+  position:fixed;right:14px;bottom:82px;z-index:1150;display:none;align-items:center;gap:7px;
+  padding:8px 11px;border-radius:999px;border:1px solid rgba(0,217,255,.14);
+  background:rgba(5,16,28,.9);backdrop-filter:blur(12px);color:#a9c6df;font-size:.57rem;font-weight:800;
+  box-shadow:0 10px 28px rgba(0,0,0,.25)
+}
+.np-admin-session-hint.show{display:flex}
+.np-admin-session-hint i{width:8px;height:8px;border-radius:50%;background:#20e879;box-shadow:0 0 0 4px rgba(32,232,121,.12)}
+@media(max-width:520px){
+  .np-stock-limit-card{padding:19px 16px;border-radius:21px}.np-stock-limit-card h3{font-size:.98rem}.np-stock-limit-card p{font-size:.68rem}
+  .np-admin-session-hint{right:10px;bottom:67px;font-size:.53rem;padding:7px 9px}
+}
+</style>
+<script>
+/* CRULOX v10.3 — ajustes visuales y flujo local de stock */
+(function(){
+  const NP_CART_TTL_MS=5*24*60*60*1000;
+  const NP_CART_SCHEMA=2;
+  let expiryTimer=null;
+  let stockNoticeTimer=null;
+
+  function now(){return Date.now()}
+  function cartItemType(item){return item?.type||'product'}
+  function productCartItem(id){return (state.cart||[]).find(item=>cartItemType(item)==='product'&&String(item.id)===String(id))||null}
+  function physicalStock(id){const p=state.products.find(x=>String(x.id)===String(id));return Math.max(0,Number(p?.stock||0))}
+  function reservedQty(id){return Math.max(0,Number(productCartItem(id)?.qty||0))}
+  function availableStock(id){return Math.max(0,physicalStock(id)-reservedQty(id))}
+  function expiryOf(item){
+    const rawAdded=item?.addedAt;
+    const parsedAdded=typeof rawAdded==='number'?rawAdded:Date.parse(rawAdded||'');
+    const added=Number.isFinite(parsedAdded)&&parsedAdded>0?parsedAdded:now();
+    const rawExpiry=item?.expiresAt;
+    const parsedExpiry=typeof rawExpiry==='number'?rawExpiry:Date.parse(rawExpiry||'');
+    return Number.isFinite(parsedExpiry)&&parsedExpiry>added?parsedExpiry:(added+NP_CART_TTL_MS);
+  }
+  function formatExpiry(ts){
+    try{const date=new Date(ts);return Number.isNaN(date.getTime())?'Fecha por confirmar':date.toLocaleString('es-GT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}catch(e){return'Fecha por confirmar'}
+  }
+  function normalizeCartTimes(){
+    let changed=false;
+    state.cart=(state.cart||[]).map(item=>{
+      if(item.addedAt&&item.expiresAt&&item.cartSchema===NP_CART_SCHEMA)return item;
+      const added=Number(item.addedAt||0)||now();changed=true;
+      return {...item,addedAt:added,expiresAt:Number(item.expiresAt||0)||(added+NP_CART_TTL_MS),cartSchema:NP_CART_SCHEMA};
+    });
+    if(changed)write(KEYS.cart,state.cart);
+    return changed;
+  }
+  function purgeExpiredCart(notify=false){
+    const before=(state.cart||[]).length;
+    const stamp=now();
+    state.cart=(state.cart||[]).filter(item=>expiryOf(item)>stamp);
+    const removed=before-state.cart.length;
+    if(removed){write(KEYS.cart,state.cart);if(notify)toast(removed===1?'Un artículo se eliminó del carrito porque superó el límite de 5 días.':`${removed} artículos se eliminaron del carrito porque superaron el límite de 5 días.`,'warn')}
+    return removed;
+  }
+  function scheduleExpiry(){
+    if(expiryTimer)clearTimeout(expiryTimer);
+    const expiries=(state.cart||[]).map(expiryOf).filter(ts=>ts>now()).sort((a,b)=>a-b);
+    if(!expiries.length)return;
+    const wait=Math.max(250,Math.min(expiries[0]-now()+60,2147483000));
+    expiryTimer=setTimeout(()=>{
+      const removed=purgeExpiredCart(true);
+      if(removed){purgeUnavailableCart(false);renderHeader();renderProducts();renderCart()}
+      scheduleExpiry();
+    },wait);
+  }
+  function showStockLimitNotice(product){
+    let root=document.getElementById('npStockLimitNotice');
+    if(!root){
+      root=document.createElement('div');root.id='npStockLimitNotice';root.className='np-stock-limit-notice';
+      root.innerHTML='<div class="np-stock-limit-card"><div class="np-stock-limit-icon">📦</div><h3>Límite de stock alcanzado</h3><p id="npStockLimitText">Ya no hay más unidades disponibles para reservar en este momento.</p></div>';
+      document.body.appendChild(root);
+    }
+    const text=root.querySelector('#npStockLimitText');
+    if(text)text.textContent=product?.name?`Has alcanzado el máximo disponible de ${product.name}. Las unidades reservadas permanecen en el carrito hasta completar la compra, eliminarlas o cumplir 5 días.`:'Ya no hay más unidades disponibles para reservar en este momento.';
+    root.classList.add('show');
+    if(stockNoticeTimer)clearTimeout(stockNoticeTimer);
+    stockNoticeTimer=setTimeout(()=>root.classList.remove('show'),2600);
+  }
+  function refreshCommerceViews(){
+    renderHeader();renderProducts();
+    if(document.getElementById('cartItems'))renderCart();
+  }
+
+  // ---------- Sesión administrativa: Tienda conserva sesión; Salir la elimina ----------
+  function ensureAdminSessionHint(){
+    let hint=document.getElementById('npAdminSessionHint');
+    if(!hint){hint=document.createElement('button');hint.type='button';hint.id='npAdminSessionHint';hint.className='np-admin-session-hint';hint.innerHTML='<i></i>';hint.setAttribute('aria-hidden','true');hint.tabIndex=-1;hint.onclick=()=>openAdmin('home');document.body.appendChild(hint)}
+    hint.classList.toggle('show',state.session?.role==='admin'&&!document.getElementById('adminOverlay')?.classList.contains('open'));
+  }
+  if($('adminStoreBtn'))$('adminStoreBtn').onclick=()=>{
+    $('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();ensureAdminSessionHint();
+    toast('Vista de tienda abierta. Tu sesión administrativa sigue activa.','success');
+  };
+  if($('adminLogout'))$('adminLogout').onclick=()=>{
+    state.session=null;write(KEYS.session,null);$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();ensureAdminSessionHint();toast('Sesión administrativa cerrada.','success');
+  };
+  const baseOpenAdminV102=openAdmin;
+  openAdmin=function(section='home'){
+    const result=baseOpenAdminV102(section);ensureAdminSessionHint();return result;
+  };
+  if($('profileBtn'))$('profileBtn').onclick=()=>{
+    if(state.session?.role==='admin')return openAdmin('home');
+    renderAccount();openModal('accountModal');
+  };
+  if($('drawerProfile'))$('drawerProfile').onclick=()=>{
+    closeAllPanels();if(state.session?.role==='admin')return openAdmin('home');renderAccount();openModal('accountModal');
+  };
+
+  // ---------- Estado de stock efectivo ----------
+  stockInfo=function(product){
+    const physical=Math.max(0,Number(product?.stock||0));
+    if(physical<=0)return ['Sin stock','out'];
+    const effective=availableStock(product?.id);
+    if(effective<=0)return ['Fuera de stock','out'];
+    if(effective<=Number(state.settings.lowStock||5))return ['Pocas unidades','low'];
+    return ['Disponible',''];
+  };
+
+  productCard=function(p){
+    const discount=p.oldPrice?Math.round((1-Number(p.price)/Number(p.oldPrice))*100):0;
+    const physical=Math.max(0,Number(p.stock||0));
+    const effective=availableStock(p.id);
+    const [stock,stockClass]=stockInfo(p);const fav=state.favorites.includes(p.id);
+    const unavailable=effective<=0;
+    const autoBadge=physical<=0?'SIN STOCK':unavailable?'FUERA DE STOCK':'';
+    const badge=autoBadge||p.badgeText||'';
+    const extraClass=physical<=0?' np-physical-out':unavailable?' np-reserved-out':'';
+    return `<article class="product${extraClass}" data-product="${esc(p.id)}"><div class="product-image"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" decoding="async"/>${badge?`<span class="badge ${autoBadge?'np-stock-badge':''} ${physical<=0?'physical':''}">${esc(badge)}</span>`:''}<button class="fav-btn ${fav?'active':''}" data-fav="${esc(p.id)}" aria-label="Favorito">${fav?'♥':'♡'}</button></div><div class="product-body"><span class="product-cat">${esc(p.category)}</span><h3>${esc(p.name)}</h3><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)})</span></div><div class="price-row"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}${discount?`<span class="discount">-${discount}%</span>`:''}</div><span class="stock ${stockClass}">${stock}</span><div class="product-actions"><button class="add" data-add="${esc(p.id)}" ${unavailable?'disabled':''}>${unavailable?'No disponible':'Añadir'}</button><button class="support" data-support="${esc(p.id)}" aria-label="WhatsApp">💬</button><button class="detail" data-detail="${esc(p.id)}">Detalles</button></div></div></article>`;
+  };
+
+  // ---------- Limpieza automática: expirados y stock físico agotado ----------
+  purgeUnavailableCart=function(notify=false){
+    normalizeCartTimes();purgeExpiredCart(false);
+    let removed=0,changed=false;const cleaned=[];
+    for(const item of state.cart||[]){
+      const type=cartItemType(item);
+      if(type==='combo'){cleaned.push(item);continue}
+      const product=state.products.find(p=>String(p.id)===String(item.id));
+      const stock=Math.max(0,Number(product?.stock||0));
+      if(!product||stock<=0){removed++;changed=true;continue}
+      const qty=Math.max(1,Math.min(Number(item.qty||1),stock));
+      if(qty!==Number(item.qty||1))changed=true;
+      cleaned.push({...item,type:'product',qty,addedAt:Number(item.addedAt||0)||now(),expiresAt:expiryOf(item),cartSchema:NP_CART_SCHEMA});
+    }
+    if(changed){state.cart=cleaned;write(KEYS.cart,state.cart)}
+    if(notify&&removed)toast(removed===1?'Se eliminó del carrito un producto que ya no tiene stock.':`Se eliminaron ${removed} productos del carrito porque ya no tienen stock.`,'warn');
+    scheduleExpiry();return removed;
+  };
+
+  // ---------- Reserva temporal al agregar ----------
+  addToCart=function(id,qty=1){
+    normalizeCartTimes();purgeExpiredCart(false);purgeUnavailableCart(false);
+    const p=state.products.find(x=>String(x.id)===String(id));
+    if(!p||physicalStock(id)<=0){refreshCommerceViews();showStockLimitNotice(p);return}
+    let item=productCartItem(id);const current=Math.max(0,Number(item?.qty||0));
+    const room=Math.max(0,physicalStock(id)-current);const wanted=Math.max(1,Number(qty||1));
+    if(room<=0){showStockLimitNotice(p);refreshCommerceViews();return}
+    const add=Math.min(room,wanted);const stamp=now();
+    if(item)item.qty=current+add;
+    else{item={type:'product',id:p.id,qty:add,addedAt:stamp,expiresAt:stamp+NP_CART_TTL_MS,cartSchema:NP_CART_SCHEMA};state.cart.push(item)}
+    write(KEYS.cart,state.cart);scheduleExpiry();refreshCommerceViews();toast(`${p.name} añadido al carrito.`,'success');
+    if(availableStock(id)<=0||add<wanted)showStockLimitNotice(p);
+  };
+
+  const baseAddComboV102=addCombo;
+  addCombo=function(combo){
+    if(!combo)return;normalizeCartTimes();purgeExpiredCart(false);
+    const existing=(state.cart||[]).find(x=>cartItemType(x)==='combo'&&x.id===combo.id);const stamp=now();
+    if(existing){existing.qty=Math.min(Number(existing.qty||0)+1,99);if(!existing.addedAt)existing.addedAt=stamp;if(!existing.expiresAt)existing.expiresAt=existing.addedAt+NP_CART_TTL_MS;existing.cartSchema=NP_CART_SCHEMA}
+    else state.cart.push({type:'combo',id:combo.id,qty:1,addedAt:stamp,expiresAt:stamp+NP_CART_TTL_MS,cartSchema:NP_CART_SCHEMA});
+    write(KEYS.cart,state.cart);scheduleExpiry();renderHeader();renderCart();toast(`${combo.name} añadido al carrito.`,'success');
+  };
+
+  changeQty=function(key,delta){
+    normalizeCartTimes();purgeExpiredCart(false);const {type,id}=parseCartKey(key);const item=(state.cart||[]).find(x=>cartItemType(x)===type&&String(x.id)===String(id));if(!item)return;
+    if(type==='combo')item.qty=Math.max(0,Math.min(Number(item.qty||0)+Number(delta||0),99));
+    else{
+      const p=state.products.find(x=>String(x.id)===String(id));if(!p||physicalStock(id)<=0){purgeUnavailableCart(true);refreshCommerceViews();return}
+      const current=Number(item.qty||0);
+      if(delta>0){const room=Math.max(0,physicalStock(id)-current);if(room<=0){showStockLimitNotice(p);return}item.qty=current+Math.min(Number(delta||1),room);if(item.qty>=physicalStock(id))showStockLimitNotice(p)}
+      else item.qty=Math.max(0,current+Number(delta||0));
+    }
+    if(Number(item.qty||0)<=0)state.cart=state.cart.filter(x=>!(cartItemType(x)===type&&String(x.id)===String(id)));
+    write(KEYS.cart,state.cart);scheduleExpiry();refreshCommerceViews();
+  };
+
+  removeCart=function(key){
+    const {type,id}=parseCartKey(key);state.cart=(state.cart||[]).filter(x=>!(cartItemType(x)===type&&String(x.id)===String(id)));write(KEYS.cart,state.cart);scheduleExpiry();refreshCommerceViews();
+  };
+
+  cartDetails=function(){
+    normalizeCartTimes();purgeExpiredCart(false);purgeUnavailableCart(false);
+    return (state.cart||[]).map(item=>{const type=cartItemType(item),data=cartEntity(type,item.id);if(!data)return null;if(type==='product'&&Number(data.stock||0)<=0)return null;return {...data,qty:Number(item.qty||1),addedAt:item.addedAt,expiresAt:expiryOf(item)}}).filter(Boolean);
+  };
+
+  renderCart=function(){
+    normalizeCartTimes();const expired=purgeExpiredCart(true);purgeUnavailableCart(true);if(expired)renderProducts();
+    const items=cartDetails();
+    $('cartItems').innerHTML=items.length?items.map(i=>{const key=cartKey(i);const sub=i.type==='combo'?'Combo reservado temporalmente':'Unidad reservada temporalmente';return `<article class="list-card"><img src="${esc(i.image)}" alt="${esc(i.name)}"/><div><h3>${esc(i.name)}</h3><p>${money(i.price)} · ${esc(sub)}</p><span class="np-cart-expiry">Reserva válida hasta <strong>${esc(formatExpiry(i.expiresAt))}</strong></span><div class="list-actions"><div class="qty"><button data-dec="${esc(key)}">−</button><span>${i.qty}</span><button data-inc="${esc(key)}">＋</button></div><button class="btn btn-red btn-sm" data-remove-cart="${esc(key)}">Eliminar</button></div></div><strong>${money(i.price*i.qty)}</strong></article>`}).join(''):'<div class="empty">Tu carrito está vacío.</div>';
+    const subtotal=items.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0);const promoResult=currentPromoResult(subtotal);const discount=promoResult?.discount||0;const total=Math.max(0,subtotal-discount);
+    if($('cartSubtotal'))$('cartSubtotal').textContent=money(subtotal);if($('cartDiscount'))$('cartDiscount').textContent=`-${money(discount)}`;if($('cartDiscountRow'))$('cartDiscountRow').hidden=!promoResult;$('cartTotal').textContent=money(total);
+    const input=$('promoCodeInput');if(input)input.value=state.appliedPromoCode||'';const message=$('promoMessage');if(message){if(promoResult){message.textContent=promoResult.message;message.className='promo-feedback success'}else{message.textContent='Los códigos activos se aplican antes de enviar el pedido.';message.className='promo-feedback'}}
+    const applyBtn=$('promoApplyBtn');if(applyBtn)applyBtn.onclick=applyPromoFromCart;if(input)input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();applyPromoFromCart()}};
+    $('cartItems').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));$('cartItems').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));$('cartItems').querySelectorAll('[data-remove-cart]').forEach(b=>b.onclick=()=>removeCart(b.dataset.removeCart));
+    scheduleExpiry();
+  };
+
+  // ---------- Detalle de producto: conserva galería/video existentes y aplica stock efectivo ----------
+  const baseOpenDetailV102=openDetail;
+  openDetail=function(id){
+    purgeExpiredCart(false);purgeUnavailableCart(false);baseOpenDetailV102(id);
+    const p=state.products.find(x=>String(x.id)===String(id));if(!p)return;
+    const effective=availableStock(id);const btn=$('detailAdd');const status=$('detailBody')?.querySelector('.stock-detail');
+    if(status){const info=stockInfo(p);status.textContent=info[0];status.classList.remove('out','low');if(info[1])status.classList.add(info[1])}
+    if(btn){btn.disabled=effective<=0;btn.textContent=effective<=0?'No disponible':'Añadir al carrito';btn.onclick=()=>{if(availableStock(id)<=0){showStockLimitNotice(p);return}addToCart(id);closeModal('detailModal')}}
+  };
+
+  // ---------- Confirmación de compra: descuenta stock físico ----------
+  submitOrder=async function(event){
+    event?.preventDefault?.();if(npOrderSubmissionLocked)return toast('El pedido ya se está procesando.','warn');
+    const user=currentUser();if(!user)return openCheckout();normalizeCartTimes();purgeExpiredCart(true);purgeUnavailableCart(true);const items=cartDetails();if(!items.length)return toast('Tu carrito está vacío.','warn');
+    const invalid=items.find(item=>item.type!=='combo'&&physicalStock(item.id)<Number(item.qty||0));
+    if(invalid){purgeUnavailableCart(true);refreshCommerceViews();showStockLimitNotice(invalid);return}
+    npOrderSubmissionLocked=true;const button=$('checkoutForm')?.querySelector('[type="submit"]');if(button){button.disabled=true;button.dataset.originalText=button.textContent;button.textContent='Confirmando pedido…'}
+    try{
+      const order=buildOrder(user,items,$('coNotes')?.value||'');registerOrder(order);
+      for(const item of items){if(item.type==='combo')continue;const p=state.products.find(x=>String(x.id)===String(item.id));if(p)p.stock=Math.max(0,Number(p.stock||0)-Number(item.qty||0))}
+      write(KEYS.products,state.products);
+      if(order.promotion){const promo=findPromo(order.promotion.code);if(promo){promo.uses=Number(promo.uses||0)+1;write(NP_PROMOS_KEY,state.promos)}}
+      state.cart=[];state.appliedPromoCode='';write(KEYS.cart,state.cart);write(NP_APPLIED_PROMO_KEY,'');scheduleExpiry();renderStore();renderHeader();renderCart();closeModal('checkoutModal');if($('coNotes'))$('coNotes').value='';toast(`Pedido ${order.id} confirmado correctamente.`,'success');
+    }catch(error){console.error('Order submission',error);showModalNotice('No fue posible confirmar el pedido. Intenta nuevamente.','error','checkoutModal')}
+    finally{setTimeout(()=>{npOrderSubmissionLocked=false;if(button){button.disabled=false;button.textContent=button.dataset.originalText||'Enviar pedido'}},900)}
+  };
+  if($('checkoutForm'))$('checkoutForm').onsubmit=submitOrder;
+
+  // Sincronización local entre pestañas del mismo origen.
+  window.addEventListener('storage',event=>{
+    if(event.key===KEYS.products){state.products=read(KEYS.products,state.products);purgeUnavailableCart(true);renderStore();renderHeader();renderCart()}
+    if(event.key===KEYS.cart){state.cart=read(KEYS.cart,[]);normalizeCartTimes();purgeExpiredCart(false);renderHeader();renderProducts();renderCart();scheduleExpiry()}
+    if(event.key===KEYS.session){state.session=read(KEYS.session,null);renderHeader();ensureAdminSessionHint()}
+  });
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden){const changed=purgeExpiredCart(true)+purgeUnavailableCart(true);if(changed)refreshCommerceViews();scheduleExpiry()}});
+
+  // Migración/limpieza inicial.
+  normalizeCartTimes();const cleanedAtStart=purgeExpiredCart(false)+purgeUnavailableCart(false);scheduleExpiry();ensureAdminSessionHint();
+  if(cleanedAtStart){renderHeader();renderProducts();renderCart()}
+})();
+</script>
+<script>
+/* v10.2.1 — sincronización final al volver de administración y al redibujar tienda */
+(function(){
+  const baseRenderStoreV102=renderStore;
+  renderStore=function(){
+    try{purgeUnavailableCart(false)}catch(e){}
+    return baseRenderStoreV102();
+  };
+  if($('adminStoreBtn'))$('adminStoreBtn').onclick=()=>{
+    $('adminOverlay').classList.remove('open');document.body.classList.remove('lock');
+    renderStore();renderHeader();
+    const hint=document.getElementById('npAdminSessionHint');if(hint)hint.classList.toggle('show',state.session?.role==='admin');
+    toast('Vista de tienda abierta. Tu sesión administrativa sigue activa.','success');
+  };
+})();
+</script>
+
+<style id="np-admin-v104-polish">
+/* CRULOX v10.4 — panel limpio, controles propios y gestión visual de imágenes */
+.admin-overlay,.admin-shell,.admin-main{background:#030914!important}
+.admin-sidebar{background:#06111e!important;box-shadow:none!important;border-color:rgba(111,188,255,.08)!important}
+.admin-brand-row{padding:10px 14px 4px!important}
+.admin-brand{width:178px!important;height:44px!important;margin:0!important}
+.admin-nav{padding:6px 14px 10px!important;gap:8px!important}
+.admin-nav button{min-height:42px!important;border-radius:15px!important;background:#081522!important;border:1px solid rgba(122,193,255,.09)!important;box-shadow:none!important}
+.admin-nav button.active,.admin-nav button:hover{background:linear-gradient(135deg,#13d9ff,#168cff)!important;color:#03101a!important;border-color:transparent!important;box-shadow:0 10px 26px rgba(0,174,255,.16)!important}
+.admin-top{min-height:66px!important;padding:10px 16px!important;background:rgba(3,9,20,.96)!important;box-shadow:none!important}
+.admin-content{padding:16px!important;max-width:1360px!important}
+.admin-content>*+*{margin-top:18px!important}
+.admin-card,.np-v10-compact-card,.np-v10-report,.np-v10-module-banner,.np-v10-commandbar,.np-v10-kpi,.np-v10-record,.np-v10-audit,.np-v10-module-link,.np-v10-module,.np-v10-tool-card{
+  background:#081522!important;border:1px solid rgba(125,194,255,.09)!important;box-shadow:none!important
+}
+.admin-card{padding:16px!important;border-radius:20px!important}
+.admin-card[style*="margin-top:0"]{margin-top:0!important}
+.admin-card-head{margin-bottom:14px!important}
+.admin-card-sub{line-height:1.55!important}
+.np-v10-home-bottom,.np-v10-modules,.np-v10-module-links,.np-v10-records,.np-v10-audit-list,.admin-list,.admin-stack{gap:14px!important}
+.np-v10-section-head{margin:24px 0 12px!important}
+.np-v10-commandbar{padding:12px!important;border-radius:18px!important}
+.np-v10-commandbar .btn{min-height:46px!important}
+.np-v10-module,.np-v10-module-link{border-radius:18px!important}
+.np-v10-kpis{gap:14px!important;margin-bottom:18px!important}
+.np-v10-kpi{padding:15px!important;border-radius:18px!important}
+.np-v10-record{padding:15px!important;border-radius:18px!important}
+.np-v10-record+.np-v10-record{margin-top:0!important}
+.admin-detail-summary,.admin-record-list{gap:14px!important}
+.admin-record{background:#081522!important;border-color:rgba(125,194,255,.09)!important;box-shadow:none!important}
+.table-wrap{background:#06111e!important;border-color:rgba(125,194,255,.09)!important;box-shadow:none!important}
+th{background:#091828!important}
+tr:hover td{background:rgba(0,217,255,.025)}
+.notice,.admin-note{background:rgba(255,190,69,.055)!important;border-color:rgba(255,190,69,.15)!important}
+
+/* Campos uniformes: nada blanco ni controles del sistema visibles */
+.admin-overlay input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.admin-overlay textarea,
+.admin-overlay select,
+.modal input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.modal textarea,
+.modal select{
+  color-scheme:dark!important;background:#0a1a2b!important;color:#edf7ff!important;border:1px solid rgba(132,198,255,.13)!important;border-radius:14px!important;box-shadow:none!important
+}
+.admin-overlay input::placeholder,.admin-overlay textarea::placeholder,.modal input::placeholder,.modal textarea::placeholder{color:#6f88a5!important}
+.admin-overlay input:focus,.admin-overlay textarea:focus,.modal input:focus,.modal textarea:focus{border-color:rgba(0,217,255,.48)!important;box-shadow:0 0 0 3px rgba(0,217,255,.08)!important}
+.admin-overlay select.np-native-select,.modal select.np-native-select{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important;padding:0!important;border:0!important}
+
+.np-custom-select{position:relative;min-width:0;width:100%}
+.np-custom-select-trigger{width:100%;min-height:44px;padding:10px 42px 10px 12px;border-radius:14px;border:1px solid rgba(132,198,255,.13);background:#0a1a2b;color:#edf7ff;text-align:left;font-weight:750;position:relative}
+.np-custom-select-trigger::after{content:'⌄';position:absolute;right:14px;top:50%;transform:translateY(-54%);color:#6edfff;font-size:1rem}
+.np-custom-select.open .np-custom-select-trigger{border-color:rgba(0,217,255,.48);box-shadow:0 0 0 3px rgba(0,217,255,.08)}
+.np-custom-select-menu{position:absolute;z-index:25050;left:0;right:0;top:calc(100% + 7px);display:none;max-height:270px;overflow:auto;padding:6px;border-radius:15px;background:#071522;border:1px solid rgba(92,190,255,.18);box-shadow:0 22px 55px rgba(0,0,0,.55)}
+.np-custom-select.open .np-custom-select-menu{display:grid;gap:4px}
+.np-custom-select-option{border:0;border-radius:11px;background:transparent;color:#dcecff;text-align:left;padding:10px 11px;font-weight:700;font-size:.72rem}
+.np-custom-select-option:hover,.np-custom-select-option.active{background:rgba(0,217,255,.11);color:#72eaff}
+.np-custom-select-option:disabled{opacity:.45}
+
+/* Gestor visual de multimedia */
+.np-media-manager{display:grid;gap:10px;margin-top:2px}
+.np-media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.np-media-grid.one{grid-template-columns:minmax(0,320px)}
+.np-media-slot{position:relative;min-width:0;aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#06111e;border:1px solid rgba(92,190,255,.14);display:grid;place-items:center}
+.np-media-slot img{width:100%;height:100%;object-fit:contain;background:radial-gradient(circle at 50% 35%,rgba(0,217,255,.08),transparent 48%),#06111e;padding:8px}
+.np-media-slot.empty{border-style:dashed;color:#6e89a7;aspect-ratio:4/3}
+.np-media-slot.empty::before{content:'Imagen disponible aquí';font-size:.68rem;font-weight:750}
+.np-media-slot-label{position:absolute;left:8px;top:8px;padding:5px 8px;border-radius:999px;background:rgba(2,9,17,.78);border:1px solid rgba(255,255,255,.08);font-size:.55rem;color:#d8ebff;font-weight:800}
+.np-media-slot-actions{position:absolute;right:8px;bottom:8px;display:flex;gap:6px}
+.np-media-slot-actions button,.np-media-pick{border:1px solid rgba(99,195,255,.16);border-radius:11px;background:rgba(5,17,29,.92);color:#e9f7ff;padding:7px 9px;font-size:.6rem;font-weight:850}
+.np-media-slot-actions button:hover,.np-media-pick:hover{border-color:rgba(0,217,255,.42);color:#72eaff}
+.np-media-slot-actions .danger{color:#ff7793;border-color:rgba(255,92,125,.18)}
+.np-media-input{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important}
+.np-media-help{font-size:.61rem;color:#7f9ab8;line-height:1.55}
+.np-media-toolbar{display:flex;gap:8px;flex-wrap:wrap}
+.np-media-preview-card{display:grid;grid-template-columns:88px minmax(0,1fr);gap:12px;align-items:center;padding:10px;border-radius:16px;background:#06111e;border:1px solid rgba(103,194,255,.1)}
+.np-media-preview-card img{width:88px;height:66px;object-fit:contain;border-radius:11px;background:#030914;padding:5px}
+.np-media-preview-card h4{font-size:.74rem;margin:0 0 4px}.np-media-preview-card p{font-size:.59rem;color:#7f9ab8;line-height:1.45}
+.np-generic-file{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.np-generic-file input[type=file]{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}.np-generic-file-name{font-size:.61rem;color:#86a0bd}
+
+/* Más aire entre funciones sin crear bloques gigantes */
+.np-admin-subnav{margin:0 0 18px!important;gap:8px!important}
+.np-admin-subnav button{background:#081522!important;border:1px solid rgba(126,197,255,.09)!important;box-shadow:none!important}
+.np-v10-module-page>.np-v10-compact-card{margin-top:18px!important}
+.np-v10-tools-head{margin-bottom:16px!important}
+.form-grid{gap:13px!important}.field{gap:7px!important}.form-actions{margin-top:16px!important;gap:10px!important}
+
+@media(max-width:900px){
+  .admin-sidebar{padding:8px 10px!important;min-height:0!important;height:auto!important}
+  .admin-brand-row{padding:4px 4px 2px!important}.admin-brand{width:150px!important;height:39px!important}
+  .admin-nav{padding:5px 2px 8px!important;gap:6px!important;grid-template-columns:repeat(4,minmax(116px,1fr))!important;overflow-x:auto!important}
+  .admin-nav button{min-height:39px!important;padding:8px 10px!important}
+  .admin-content{padding:12px!important}
+}
+@media(max-width:620px){
+  .admin-top{padding:10px 12px!important}.admin-top h1{font-size:1.05rem!important}
+  .admin-content>*+*{margin-top:16px!important}
+  .np-media-grid{grid-template-columns:1fr 1fr;gap:8px}.np-media-slot-actions{right:6px;bottom:6px}.np-media-slot-actions button{padding:6px 7px}
+  .form-grid{gap:11px!important}.admin-card{padding:13px!important}
+}
+@media(max-width:390px){.np-media-grid{grid-template-columns:1fr}.np-media-slot{aspect-ratio:16/10}.np-media-grid.one{grid-template-columns:1fr}}
+</style>
+<script>
+/* CRULOX v10.4 — sincronización panel/tienda + controles administrativos visuales */
+(function(){
+  const nextTick=fn=>{if(typeof queueMicrotask==='function')queueMicrotask(fn);else setTimeout(fn,0)};
+  let syncing=false,syncQueued=false;
+
+  function syncPublicStore(reason=''){
+    if(syncing)return;syncing=true;
+    try{
+      if(typeof applySettings==='function')applySettings();
+      const slogan=document.querySelector('.hero-brand-slogan');if(slogan)slogan.textContent=state.settings?.slogan||'Plataformas Digitales';
+      if(typeof renderHeader==='function')renderHeader();
+      if(typeof renderCategories==='function')renderCategories();
+      if(typeof renderProducts==='function')renderProducts();
+      if(typeof renderCombos==='function')renderCombos();
+      if(typeof renderFaqs==='function')renderFaqs();
+      if(typeof renderCart==='function')renderCart();
+      if(typeof renderFavorites==='function')renderFavorites();
+    }catch(error){console.warn('NovaPrime sync',reason,error)}finally{syncing=false}
+  }
+  function queueStoreSync(reason){if(syncQueued)return;syncQueued=true;nextTick(()=>{syncQueued=false;syncPublicStore(reason)})}
+
+  /* Cada cambio comercial realizado desde el panel se refleja también en la vista pública local. */
+  const baseWriteV104=write;
+  write=function(key,value){
+    const result=baseWriteV104(key,value);
+    if([KEYS.products,KEYS.combos,KEYS.faqs,KEYS.settings,NP_PROMOS_KEY].includes(key))queueStoreSync(key);
+    return result;
+  };
+
+  const baseApplySettingsV104=applySettings;
+  applySettings=function(){
+    const result=baseApplySettingsV104();
+    const slogan=document.querySelector('.hero-brand-slogan');if(slogan)slogan.textContent=state.settings?.slogan||'Plataformas Digitales';
+    const heroLogo=document.querySelector('.hero-brand-top img');if(heroLogo)heroLogo.src=state.settings?.heroLogoData||BRAND_LOGO;
+    return result;
+  };
+
+  /* SELECT propio: evita el cuadro blanco/tosco del navegador Android. */
+  const selectRegistry=new WeakMap();
+  function closeAdminSelects(except){document.querySelectorAll('.np-custom-select.open').forEach(el=>{if(el!==except)el.classList.remove('open')})}
+  function upgradeSelect(select){
+    if(!select||selectRegistry.has(select)||select.closest('.np-custom-select'))return;
+    if(!select.closest('.admin-overlay')&&!select.closest('.modal'))return;
+    const wrap=document.createElement('div');wrap.className='np-custom-select';
+    const trigger=document.createElement('button');trigger.type='button';trigger.className='np-custom-select-trigger';
+    const menu=document.createElement('div');menu.className='np-custom-select-menu';menu.setAttribute('role','listbox');
+    select.parentNode.insertBefore(wrap,select);wrap.appendChild(select);wrap.appendChild(trigger);wrap.appendChild(menu);select.classList.add('np-native-select');
+    const paint=()=>{
+      const options=[...select.options];const current=options.find(o=>o.value===select.value)||options[select.selectedIndex]||options[0];trigger.textContent=current?.textContent||'Seleccionar';
+      menu.innerHTML=options.map((o,i)=>`<button type="button" class="np-custom-select-option ${o.value===select.value?'active':''}" data-index="${i}" ${o.disabled?'disabled':''}>${esc(o.textContent)}</button>`).join('');
+      menu.querySelectorAll('[data-index]').forEach(btn=>btn.onclick=e=>{e.stopPropagation();const option=select.options[Number(btn.dataset.index)];if(!option||option.disabled)return;select.value=option.value;select.dispatchEvent(new Event('change',{bubbles:true}));paint();wrap.classList.remove('open')});
+    };
+    trigger.onclick=e=>{e.stopPropagation();const opening=!wrap.classList.contains('open');closeAdminSelects(wrap);wrap.classList.toggle('open',opening)};
+    select.addEventListener('change',paint);paint();selectRegistry.set(select,{wrap,paint});
+  }
+  function upgradeAllSelects(root=document){root.querySelectorAll?.('.admin-overlay select,.modal select').forEach(upgradeSelect)}
+  document.addEventListener('click',()=>{if(document.getElementById('adminOverlay')?.classList.contains('open')||document.querySelector('.modal-overlay.open'))closeAdminSelects()});
+
+  /* Inputs de archivo genéricos quedan como botones oscuros; los gestores de imagen tienen UI propia. */
+  function upgradeFileInput(input){
+    if(!input||input.dataset.npFileStyled==='1'||input.classList.contains('np-media-input'))return;
+    if(!input.closest('.admin-overlay')&&!input.closest('.modal'))return;
+    input.dataset.npFileStyled='1';const host=document.createElement('div');host.className='np-generic-file';
+    input.parentNode.insertBefore(host,input);host.appendChild(input);
+    const label=document.createElement('label');label.className='np-media-pick';label.htmlFor=input.id;label.textContent=input.accept?.includes('image')?'Seleccionar imagen':'Seleccionar archivo';
+    const name=document.createElement('span');name.className='np-generic-file-name';name.textContent='Ningún archivo seleccionado';host.append(label,name);
+    input.addEventListener('change',()=>name.textContent=input.files?.length?[...input.files].map(f=>f.name).join(', '):'Ningún archivo seleccionado');
+  }
+  function upgradeAllFiles(root=document){root.querySelectorAll?.('.admin-overlay input[type=file],.modal input[type=file]').forEach(upgradeFileInput)}
+  function upgradeAdminControls(root=document){upgradeAllSelects(root);upgradeAllFiles(root)}
+  let controlsFrame=0;const controlsRoots=new Set();
+  const observer=new MutationObserver(mutations=>{
+    for(const m of mutations)for(const node of m.addedNodes)if(node.nodeType===1)controlsRoots.add(node);
+    if(controlsFrame||!controlsRoots.size)return;
+    controlsFrame=requestAnimationFrame(()=>{controlsFrame=0;const roots=[...controlsRoots];controlsRoots.clear();roots.forEach(root=>upgradeAdminControls(root))});
+  });
+  [document.getElementById('adminOverlay'),...document.querySelectorAll('.modal-overlay')].filter(Boolean).forEach(root=>observer.observe(root,{childList:true,subtree:true}));
+
+  /* ---------- Producto: 2 imágenes visuales, jamás base64 expuesto en una barra ---------- */
+  function productMediaSlot(index,src){
+    const n=index+1;return `<div class="np-media-slot ${src?'':'empty'}" data-product-media-slot="${index}">${src?`<img src="${esc(src)}" alt="Imagen ${n} del producto">`:''}<span class="np-media-slot-label">Imagen ${n}</span><div class="np-media-slot-actions"><label class="np-media-pick" for="pfFile${n}">${src?'Cambiar':'Añadir'}</label>${src?`<button type="button" class="danger" data-remove-pf-image="${index}">Eliminar</button>`:''}</div><input class="np-media-input" id="pfFile${n}" type="file" accept="image/*"></div>`;
+  }
+  function productFormV104(product=null){
+    const p=normalizeProductMediaRecord(product||{id:'',name:'',category:'',price:'',oldPrice:'',stock:0,rati

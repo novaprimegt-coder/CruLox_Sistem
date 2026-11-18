@@ -1,0 +1,1697 @@
+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","description":"Programa educativo para adultos enfocado en sexualidad, comunicación, intimidad y comprensión del placer femenino. Reserva previa de la Versión 1.","badge":"custom","badgeText":"Reserva Q100","featured":true},{"id":"ff-110","name":"110 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":10,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 110 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"110 diamantes","featured":true},{"id":"ff-341","name":"341 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":32,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 341 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"341 diamantes","featured":false},{"id":"ff-572","name":"572 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":47,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 572 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"572 diamantes","featured":true},{"id":"ff-1166","name":"1166 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":87,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 1166 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"1166 diamantes","featured":true},{"id":"ff-2398","name":"2398 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":165,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 2398 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"2398 diamantes","featured":false},{"id":"ff-6160","name":"6160 Diamantes Free Fire","category":"Diamantes","digitalType":"Recarga de juego","platform":"Free Fire","duration":"Recarga digital","deliveryMode":"Recarga coordinada","requiresData":"ID del jugador y región/servidor si aplica","availabilityMode":"unlimited","stock":9999,"price":400,"oldPrice":null,"rating":5,"reviews":0,"image":FREEFIRE_PRODUCT_IMAGE,"description":"Recarga digital de 6160 diamantes Free Fire. Verifica tu ID de jugador antes de enviar el pedido.","badge":"custom","badgeText":"6160 diamantes","featured":false}];
+const DEFAULT_COMBOS=[];
+const DEFAULT_FAQS=[{"id":"f1","q":"¿Cómo recibo mi compra?","a":"Todos los servicios de CRULOX se entregan o activan de forma digital. La información se coordina por WhatsApp, correo o el canal indicado para cada servicio."},{"id":"f2","q":"¿Qué datos debo enviar?","a":"Depende del servicio. Por ejemplo, una recarga puede requerir tu ID de jugador; una suscripción o curso puede requerir correo o datos de contacto. La tienda te indica qué información es necesaria antes de confirmar."},{"id":"f3","q":"¿Cuánto tarda la activación?","a":"El tiempo depende del servicio y de la disponibilidad. Antes de confirmar el pago se te informa cómo se realizará la activación o entrega digital."},{"id":"f4","q":"¿Qué métodos de pago aceptan?","a":"Banrural, Banco Industrial, Banco Azteca, PayPal y remesas."},{"id":"f5","q":"¿Realizan envíos físicos?","a":"No. CRULOX vende únicamente productos y servicios digitales: perfiles, suscripciones, recargas, cursos y otros accesos digitales."}];
+const DEFAULT_SETTINGS={"storeName":"CRULOX","slogan":"Plataformas Digitales","subtitle":"Compra digital simple, segura y transparente.\nDe Guatemala al mundo: un marketplace confiable.","email":"","facebookUrl":"","instagramUrl":"","tiktokUrl":"","supportBotUrl":"https://wa.me/50230983655","supportVariable":"Consulta","orderBotUrl":"https://wa.me/50230983655","orderVariable":"Pedido digital","orderJsonVariable":"PedidoJSON","currency":"Q","lowStock":3,"shippingText":"Entrega 100% digital","paymentText":"Banrural · Industrial · Azteca · PayPal · Remesas","returnText":"Condiciones según cada servicio digital","whatsappPhone":"+502 30983655","socialHandle":"crulox","paymentMethods":"Banrural, Industrial, Azteca, PayPal, Remesas","activationText":"Activación o entrega digital coordinada","digitalPolicy":"No realizamos entregas físicas. Cada servicio indica sus datos requeridos, disponibilidad y forma de activación."};
+const ADMIN_EMAIL='admin-separado@crulox.invalid';
+const ADMIN_PASSWORD_HASH='9c3b83eb1b39297606a1d599f17c6900f2e9f3df65fee429b5537edbaa91a52b';
+const KEYS={products:'jm_digital_v1_products',combos:'jm_digital_v1_bundles',faqs:'jm_digital_v1_faqs',settings:'jm_digital_v1_settings',users:'jm_digital_v1_users',orders:'jm_digital_v1_orders',session:'jm_digital_v1_session',cart:'jm_digital_v1_cart',favorites:'jm_digital_v1_favorites',activity:'jm_digital_v1_activity'};
+const CRUZCLICK_BRAND_MIGRATION='cruzclick_brand_v370';
+(function migrateCruzClickBrand(){
+  try{if(localStorage.getItem(CRUZCLICK_BRAND_MIGRATION)==='1')return}catch(e){}
+  const oldName=['JM',' Cruz',' L.',' Digital'].join('');
+  const oldHandle=['jm','cruzl','digital'].join('');
+  const oldSocial=new Set([
+    'https://facebook.com/'+oldHandle,
+    'https://instagram.com/'+oldHandle,
+    'https://www.tiktok.com/@'+oldHandle
+  ]);
+  const migrate=value=>{
+    if(typeof value==='string'){
+      if(oldSocial.has(value))return '';
+      return value.split(oldName).join('CRULOX').split(oldHandle).join('cruzclick');
+    }
+    if(Array.isArray(value))return value.map(migrate);
+    if(value&&typeof value==='object'){
+      Object.keys(value).forEach(k=>{value[k]=migrate(value[k])});
+      return value;
+    }
+    return value;
+  };
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);if(!key)continue;
+      const raw=localStorage.getItem(key);if(!raw||(!raw.includes(oldName)&&!raw.includes(oldHandle)))continue;
+      try{localStorage.setItem(key,JSON.stringify(migrate(JSON.parse(raw))))}
+      catch(e){localStorage.setItem(key,migrate(raw))}
+    }
+    localStorage.setItem(CRUZCLICK_BRAND_MIGRATION,'1');
+  }catch(e){console.warn('CRULOX brand migration',e)}
+})();
+const $=id=>document.getElementById(id);
+const LOGO_PLACEHOLDER='data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';document.querySelectorAll(`img[src="${LOGO_PLACEHOLDER}"]`).forEach(img=>{img.src=BRAND_LOGO});const favicon=document.querySelector('link[rel="icon"]');if(favicon)favicon.href=BRAND_LOGO;
+const clone=v=>JSON.parse(JSON.stringify(v));
+function read(key,fallback){try{const raw=localStorage.getItem(key);return raw?JSON.parse(raw):clone(fallback)}catch(e){console.warn('Storage read',key,e);return clone(fallback)}}
+function readArray(key,fallback=[]){const value=read(key,fallback);return Array.isArray(value)?value:clone(fallback)}
+function readObject(key,fallback={}){const value=read(key,fallback);return value&&typeof value==='object'&&!Array.isArray(value)?value:clone(fallback)}
+function readSession(key){const value=read(key,null);return value===null||(value&&typeof value==='object'&&!Array.isArray(value))?value:null}
+function write(key,value){try{localStorage.setItem(key,JSON.stringify(value));try{window.CruzClickFirebase?.queueLocalWrite?.(key,value)}catch(_fb){}return true}catch(e){console.warn('Storage write',key,e);toast('No fue posible guardar los cambios.','error');return false}}
+let state={products:readArray(KEYS.products,DEFAULT_PRODUCTS),combos:readArray(KEYS.combos,DEFAULT_COMBOS),faqs:readArray(KEYS.faqs,DEFAULT_FAQS),settings:{...DEFAULT_SETTINGS,...readObject(KEYS.settings,{})},users:readArray(KEYS.users,[]),orders:readArray(KEYS.orders,[]),session:readSession(KEYS.session),cart:readArray(KEYS.cart,[]),favorites:readArray(KEYS.favorites,[]),activity:readArray(KEYS.activity,[]),category:'all',query:'',activeSuggestion:-1,adminSection:'dashboard'};
+const CRULOX_BRAND_MIGRATION_KEY='crulox-brand-v1';
+(function enforceCruloxBrand(){
+  const replaceBrand=value=>{
+    if(typeof value==='string'){
+      return value
+        .replace(/Cruz\s*Click/gi,'CRULOX')
+        .replace(/CRULOX/gi,'CRULOX')
+        .replace(/CRULOX/gi,'CRULOX')
+        .replace(/@crulox/gi,'@crulox')
+        .replace(/cruzclick/gi,'crulox');
+    }
+    if(Array.isArray(value))return value.map(replaceBrand);
+    if(value&&typeof value==='object'){Object.keys(value).forEach(k=>{value[k]=replaceBrand(value[k])});return value}
+    return value;
+  };
+  try{
+    for(let i=0;i<localStorage.length;i++){
+      const key=localStorage.key(i);if(!key)continue;
+      const raw=localStorage.getItem(key);
+      if(!raw||(!/Cruz\s*Click|CRULOX|CRULOX|cruzclick/i.test(raw)))continue;
+      try{localStorage.setItem(key,JSON.stringify(replaceBrand(JSON.parse(raw))))}catch(e){localStorage.setItem(key,replaceBrand(raw))}
+    }
+  }catch(e){}
+  state.settings=replaceBrand(state.settings||{});
+  state.settings.storeName='CRULOX';
+  state.settings.slogan='Plataformas Digitales';
+  state.settings.socialHandle='crulox';
+  state.settings.subtitle='Compra digital simple, segura y transparente.\nDe Guatemala al mundo: un marketplace confiable.';
+  if(!state.settings.heroLogoData || /Cruz\s*Click|CRULOX|CRULOX|cruzclick/i.test(String(state.settings.heroLogoData||'')) || String(state.settings.heroLogoData||'').startsWith('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAD5')){
+    state.settings.heroLogoData=BRAND_LOGO_FULL;
+  }
+  try{localStorage.setItem(KEYS.settings,JSON.stringify(state.settings));localStorage.setItem(CRULOX_BRAND_MIGRATION_KEY,'1')}catch(e){}
+})();
+const NP_MEDIA_MIGRATION_KEY='jm_digital_v1_media_optimized';
+const LEGACY_BRAND_PREFIX='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAA+gAAAD5';
+function isRasterDataUrl(value){return typeof value==='string'&&/^data:image\/(?:png|jpe?g|webp);base64,/i.test(value)}
+function readFileAsDataUrl(file){return new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(reader.error||new Error('No se pudo leer la imagen'));reader.readAsDataURL(file)})}
+function optimizeImageDataUrl(dataUrl,{maxWidth=1400,maxHeight=1400,quality=.9}={}){
+  return new Promise(resolve=>{
+    if(!isRasterDataUrl(dataUrl)||dataUrl.length<120000){resolve(dataUrl);return}
+    const image=new Image();
+    image.onload=()=>{
+      try{
+        const scale=Math.min(1,maxWidth/image.naturalWidth,maxHeight/image.naturalHeight);
+        const width=Math.max(1,Math.round(image.naturalWidth*scale));
+        const height=Math.max(1,Math.round(image.naturalHeight*scale));
+        const canvas=document.createElement('canvas');canvas.width=width;canvas.height=height;
+        const ctx=canvas.getContext('2d',{alpha:true});
+        if(!ctx){resolve(dataUrl);return}
+        ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(image,0,0,width,height);
+        let optimized='';
+        try{optimized=canvas.toDataURL('image/webp',quality)}catch(error){}
+        if(!optimized||optimized==='data:,'){
+          try{optimized=canvas.toDataURL('image/jpeg',quality)}catch(error){}
+        }
+        resolve(optimized&&optimized.length<dataUrl.length?optimized:dataUrl);
+        canvas.width=1;canvas.height=1;
+      }catch(error){resolve(dataUrl)}
+    };
+    image.onerror=()=>resolve(dataUrl);
+    image.src=dataUrl;
+  })
+}
+async function optimizeImageFile(file,options){const dataUrl=await readFileAsDataUrl(file);return optimizeImageDataUrl(dataUrl,options)}
+function migrateLegacyBuiltInLogo(){
+  const value=state.settings&&state.settings.heroLogoData;
+  if(typeof value==='string'&&value.startsWith(LEGACY_BRAND_PREFIX)){
+    state.settings.heroLogoData='';
+    try{localStorage.setItem(KEYS.settings,JSON.stringify(state.settings))}catch(error){}
+  }
+  state.combos=(state.combos||[]).map(combo=>typeof combo.image==='string'&&combo.image.startsWith(LEGACY_BRAND_PREFIX)?{...combo,image:''}:combo);
+}
+async function migrateHeavyStoredMedia(){
+  if(localStorage.getItem(NP_MEDIA_MIGRATION_KEY)==='1')return false;
+  let changed=false;
+  for(const product of state.products||[]){
+    if(isRasterDataUrl(product.image)&&product.image.length>180000){const next=await optimizeImageDataUrl(product.image,{maxWidth:1400,maxHeight:1400,quality:.9});if(next!==product.image){product.image=next;changed=true}}
+  }
+  for(const combo of state.combos||[]){
+    if(isRasterDataUrl(combo.image)&&combo.image.length>180000){const next=await optimizeImageDataUrl(combo.image,{maxWidth:1600,maxHeight:1600,quality:.9});if(next!==combo.image){combo.image=next;changed=true}}
+  }
+  if(isRasterDataUrl(state.settings.heroLogoData)&&state.settings.heroLogoData.length>120000){const next=await optimizeImageDataUrl(state.settings.heroLogoData,{maxWidth:1000,maxHeight:350,quality:.94});if(next!==state.settings.heroLogoData){state.settings.heroLogoData=next;changed=true}}
+  if(changed){write(KEYS.products,state.products);write(KEYS.combos,state.combos);write(KEYS.settings,state.settings)}
+  try{localStorage.setItem(NP_MEDIA_MIGRATION_KEY,'1')}catch(error){}
+  return changed;
+}
+function releaseTransientWebViewResources(){
+  try{const frame=$('fullFrame');if(frame){frame.removeAttribute('src');frame.srcdoc=''}}catch(error){}
+  try{closeSuggestions()}catch(error){}
+  try{document.querySelectorAll('.toast').forEach(el=>el.remove())}catch(error){}
+}
+migrateLegacyBuiltInLogo();
+
+function cleanBuiltInProductImage(src){
+  if(typeof src!=='string'||!src.startsWith('data:image/svg+xml')||!/%3Ctext/i.test(src))return src;
+  try{
+    const comma=src.indexOf(',');
+    if(comma<0)return src;
+    const prefix=src.slice(0,comma+1);
+    let svg=decodeURIComponent(src.slice(comma+1));
+    svg=svg.replace(/<text\b[^>]*>[\s\S]*?<\/text>/gi,'');
+    return prefix+encodeURIComponent(svg);
+  }catch(error){return src}
+}
+{
+  let cleaned=false;
+  state.products=state.products.map(product=>{
+    const image=cleanBuiltInProductImage(product.image);
+    if(image!==product.image)cleaned=true;
+    return image===product.image?product:{...product,image};
+  });
+  /* Limpieza visual en memoria; no fuerza una escritura al abrir la tienda. */
+}
+if(state.settings.subtitle==='Innovación, calidad y confianza en cada producto.'){
+  state.settings.subtitle='Compra digital simple, segura y transparente.\nDe Guatemala al mundo: un marketplace confiable.';
+  if(state.settings.slogan==='Tecnología que impulsa tu estilo')state.settings.slogan='Tecnología elegida con criterio';
+  try{localStorage.setItem(KEYS.settings,JSON.stringify(state.settings))}catch(error){}
+}
+state.settings.subtitle='Compra digital simple, segura y transparente.\nDe Guatemala al mundo: un marketplace confiable.';
+try{localStorage.setItem(KEYS.settings,JSON.stringify(state.settings))}catch(error){}
+
+
+function uid(prefix='id'){return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2,8)}`}
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
+function norm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function money(v){return `${state.settings.currency||'Q'}${Number(v||0).toFixed(2)}`}
+function toast(message,type='info'){const el=document.createElement('div');el.className=`toast ${type}`;el.textContent=message;$('toastbox').appendChild(el);setTimeout(()=>el.remove(),3600)}
+function persistCore(){write(KEYS.products,state.products);write(KEYS.combos,state.combos);write(KEYS.faqs,state.faqs);write(KEYS.settings,state.settings);write(KEYS.users,state.users);write(KEYS.orders,state.orders);write(KEYS.session,state.session);write(KEYS.cart,state.cart);write(KEYS.favorites,state.favorites);write(KEYS.activity,state.activity)}
+function logActivity(action,detail=''){state.activity.unshift({id:uid('act'),action,detail,at:new Date().toISOString()});state.activity=state.activity.slice(0,250);write(KEYS.activity,state.activity)}
+function sha256Fallback(ascii){function rightRotate(value,amount){return(value>>>amount)|(value<<(32-amount))}const mathPow=Math.pow,maxWord=mathPow(2,32),lengthProperty='length';let i,j,result='',words=[],asciiBitLength=ascii[lengthProperty]*8;let hash=sha256Fallback.h=sha256Fallback.h||[],k=sha256Fallback.k=sha256Fallback.k||[],primeCounter=k[lengthProperty],isComposite={};for(let candidate=2;primeCounter<64;candidate++){if(!isComposite[candidate]){for(i=0;i<313;i+=candidate)isComposite[i]=candidate;hash[primeCounter]=(mathPow(candidate,.5)*maxWord)|0;k[primeCounter++]=(mathPow(candidate,1/3)*maxWord)|0}}ascii+='\x80';while(ascii[lengthProperty]%64-56)ascii+='\x00';for(i=0;i<ascii[lengthProperty];i++){j=ascii.charCodeAt(i);if(j>>8)return'';words[i>>2]|=j<<((3-i)%4)*8}words[words[lengthProperty]]=((asciiBitLength/maxWord)|0);words[words[lengthProperty]]=asciiBitLength;for(j=0;j<words[lengthProperty];){const w=words.slice(j,j+=16),oldHash=hash;hash=hash.slice(0,8);for(i=0;i<64;i++){const w15=w[i-15],w2=w[i-2],a=hash[0],e=hash[4];const temp1=hash[7]+(rightRotate(e,6)^rightRotate(e,11)^rightRotate(e,25))+((e&hash[5])^((~e)&hash[6]))+k[i]+(w[i]=(i<16)?w[i]:((w[i-16]+(rightRotate(w15,7)^rightRotate(w15,18)^(w15>>>3))+w[i-7]+(rightRotate(w2,17)^rightRotate(w2,19)^(w2>>>10)))|0));const temp2=(rightRotate(a,2)^rightRotate(a,13)^rightRotate(a,22))+((a&hash[1])^(a&hash[2])^(hash[1]&hash[2]));hash=[(temp1+temp2)|0,a,hash[1],hash[2],(hash[3]+temp1)|0,hash[4],hash[5],hash[6]]}for(i=0;i<8;i++)hash[i]=(hash[i]+oldHash[i])|0}for(i=0;i<8;i++)for(j=3;j+1;j--){const b=(hash[i]>>(j*8))&255;result+=(b<16?'0':'')+b.toString(16)}return result}
+async function sha256(text){try{if(window.crypto&&window.crypto.subtle){const data=new TextEncoder().encode(String(text));const hash=await window.crypto.subtle.digest('SHA-256',data);return[...new Uint8Array(hash)].map(b=>b.toString(16).padStart(2,'0')).join('')}}catch(error){console.warn('Web Crypto no disponible; se usará el respaldo local.',error)}return sha256Fallback(unescape(encodeURIComponent(String(text))))}
+function currentUser(){return state.session?.role==='client'?state.users.find(u=>u.id===state.session.userId)||null:null}
+function categories(){return [...new Set(state.products.map(p=>p.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'es'))}
+function closeAllPanels(){['drawer','cartPanel','favPanel'].forEach(id=>$(id)?.classList.remove('open'));['drawerOverlay','cartOverlay','favOverlay'].forEach(id=>$(id)?.classList.remove('open'));document.body.classList.remove('lock')}
+function openPanel(panel,overlay){closeAllPanels();$(overlay).classList.add('open');$(panel).classList.add('open');document.body.classList.add('lock')}
+function openModal(id){$(id).classList.add('open');document.body.classList.add('lock')}
+function closeModal(id){$(id).classList.remove('open');if(!document.querySelector('.modal-overlay.open,.side-panel.open,.drawer.open'))document.body.classList.remove('lock')}
+function applySettings(){document.title=`${state.settings.storeName||'CRULOX'} · Tienda Premium`;if($('heroSubtitle'))$('heroSubtitle').textContent=state.settings.subtitle;if($('footerSubtitle'))$('footerSubtitle').textContent=state.settings.subtitle;if($('footerEmail'))$('footerEmail').textContent=`📧 ${state.settings.email}`;if($('footerEmail'))$('footerEmail').href=`mailto:${state.settings.email}`;if($('shippingBenefit'))$('shippingBenefit').textContent=state.settings.shippingText||'Entrega digital';if($('returnBenefit'))$('returnBenefit').textContent=state.settings.returnText||'Según servicio digital';renderSocials()}
+function socialItems(){return [{key:'facebookUrl',label:'Facebook'},{key:'instagramUrl',label:'Instagram'},{key:'tiktokUrl',label:'TikTok'}]}
+function renderSocials(){const markup=socialItems().map(x=>`<a class="social-pill" href="${esc(state.settings[x.key]||'#')}" target="_blank" rel="noopener">${x.label}</a>`).join('');$('footerSocial').innerHTML=markup;$('drawerSocial').innerHTML=markup}
+function renderHeader(){const user=currentUser();$('profileDot').textContent=state.session?.role==='admin'?'A':user?(user.fullName||user.username||'U').charAt(0).toUpperCase():'P';$('cartCount').textContent=state.cart.reduce((s,i)=>s+Number(i.qty||0),0);$('favCount').textContent=state.favorites.length;const heroProduct=$('heroProductCount');if(heroProduct)heroProduct.textContent=state.products.length;const heroCategory=$('heroCategoryCount');if(heroCategory)heroCategory.textContent=categories().length}
+function stockInfo(p){const n=Number(p.stock||0);return n<=0?['Agotado','out']:n<=Number(state.settings.lowStock||5)?['Pocas unidades','low']:['Disponible','']}
+function productCard(p){const discount=p.oldPrice?Math.round((1-Number(p.price)/Number(p.oldPrice))*100):0;const [stock,stockClass]=stockInfo(p);const fav=state.favorites.includes(p.id);return `<article class="product" data-product="${esc(p.id)}"><div class="product-image"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="lazy" decoding="async"/>${p.badgeText?`<span class="badge">${esc(p.badgeText)}</span>`:''}<button class="fav-btn ${fav?'active':''}" data-fav="${esc(p.id)}" aria-label="Favorito">${fav?'♥':'♡'}</button></div><div class="product-body"><span class="product-cat">${esc(p.category)}</span><h3>${esc(p.name)}</h3><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)})</span></div><div class="price-row"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}${discount?`<span class="discount">-${discount}%</span>`:''}</div><span class="stock ${stockClass}">${stock}</span><div class="product-actions"><button class="add" data-add="${esc(p.id)}" ${Number(p.stock)<=0?'disabled':''}>Añadir</button><button class="support" data-support="${esc(p.id)}" aria-label="WhatsApp">💬</button><button class="detail" data-detail="${esc(p.id)}">Detalles</button></div></div></article>`}
+function filteredProducts(){const q=norm(state.query);return state.products.filter(p=>(state.category==='all'||p.category===state.category)&&(!q||norm(`${p.name} ${p.category} ${p.description}`).includes(q)))}
+function renderCategories(){const cats=categories(),counts=new Map();state.products.forEach(p=>{if(p.category)counts.set(p.category,(counts.get(p.category)||0)+1)});$('categoryChips').innerHTML=[`<button class="cat ${state.category==='all'?'active':''}" data-cat="all">Todos ${state.products.length}</button>`,...cats.map(c=>`<button class="cat ${state.category===c?'active':''}" data-cat="${esc(c)}">${esc(c)} ${counts.get(c)||0}</button>`)].join('');$('categoryChips').querySelectorAll('[data-cat]').forEach(btn=>btn.onclick=()=>{state.category=btn.dataset.cat;renderCategories();renderProducts()})}
+function renderProducts(){const list=filteredProducts();$('productsGrid').innerHTML=list.length?list.map(productCard).join(''):'<div class="empty">No hay productos que coincidan con la búsqueda.</div>';bindProductActions($('productsGrid'))}
+function renderCombos(){
+  $('combosGrid').innerHTML=state.combos.map(c=>{
+    const comboProducts=c.productIds.map(id=>state.products.find(p=>p.id===id)).filter(Boolean);
+    const primary=comboProducts[0];
+    const secondary=comboProducts[1];
+    const names=comboProducts.map(p=>p.name);
+    const discount=c.oldPrice?Math.round((1-c.price/c.oldPrice)*100):0;
+    return `<article class="combo"><div class="combo-visual"><div class="combo-image-card primary">${primary?`<img src="${esc(primary.image)}" alt="${esc(primary.name)}" loading="lazy" decoding="async"/>`:''}${primary?`<span class="combo-image-label">${esc(primary.name)}</span>`:''}</div><div class="combo-image-card secondary">${secondary?`<img src="${esc(secondary.image)}" alt="${esc(secondary.name)}" loading="lazy" decoding="async"/>`:''}${secondary?`<span class="combo-image-label">${esc(secondary.name)}</span>`:''}</div></div><div class="combo-copy"><span class="section-kicker">AHORRA ${discount}%</span><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><div class="combo-products">${names.map((n,i)=>`<span><i>${i===0?'◉':'◎'}</i>${esc(n)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong><span class="old">${money(c.oldPrice)}</span></div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div><button class="btn btn-secondary" data-combo-detail="${c.id}">Ver más detalles</button></div></div></article>`;
+  }).join('');
+  $('combosGrid').querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  $('combosGrid').querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  $('combosGrid').querySelectorAll('[data-combo-detail]').forEach(b=>b.onclick=()=>openComboDetail(b.dataset.comboDetail));
+}
+function renderFaqs(){$('faqList').innerHTML=state.faqs.map(f=>`<article class="faq"><button class="faq-q"><span>${esc(f.q)}</span><i>▾</i></button><div class="faq-a">${esc(f.a)}</div></article>`).join('');$('faqList').querySelectorAll('.faq-q').forEach(q=>q.onclick=()=>{const item=q.closest('.faq');const a=item.querySelector('.faq-a');item.classList.toggle('open');a.style.maxHeight=item.classList.contains('open')?`${a.scrollHeight}px`:'0px'})}
+function bindProductActions(root=document){root.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>addToCart(b.dataset.add));root.querySelectorAll('[data-fav]').forEach(b=>b.onclick=()=>toggleFavorite(b.dataset.fav));root.querySelectorAll('[data-detail]').forEach(b=>b.onclick=()=>openDetail(b.dataset.detail));root.querySelectorAll('[data-support]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.support);openBot('support',`Hola. Necesito información sobre ${p.name}, precio ${money(p.price)}.`,{Producto:p.name,Precio:money(p.price),Tipo:'Consulta'})})}
+function addToCart(id,qty=1){const p=state.products.find(x=>x.id===id);if(!p||Number(p.stock)<=0)return toast('Producto agotado.','warn');const item=state.cart.find(x=>x.id===id);const current=item?item.qty:0;const next=Math.min(current+qty,Number(p.stock));if(item)item.qty=next;else state.cart.push({id:p.id,qty:Math.min(qty,Number(p.stock))});write(KEYS.cart,state.cart);renderHeader();renderCart();toast(`${p.name} añadido al carrito.`,'success')}
+function addCombo(combo){if(!combo)return;combo.productIds.forEach(id=>addToCart(id,1));toast(`${combo.name} agregado.`,'success')}
+function changeQty(id,delta){const p=state.products.find(x=>x.id===id);const item=state.cart.find(x=>x.id===id);if(!p||!item)return;item.qty=Math.max(0,Math.min(item.qty+delta,Number(p.stock)));if(item.qty===0)state.cart=state.cart.filter(x=>x.id!==id);write(KEYS.cart,state.cart);renderHeader();renderCart()}
+function removeCart(id){state.cart=state.cart.filter(x=>x.id!==id);write(KEYS.cart,state.cart);renderHeader();renderCart()}
+function cartDetails(){return state.cart.map(i=>{const p=state.products.find(x=>x.id===i.id);return p?{...p,qty:i.qty}:null}).filter(Boolean)}
+function renderCart(){const items=cartDetails();$('cartItems').innerHTML=items.length?items.map(i=>`<article class="list-card"><img src="${esc(i.image)}" alt="${esc(i.name)}"/><div><h3>${esc(i.name)}</h3><p>${money(i.price)} · ${stockInfo(i)[0]}</p><div class="list-actions"><div class="qty"><button data-dec="${i.id}">−</button><span>${i.qty}</span><button data-inc="${i.id}">＋</button></div><button class="btn btn-red btn-sm" data-remove-cart="${i.id}">Eliminar</button></div></div><strong>${money(i.price*i.qty)}</strong></article>`).join(''):'<div class="empty">Tu carrito está vacío.</div>';$('cartTotal').textContent=money(items.reduce((s,i)=>s+i.price*i.qty,0));$('cartItems').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));$('cartItems').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));$('cartItems').querySelectorAll('[data-remove-cart]').forEach(b=>b.onclick=()=>removeCart(b.dataset.removeCart))}
+function toggleFavorite(id){state.favorites=state.favorites.includes(id)?state.favorites.filter(x=>x!==id):[...state.favorites,id];write(KEYS.favorites,state.favorites);renderHeader();renderProducts();renderFavorites()}
+function renderFavorites(){const list=state.products.filter(p=>state.favorites.includes(p.id));$('favItems').innerHTML=list.length?list.map(p=>`<article class="list-card"><img src="${esc(p.image)}" alt="${esc(p.name)}"/><div><h3>${esc(p.name)}</h3><p>${esc(p.category)} · ${money(p.price)}</p><div class="list-actions"><button class="btn btn-primary btn-sm" data-fav-add="${p.id}">Añadir</button><button class="btn btn-secondary btn-sm" data-fav-detail="${p.id}">Ver</button><button class="btn btn-red btn-sm" data-fav-remove="${p.id}">Quitar</button></div></div></article>`).join(''):'<div class="empty">Aún no tienes productos favoritos.</div>';$('favItems').querySelectorAll('[data-fav-add]').forEach(b=>b.onclick=()=>addToCart(b.dataset.favAdd));$('favItems').querySelectorAll('[data-fav-detail]').forEach(b=>b.onclick=()=>openDetail(b.dataset.favDetail));$('favItems').querySelectorAll('[data-fav-remove]').forEach(b=>b.onclick=()=>toggleFavorite(b.dataset.favRemove))}
+function openDetail(id){const p=state.products.find(x=>x.id===id);if(!p)return;const [stock,stockClass]=stockInfo(p);$('detailBody').innerHTML=`<div class="product-detail"><img src="${esc(p.image)}" alt="${esc(p.name)}"/><div><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row" style="margin:12px 0"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock ${stockClass}" style="margin-top:10px">${stock} · ${Number(p.stock)} unidades</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>Añadir al carrito</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;openModal('detailModal');$('detailAdd').onclick=()=>{addToCart(p.id);closeModal('detailModal')};$('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});$('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)}}
+function openComboDetail(id){const c=state.combos.find(x=>x.id===id);if(!c)return;const items=c.productIds.map(pid=>state.products.find(p=>p.id===pid)).filter(Boolean);const primary=items[0];const secondary=items[1];const discount=c.oldPrice?Math.round((1-c.price/c.oldPrice)*100):0;$('detailBody').innerHTML=`<div class="combo-detail"><div class="combo-detail-visual"><div class="combo-detail-stage"><div class="combo-image-card primary">${primary?`<img class="combo-detail-main" src="${esc(primary.image)}" alt="${esc(primary.name)}"/>`:''}${primary?`<span class="combo-image-label">${esc(primary.name)}</span>`:''}</div><div class="combo-image-card secondary">${secondary?`<img class="combo-detail-secondary" src="${esc(secondary.image)}" alt="${esc(secondary.name)}"/>`:''}${secondary?`<span class="combo-image-label">${esc(secondary.name)}</span>`:''}</div></div></div><div><span class="section-kicker">Combo inteligente · Ahorra ${discount}%</span><h2>${esc(c.name)}</h2><div class="price-row" style="margin:12px 0"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><p>${esc(c.description)}</p><div class="combo-detail-items">${items.map(item=>`<div class="combo-detail-item"><img src="${esc(item.image)}" alt="${esc(item.name)}"/><div><h4>${esc(item.name)}</h4><p>${esc(item.category)} · ${money(item.price)}</p></div></div>`).join('')}</div><div class="combo-detail-actions"><button class="btn btn-primary" id="detailAddCombo">🛒 Añadir combo</button><button class="btn btn-green" id="detailSupportCombo">WhatsApp</button><button class="btn btn-secondary" id="detailCloseCombo">Seguir viendo combos</button></div></div></div>`;openModal('detailModal');$('detailAddCombo').onclick=()=>{addCombo(c);closeModal('detailModal')};$('detailSupportCombo').onclick=()=>openBot('support',`Hola. Necesito información detallada sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'});$('detailCloseCombo').onclick=()=>closeModal('detailModal')}
+function getSuggestions(q){const n=norm(q);if(!n)return state.products.slice(0,6);return state.products.filter(p=>norm(`${p.name} ${p.category}`).includes(n)).slice(0,7)}
+function renderSuggestions(){const list=getSuggestions($('searchInput').value);state.activeSuggestion=-1;$('suggestions').innerHTML=list.length?list.map((p,i)=>`<button class="suggestion" data-suggest="${p.id}" data-index="${i}"><img src="${esc(p.image)}" alt=""/><span><b>${esc(p.name)}</b><small>${esc(p.category)}</small></span><strong>${money(p.price)}</strong></button>`).join(''):'<div class="empty" style="padding:18px">Sin coincidencias.</div>';$('suggestions').classList.add('open');$('searchInput').setAttribute('aria-expanded','true');$('suggestions').querySelectorAll('[data-suggest]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.suggest);$('searchInput').value=p.name;state.query=p.name;$('searchClear').classList.add('show');closeSuggestions();renderProducts();$('catalog').scrollIntoView({behavior:'smooth'})})}
+function closeSuggestions(){$('suggestions').classList.remove('open');$('searchInput').setAttribute('aria-expanded','false');state.activeSuggestion=-1}
+function activateSuggestion(i){const opts=[...$('suggestions').querySelectorAll('.suggestion')];if(!opts.length)return;state.activeSuggestion=(i+opts.length)%opts.length;opts.forEach((o,j)=>o.classList.toggle('active',j===state.activeSuggestion));opts[state.activeSuggestion].scrollIntoView({block:'nearest'})}
+function copyText(text){if(navigator.clipboard?.writeText){navigator.clipboard.writeText(text).catch(()=>fallbackCopy(text));return}fallbackCopy(text)}
+function fallbackCopy(text){const ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy')}catch(e){}ta.remove()}
+function isWhatsAppUrl(url){return /(^|\.)wa\.me$|whatsapp\.com|api\.whatsapp\.com/i.test((()=>{try{return new URL(url,location.href).hostname}catch(e){return ''}})())}
+function buildBotUrl(kind,message,extra={}){const isOrder=kind==='order';const base=isOrder?state.settings.orderBotUrl:state.settings.supportBotUrl;if(!base||base==='#')return '';try{const u=new URL(base,location.href);if(isWhatsAppUrl(base))u.searchParams.set('text',message);else{u.searchParams.set(isOrder?(state.settings.orderVariable||'Pedido'):(state.settings.supportVariable||'Consulta'),message);Object.entries(extra).forEach(([k,v])=>{if(v!==undefined&&v!==null&&String(v)!=='')u.searchParams.set(k,String(v))});if(isOrder)u.searchParams.set(state.settings.orderJsonVariable||'PedidoJSON',JSON.stringify(extra))}u.searchParams.set('Origen','CRULOX');return u.toString()}catch(e){console.warn(e);return ''}}
+function openBot(kind,message,extra={}){const url=buildBotUrl(kind,message,extra);copyText(message);if(!url){toast(kind==='order'?'Estamos mejorando el proceso de pedidos para ofrecerte una experiencia más clara y segura.':'Estamos mejorando este canal para brindarte una atención más rápida y personalizada.','warn');return false}const w=window.open(url,'_blank');if(w){try{w.opener=null}catch(e){}}else{toast('El navegador bloqueó la ventana. Se abrirá en esta pestaña.','warn');location.assign(url)}return true}
+function renderAccount(){const user=currentUser();if(user){$('accountBody').innerHTML=`<div class="profile-card"><span class="section-kicker">Sesión activa</span><h3>${esc(user.fullName)}</h3><div class="profile-grid">${[['Usuario',user.username],['Correo',user.email],['Teléfono',user.phone],['Departamento',user.department],['Municipio',user.municipality],['Dirección',user.address],['Referencia',user.reference]].map(([a,b])=>`<div class="profile-info"><small>${a}</small><b>${esc(b)}</b></div>`).join('')}</div><div class="form-actions"><button class="btn btn-primary" id="editProfile">Editar perfil</button><button class="btn btn-secondary" id="profileOrders">Mis pedidos</button><button class="btn btn-red" id="logoutClient">Cerrar sesión</button></div></div>`;$('editProfile').onclick=()=>renderProfileEditor(user);$('profileOrders').onclick=renderClientOrders;$('logoutClient').onclick=()=>{state.session=null;write(KEYS.session,null);renderHeader();renderAccount();toast('Sesión cerrada.','success')}}else{$('accountBody').innerHTML=`<div class="tabs"><button class="tab active" data-auth-tab="login">Iniciar sesión</button><button class="tab" data-auth-tab="register">Crear cuenta</button></div><div id="authContent"></div>`;$('accountBody').querySelectorAll('[data-auth-tab]').forEach(t=>t.onclick=()=>{$('accountBody').querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x===t));t.dataset.authTab==='login'?renderLogin():renderRegister()});renderLogin()}}
+function renderLogin(){$('authContent').innerHTML=`<form id="loginForm"><div class="form-grid"><div class="field full"><label>Usuario o correo</label><input id="loginIdentity" required autocomplete="username"/></div><div class="field full"><label>Contraseña</label><input id="loginPassword" type="password" required autocomplete="current-password"/></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Acceder</button></div></form>`;$('loginForm').onsubmit=handleLogin}
+function renderRegister(){$('authContent').innerHTML=`<form id="registerForm"><div class="form-grid">${accountFields().map(f=>fieldHtml(f,'reg')).join('')}<div class="field"><label>Contraseña</label><input id="regPassword" type="password" minlength="8" required/></div><div class="field"><label>Confirmar contraseña</label><input id="regConfirm" type="password" minlength="8" required/></div><div class="field full"><label><input id="regConsent" type="checkbox" required style="width:auto;min-height:0"/> Acepto que mis datos se utilicen para gestionar pedidos y entregas.</label></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Crear cuenta</button></div></form>`;$('registerForm').onsubmit=handleRegister}
+function accountFields(){return[{key:'fullName',label:'Nombre completo',required:true},{key:'username',label:'Usuario',required:true},{key:'email',label:'Correo electrónico',type:'email',required:true},{key:'phone',label:'Teléfono',type:'tel',required:true},{key:'department',label:'Departamento',required:true},{key:'municipality',label:'Municipio',required:true},{key:'address',label:'Dirección completa',required:true,full:true},{key:'reference',label:'Referencia de entrega',required:true,full:true}]}
+function fieldHtml(f,prefix,value=''){return `<div class="field ${f.full?'full':''}"><label>${f.label}</label><input id="${prefix}${f.key.charAt(0).toUpperCase()+f.key.slice(1)}" type="${f.type||'text'}" value="${esc(value)}" ${f.required?'required':''}/></div>`}
+function collectAccount(prefix){const data={};accountFields().forEach(f=>data[f.key]=$(`${prefix}${f.key.charAt(0).toUpperCase()+f.key.slice(1)}`).value.trim());return data}
+async function handleRegister(e){e.preventDefault();const data=collectAccount('reg');const password=$('regPassword').value;if(password!==$('regConfirm').value)return toast('Las contraseñas no coinciden.','error');if(state.users.some(u=>norm(u.username)===norm(data.username)||norm(u.email)===norm(data.email)))return toast('El usuario o correo ya está registrado.','error');const user={id:uid('usr'),...data,passwordHash:await sha256(password),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};state.users.push(user);state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};write(KEYS.users,state.users);write(KEYS.session,state.session);logActivity('Cliente registrado',user.email);renderHeader();renderAccount();toast('Cuenta creada correctamente.','success')}
+async function handleLogin(e){e.preventDefault();const identity=$('loginIdentity').value.trim();const pass=$('loginPassword').value;const hash=await sha256(pass);if(norm(identity)===norm(ADMIN_EMAIL)&&hash===ADMIN_PASSWORD_HASH){state.session={role:'admin',email:ADMIN_EMAIL,createdAt:new Date().toISOString()};write(KEYS.session,state.session);closeModal('accountModal');openAdmin('dashboard');logActivity('Inicio administrativo',ADMIN_EMAIL);return}const user=state.users.find(u=>norm(u.username)===norm(identity)||norm(u.email)===norm(identity));if(!user||user.passwordHash!==hash)return toast('Credenciales incorrectas.','error');state.session={role:'client',userId:user.id,createdAt:new Date().toISOString()};write(KEYS.session,state.session);renderHeader();renderAccount();toast('Sesión iniciada.','success')}
+function renderProfileEditor(user){$('accountBody').innerHTML=`<form id="profileForm"><div class="form-grid">${accountFields().map(f=>fieldHtml(f,'edit',user[f.key])).join('')}<div class="field"><label>Nueva contraseña (opcional)</label><input id="editPassword" type="password" minlength="8"/></div><div class="field"><label>Confirmar contraseña</label><input id="editConfirm" type="password" minlength="8"/></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar cambios</button><button class="btn btn-secondary" type="button" id="cancelEditProfile">Cancelar</button></div></form>`;$('cancelEditProfile').onclick=renderAccount;$('profileForm').onsubmit=async e=>{e.preventDefault();const data=collectAccount('edit');if(state.users.some(u=>u.id!==user.id&&(norm(u.username)===norm(data.username)||norm(u.email)===norm(data.email))))return toast('Usuario o correo ya utilizado.','error');const pass=$('editPassword').value;if(pass&&pass!==$('editConfirm').value)return toast('Las contraseñas no coinciden.','error');Object.assign(user,data,{updatedAt:new Date().toISOString()});if(pass)user.passwordHash=await sha256(pass);write(KEYS.users,state.users);renderAccount();renderHeader();toast('Perfil actualizado.','success')}}
+function renderClientOrders(){const user=currentUser();const list=state.orders.filter(o=>o.userId===user.id||norm(o.customer?.email)===norm(user.email));$('accountBody').innerHTML=`<div class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Mis pedidos</h2><button class="btn btn-secondary btn-sm" id="backProfile">Volver</button></div><div class="admin-list">${list.length?list.map(o=>`<article class="admin-list-item"><div><h3>${esc(o.id)} · ${money(o.total)}</h3><p>${new Date(o.createdAt).toLocaleString('es-GT')} · ${esc(o.status)}</p></div><span class="status">${esc(o.status)}</span></article>`).join(''):'<div class="empty">Todavía no tienes pedidos registrados.</div>'}</div></div>`;$('backProfile').onclick=renderAccount}
+function checkoutField(label,key,value){return `<div class="field ${key==='address'||key==='reference'?'full':''}"><label>${label}</label><input id="co${key.charAt(0).toUpperCase()+key.slice(1)}" value="${esc(value)}" readonly/></div>`}
+function openCheckout(){if(!state.cart.length)return toast('Tu carrito está vacío.','warn');const user=currentUser();if(!user){closeAllPanels();renderAccount();openModal('accountModal');toast('Inicia sesión o crea una cuenta antes de enviar el pedido.','warn');return}const map=[['Nombre completo','fullName'],['Correo','email'],['Teléfono','phone'],['Departamento','department'],['Municipio','municipality'],['Dirección','address'],['Referencia','reference']];$('checkoutFields').innerHTML=map.map(([a,k])=>checkoutField(a,k,user[k])).join('');closeAllPanels();openModal('checkoutModal')}
+function buildOrder(user,items,notes=''){return{id:`NP-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${Math.random().toString(36).slice(2,7).toUpperCase()}`,userId:user.id,customer:{fullName:user.fullName,email:user.email,phone:user.phone,department:user.department,municipality:user.municipality,address:user.address,reference:user.reference},items:items.map(i=>({id:i.id,name:i.name,price:Number(i.price),qty:Number(i.qty)})),total:items.reduce((s,i)=>s+Number(i.price)*Number(i.qty),0),notes,status:'Nuevo',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}
+function orderMessage(order){return `📦 Pedido ${order.id} - CRULOX\nNombre: ${order.customer.fullName}\nCorreo: ${order.customer.email}\nTeléfono: ${order.customer.phone}\nDepartamento: ${order.customer.department}\nMunicipio: ${order.customer.municipality}\nDirección: ${order.customer.address}\nReferencia: ${order.customer.reference}\nProductos:\n${order.items.map(i=>`• ${i.name} x${i.qty} = ${money(i.price*i.qty)}`).join('\n')}\nTotal: ${money(order.total)}\nNotas: ${order.notes||'Ninguna'}`}
+function orderExtras(order){return{'Pedido ID':order.id,Nombre:order.customer.fullName,Correo:order.customer.email,Telefono:order.customer.phone,Departamento:order.customer.department,Municipio:order.customer.municipality,Direccion:order.customer.address,Referencia:order.customer.reference,Productos:order.items.map(i=>`${i.name} x${i.qty}`).join(', '),Total:money(order.total),Notas:order.notes||'Ninguna',Tipo:'Pedido',Estado:order.status}}
+function registerOrder(order){state.orders.unshift(order);write(KEYS.orders,state.orders);logActivity('Pedido registrado',`${order.id} · ${money(order.total)}`);if(state.session?.role==='admin'&&$('adminOverlay').classList.contains('open'))renderAdminSection(state.adminSection)}
+function submitOrder(e){e.preventDefault();const user=currentUser();if(!user)return openCheckout();const order=buildOrder(user,cartDetails(),$('coNotes').value.trim());registerOrder(order);state.cart=[];write(KEYS.cart,state.cart);renderHeader();renderCart();closeModal('checkoutModal');$('coNotes').value='';toast(`Pedido ${order.id} enviado correctamente.`,'success')}
+function productForm(product=null){const p=product||{id:'',name:'',category:'',price:'',oldPrice:'',stock:0,rating:5,reviews:0,image:'',description:'',badge:'',badgeText:'',featured:false};return `<form id="productForm"><div class="form-grid"><div class="field full"><label>Nombre</label><input id="pfName" value="${esc(p.name)}" required/></div><div class="field"><label>Categoría</label><input id="pfCategory" value="${esc(p.category)}" required/></div><div class="field"><label>Existencias</label><input id="pfStock" type="number" min="0" value="${Number(p.stock||0)}" required/></div><div class="field"><label>Precio</label><input id="pfPrice" type="number" step="0.01" min="0" value="${p.price}" required/></div><div class="field"><label>Precio anterior</label><input id="pfOldPrice" type="number" step="0.01" min="0" value="${p.oldPrice??''}"/></div><div class="field"><label>Calificación</label><input id="pfRating" type="number" step="0.1" min="0" max="5" value="${p.rating}"/></div><div class="field"><label>Reseñas</label><input id="pfReviews" type="number" min="0" value="${p.reviews}"/></div><div class="field full"><label>URL o data URI de imagen</label><input id="pfImage" value="${esc(p.image)}" required/></div><div class="field full"><label>Cargar imagen local</label><input id="pfFile" type="file" accept="image/*"/></div><div class="field"><label>Etiqueta</label><input id="pfBadgeText" value="${esc(p.badgeText||'')}" placeholder="Nuevo, Oferta..."/></div><div class="field"><label>Destacado</label><select id="pfFeatured"><option value="false" ${!p.featured?'selected':''}>No</option><option value="true" ${p.featured?'selected':''}>Sí</option></select></div><div class="field full"><label>Descripción</label><textarea id="pfDescription" required>${esc(p.description)}</textarea></div></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Guardar producto</button></div></form>`}
+function openProductEditor(id=null){const product=id?state.products.find(p=>p.id===id):null;$('crudTitle').textContent=product?'Editar producto':'Agregar producto';$('crudBody').innerHTML=productForm(product);openModal('crudModal');let fileData='';$('pfFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{fileData=await optimizeImageFile(f,{maxWidth:1400,maxHeight:1400,quality:.9});$('pfImage').value=fileData}catch(error){toast('No fue posible procesar la imagen.','error')}};$('productForm').onsubmit=e=>{e.preventDefault();const data={name:$('pfName').value.trim(),category:$('pfCategory').value.trim(),stock:Number($('pfStock').value),price:Number($('pfPrice').value),oldPrice:$('pfOldPrice').value?Number($('pfOldPrice').value):null,rating:Number($('pfRating').value||0),reviews:Number($('pfReviews').value||0),image:fileData||$('pfImage').value.trim(),description:$('pfDescription').value.trim(),badgeText:$('pfBadgeText').value.trim()||null,badge:$('pfBadgeText').value.trim()?'custom':null,featured:$('pfFeatured').value==='true'};if(product)Object.assign(product,data);else state.products.unshift({id:uid('p'),...data});write(KEYS.products,state.products);logActivity(product?'Producto editado':'Producto agregado',data.name);closeModal('crudModal');renderStore();renderAdminSection('products');toast('Producto guardado.','success')}}
+function openAdmin(section='dashboard'){if(state.session?.role!=='admin')return;state.adminSection=section;$('adminOverlay').classList.add('open');document.body.classList.add('lock');renderAdminNav();renderAdminSection(section)}
+function renderAdminNav(){$('adminNav').querySelectorAll('[data-admin]').forEach(b=>b.classList.toggle('active',b.dataset.admin===state.adminSection))}
+function renderAdminSection(section){state.adminSection=section;renderAdminNav();const titles={dashboard:'Resumen',products:'Productos',inventory:'Inventario',categories:'Categorías',faqs:'Preguntas frecuentes',users:'Clientes',orders:'Pedidos',settings:'Tienda',bots:'Atención',backup:'Respaldos',activity:'Actividad'};$('adminTitle').textContent=titles[section]||'Administración';const fn={dashboard:adminDashboard,products:adminProducts,inventory:adminInventory,categories:adminCategories,faqs:adminFaqs,users:adminUsers,orders:adminOrders,settings:adminSettings,bots:adminBots,backup:adminBackup,activity:adminActivity}[section]||adminDashboard;fn()}
+function metric(label,value){return `<article class="metric"><small>${label}</small><strong>${value}</strong></article>`}
+function adminDashboard(){const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);const low=state.products.filter(p=>p.stock>0&&p.stock<=Number(state.settings.lowStock||5)).length;const out=state.products.filter(p=>p.stock<=0).length;$('adminContent').innerHTML=`<div class="notice"><b>Importante:</b> este panel funciona localmente en el navegador actual. Para producción real se necesita backend, base de datos y autenticación del servidor.</div><div class="admin-grid">${metric('Productos',state.products.length)}${metric('Categorías',categories().length)}${metric('Clientes',state.users.length)}${metric('Pedidos',state.orders.length)}${metric('Ventas registradas',money(sales))}${metric('Stock bajo',low)}${metric('Agotados',out)}${metric('FAQ',state.faqs.length)}</div><div class="admin-two"><section class="admin-card"><div class="admin-card-head"><h2>Acciones rápidas</h2></div><div class="toolbar"><button class="btn btn-primary btn-sm" id="quickAddProduct">Agregar producto</button><button class="btn btn-secondary btn-sm" id="quickOrders">Revisar pedidos</button><button class="btn btn-secondary btn-sm" id="quickBots">Configurar atención</button><button class="btn btn-secondary btn-sm" id="quickBackup">Crear respaldo</button></div></section><section class="admin-card"><div class="admin-card-head"><h2>Estado técnico</h2></div><div class="admin-list"><article class="admin-list-item"><div><h3>Canal de atención</h3><p>${esc(state.settings.supportBotUrl)}</p></div><span class="status ${state.settings.supportBotUrl==='#'?'warn':''}">${state.settings.supportBotUrl==='#'?'Pendiente':'Configurado'}</span></article><article class="admin-list-item"><div><h3>Gestión de pedidos</h3><p>${esc(state.settings.orderBotUrl)}</p></div><span class="status ${state.settings.orderBotUrl==='#'?'warn':''}">${state.settings.orderBotUrl==='#'?'Pendiente':'Configurado'}</span></article></div></section></div>`;$('quickAddProduct').onclick=()=>openProductEditor();$('quickOrders').onclick=()=>renderAdminSection('orders');$('quickBots').onclick=()=>renderAdminSection('bots');$('quickBackup').onclick=exportBackup}
+function adminProducts(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Gestión de productos</h2><div class="toolbar"><input id="adminProductSearch" placeholder="Buscar producto"/><button class="btn btn-primary btn-sm" id="adminAddProduct">Agregar producto</button></div></div><div class="table-wrap"><table><thead><tr><th>Producto</th><th>Categoría</th><th>Precio</th><th>Stock</th><th>Etiqueta</th><th>Acciones</th></tr></thead><tbody id="adminProductRows"></tbody></table></div></section>`;const renderRows=()=>{const q=norm($('adminProductSearch').value);const list=state.products.filter(p=>!q||norm(`${p.name} ${p.category}`).includes(q));$('adminProductRows').innerHTML=list.map(p=>`<tr><td><div style="display:flex;align-items:center;gap:8px"><img src="${esc(p.image)}" alt=""><b>${esc(p.name)}</b></div></td><td>${esc(p.category)}</td><td>${money(p.price)}</td><td><span class="status ${p.stock<=0?'bad':p.stock<=state.settings.lowStock?'warn':''}">${p.stock}</span></td><td>${esc(p.badgeText||'—')}</td><td><div class="toolbar"><button class="btn btn-secondary btn-sm" data-edit-product="${p.id}">Editar</button><button class="btn btn-secondary btn-sm" data-duplicate-product="${p.id}">Duplicar</button><button class="btn btn-red btn-sm" data-delete-product="${p.id}">Eliminar</button></div></td></tr>`).join('');$('adminProductRows').querySelectorAll('[data-edit-product]').forEach(b=>b.onclick=()=>openProductEditor(b.dataset.editProduct));$('adminProductRows').querySelectorAll('[data-duplicate-product]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.duplicateProduct);state.products.unshift({...clone(p),id:uid('p'),name:`${p.name} copia`});write(KEYS.products,state.products);renderRows();renderStore();logActivity('Producto duplicado',p.name)});$('adminProductRows').querySelectorAll('[data-delete-product]').forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>x.id===b.dataset.deleteProduct);if(!await npConfirm(`Eliminar ${p.name}?`))return;state.products=state.products.filter(x=>x.id!==p.id);state.cart=state.cart.filter(x=>x.id!==p.id);state.favorites=state.favorites.filter(x=>x!==p.id);persistCore();renderRows();renderStore();logActivity('Producto eliminado',p.name)})};renderRows();$('adminProductSearch').oninput=renderRows;$('adminAddProduct').onclick=()=>openProductEditor()}
+function adminInventory(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Control de inventario</h2><div class="toolbar"><input id="inventorySearch" placeholder="Buscar"/><select id="inventoryFilter"><option value="all">Todos</option><option value="low">Stock bajo</option><option value="out">Agotados</option></select></div></div><div class="admin-list" id="inventoryList"></div></section>`;const render=()=>{const q=norm($('inventorySearch').value),filter=$('inventoryFilter').value;const list=state.products.filter(p=>(!q||norm(p.name).includes(q))&&(filter==='all'||filter==='low'&&(p.stock>0&&p.stock<=state.settings.lowStock)||filter==='out'&&p.stock<=0));$('inventoryList').innerHTML=list.map(p=>`<article class="admin-list-item"><div><h3>${esc(p.name)}</h3><p>${esc(p.category)} · ${money(p.price)}</p></div><div class="toolbar"><button class="btn btn-secondary btn-sm" data-stock="${p.id}" data-delta="-1">−1</button><span class="status ${p.stock<=0?'bad':p.stock<=state.settings.lowStock?'warn':''}">${p.stock}</span><button class="btn btn-primary btn-sm" data-stock="${p.id}" data-delta="1">+1</button><button class="btn btn-secondary btn-sm" data-set-stock="${p.id}">Definir</button></div></article>`).join('')||'<div class="empty">No hay productos en este filtro.</div>';$('inventoryList').querySelectorAll('[data-stock]').forEach(b=>b.onclick=()=>{const p=state.products.find(x=>x.id===b.dataset.stock);p.stock=Math.max(0,p.stock+Number(b.dataset.delta));write(KEYS.products,state.products);render();renderStore()});$('inventoryList').querySelectorAll('[data-set-stock]').forEach(b=>b.onclick=async()=>{const p=state.products.find(x=>x.id===b.dataset.setStock);const n=await npPrompt(`Existencias para ${p.name}`,p.stock);if(n===null||isNaN(Number(n)))return;p.stock=Math.max(0,Number(n));write(KEYS.products,state.products);render();renderStore()})};render();$('inventorySearch').oninput=render;$('inventoryFilter').onchange=render}
+function adminCategories(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Categorías</h2><button class="btn btn-primary btn-sm" id="addCategory">Agregar categoría</button></div><div class="admin-list" id="categoryAdminList"></div></section>`;const render=()=>{$('categoryAdminList').innerHTML=categories().map(c=>`<article class="admin-list-item"><div><h3>${esc(c)}</h3><p>${state.products.filter(p=>p.category===c).length} productos</p></div><div class="toolbar"><button class="btn btn-secondary btn-sm" data-rename-cat="${esc(c)}">Renombrar</button><button class="btn btn-red btn-sm" data-delete-cat="${esc(c)}">Eliminar</button></div></article>`).join('')||'<div class="empty">No hay categorías.</div>';$('categoryAdminList').querySelectorAll('[data-rename-cat]').forEach(b=>b.onclick=async()=>{const old=b.dataset.renameCat;const next=(await npPrompt('Nuevo nombre',old))?.trim();if(!next||next===old)return;state.products.forEach(p=>{if(p.category===old)p.category=next});write(KEYS.products,state.products);render();renderStore();logActivity('Categoría renombrada',`${old} → ${next}`)});$('categoryAdminList').querySelectorAll('[data-delete-cat]').forEach(b=>b.onclick=()=>{const cat=b.dataset.deleteCat;const count=state.products.filter(p=>p.category===cat).length;if(count)return toast('No puedes eliminar una categoría con productos. Reasigna los productos primero.','warn');render()})};render();$('addCategory').onclick=()=>toast('Las categorías se crean al asignarlas a un producto.','info')}
+function adminFaqs(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Preguntas frecuentes</h2><button class="btn btn-primary btn-sm" id="addFaq">Agregar pregunta</button></div><div class="admin-list" id="faqAdminList"></div></section>`;const render=()=>{$('faqAdminList').innerHTML=state.faqs.map(f=>`<article class="admin-list-item"><div><h3>${esc(f.q)}</h3><p>${esc(f.a)}</p></div><div class="toolbar"><button class="btn btn-secondary btn-sm" data-edit-faq="${f.id}">Editar</button><button class="btn btn-red btn-sm" data-delete-faq="${f.id}">Eliminar</button></div></article>`).join('')||'<div class="empty">No hay preguntas.</div>';$('faqAdminList').querySelectorAll('[data-edit-faq]').forEach(b=>b.onclick=()=>openFaqEditor(b.dataset.editFaq));$('faqAdminList').querySelectorAll('[data-delete-faq]').forEach(b=>b.onclick=()=>{state.faqs=state.faqs.filter(x=>x.id!==b.dataset.deleteFaq);write(KEYS.faqs,state.faqs);render();renderFaqs()})};render();$('addFaq').onclick=()=>openFaqEditor()}
+function openFaqEditor(id=null){const f=id?state.faqs.find(x=>x.id===id):null;$('crudTitle').textContent=f?'Editar pregunta':'Agregar pregunta';$('crudBody').innerHTML=`<form id="faqForm"><div class="field"><label>Pregunta</label><input id="ffQuestion" value="${esc(f?.q||'')}" required/></div><div class="field" style="margin-top:10px"><label>Respuesta</label><textarea id="ffAnswer" required>${esc(f?.a||'')}</textarea></div><div class="form-actions"><button class="btn btn-primary btn-block" type="submit">Guardar</button></div></form>`;openModal('crudModal');$('faqForm').onsubmit=e=>{e.preventDefault();if(f)Object.assign(f,{q:$('ffQuestion').value.trim(),a:$('ffAnswer').value.trim()});else state.faqs.push({id:uid('f'),q:$('ffQuestion').value.trim(),a:$('ffAnswer').value.trim()});write(KEYS.faqs,state.faqs);closeModal('crudModal');renderFaqs();renderAdminSection('faqs');logActivity(f?'FAQ editada':'FAQ agregada',$('ffQuestion')?.value||'')}}
+function adminUsers(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Clientes registrados</h2><button class="btn btn-secondary btn-sm" id="exportUsers">Exportar CSV</button></div><div class="table-wrap"><table><thead><tr><th>Cliente</th><th>Usuario</th><th>Teléfono</th><th>Ubicación</th><th>Registro</th><th>Acciones</th></tr></thead><tbody>${state.users.map(u=>`<tr><td><b>${esc(u.fullName)}</b><br>${esc(u.email)}</td><td>${esc(u.username)}</td><td>${esc(u.phone)}</td><td>${esc(u.municipality)}, ${esc(u.department)}</td><td>${new Date(u.createdAt).toLocaleDateString('es-GT')}</td><td><button class="btn btn-red btn-sm" data-delete-user="${u.id}">Eliminar</button></td></tr>`).join('')}</tbody></table></div></section>`;$('adminContent').querySelectorAll('[data-delete-user]').forEach(b=>b.onclick=async()=>{const u=state.users.find(x=>x.id===b.dataset.deleteUser);if(!await npConfirm(`Eliminar la cuenta de ${u.fullName}?`))return;state.users=state.users.filter(x=>x.id!==u.id);write(KEYS.users,state.users);renderAdminSection('users');logActivity('Cliente eliminado',u.email)});$('exportUsers').onclick=()=>exportCsv('clientes',state.users.map(u=>({nombre:u.fullName,usuario:u.username,correo:u.email,telefono:u.phone,departamento:u.department,municipio:u.municipality,direccion:u.address,referencia:u.reference})))}
+function adminOrders(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Pedidos</h2><div class="toolbar"><input id="orderSearch" placeholder="Buscar pedido o cliente"/><select id="orderStatus"><option value="all">Todos los estados</option>${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" id="exportOrders">Exportar CSV</button></div></div><div class="admin-list" id="orderAdminList"></div></section>`;const render=()=>{const q=norm($('orderSearch').value),st=$('orderStatus').value;const list=state.orders.filter(o=>(st==='all'||o.status===st)&&(!q||norm(`${o.id} ${o.customer?.fullName} ${o.customer?.email}`).includes(q)));$('orderAdminList').innerHTML=list.map(o=>`<article class="admin-list-item"><div><h3>${esc(o.id)} · ${esc(o.customer?.fullName||'Cliente')}</h3><p>${new Date(o.createdAt).toLocaleString('es-GT')} · ${o.items.length} artículos · ${money(o.total)}</p></div><div class="toolbar"><select data-order-status="${o.id}">${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" data-copy-order="${o.id}">Copiar</button><button class="btn btn-green btn-sm" data-resend-order="${o.id}">Reenviar</button><button class="btn btn-red btn-sm" data-delete-order="${o.id}">Eliminar</button></div></article>`).join('')||'<div class="empty">No hay pedidos en este filtro.</div>';$('orderAdminList').querySelectorAll('[data-order-status]').forEach(s=>s.onchange=()=>{const o=state.orders.find(x=>x.id===s.dataset.orderStatus);o.status=s.value;o.updatedAt=new Date().toISOString();write(KEYS.orders,state.orders);logActivity('Estado de pedido',`${o.id} → ${o.status}`)});$('orderAdminList').querySelectorAll('[data-copy-order]').forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>x.id===b.dataset.copyOrder);copyText(orderMessage(o));toast('Pedido copiado.','success')});$('orderAdminList').querySelectorAll('[data-resend-order]').forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>x.id===b.dataset.resendOrder);openBot('order',orderMessage(o),orderExtras(o))});$('orderAdminList').querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>x.id===b.dataset.deleteOrder);if(!await npConfirm(`Eliminar el pedido ${o.id}?`))return;state.orders=state.orders.filter(x=>x.id!==o.id);write(KEYS.orders,state.orders);render();logActivity('Pedido eliminado',o.id)})};render();$('orderSearch').oninput=render;$('orderStatus').onchange=render;$('exportOrders').onclick=()=>exportCsv('pedidos',state.orders.map(o=>({id:o.id,cliente:o.customer?.fullName,correo:o.customer?.email,telefono:o.customer?.phone,total:o.total,estado:o.status,fecha:o.createdAt,productos:o.items.map(i=>`${i.name} x${i.qty}`).join(' | ')})))}
+function adminSettings(){$('adminContent').innerHTML=`<form class="admin-card" style="margin-top:0" id="settingsForm"><div class="admin-card-head"><h2>Identidad y datos de la tienda</h2></div><div class="form-grid"><div class="field"><label>Nombre de tienda</label><input id="setName" value="${esc(state.settings.storeName)}"/></div><div class="field"><label>Correo</label><input id="setEmail" type="email" value="${esc(state.settings.email)}"/></div><div class="field full"><label>Eslogan</label><input id="setSlogan" value="${esc(state.settings.slogan)}"/></div><div class="field full"><label>Descripción</label><textarea id="setSubtitle">${esc(state.settings.subtitle)}</textarea></div><div class="field"><label>Moneda</label><input id="setCurrency" value="${esc(state.settings.currency)}"/></div><div class="field"><label>Límite de stock bajo</label><input id="setLowStock" type="number" min="0" value="${state.settings.lowStock}"/></div><div class="field"><label>Facebook</label><input id="setFacebook" value="${esc(state.settings.facebookUrl)}"/></div><div class="field"><label>Instagram</label><input id="setInstagram" value="${esc(state.settings.instagramUrl)}"/></div><div class="field"><label>TikTok</label><input id="setTiktok" value="${esc(state.settings.tiktokUrl)}"/></div><div class="field"><label>Texto de entrega</label><input id="setShipping" value="${esc(state.settings.shippingText)}"/></div><div class="field"><label>Texto de cambios</label><input id="setReturn" value="${esc(state.settings.returnText)}"/></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar configuración</button></div></form>`;$('settingsForm').onsubmit=e=>{e.preventDefault();Object.assign(state.settings,{storeName:$('setName').value.trim(),email:$('setEmail').value.trim(),slogan:$('setSlogan').value.trim(),subtitle:$('setSubtitle').value.trim(),currency:$('setCurrency').value.trim()||'Q',lowStock:Number($('setLowStock').value||5),facebookUrl:$('setFacebook').value.trim()||'#',instagramUrl:$('setInstagram').value.trim()||'#',tiktokUrl:$('setTiktok').value.trim()||'#',shippingText:$('setShipping').value.trim(),returnText:$('setReturn').value.trim()});write(KEYS.settings,state.settings);applySettings();renderStore();logActivity('Configuración de tienda','Actualizada');toast('Configuración guardada.','success')}}
+function botDiagnostic(kind){const msg=kind==='order'?'PRUEBA DE PEDIDO NOVAPRIME GT':'Prueba de consulta CRULOX';const extra=kind==='order'?{'Pedido ID':'NP-PRUEBA',Nombre:'Cliente de prueba',Productos:'Producto x1',Total:money(1),Tipo:'Pedido'}:{Tipo:'Consulta'};return buildBotUrl(kind,msg,extra)}
+function adminBots(){$('adminContent').innerHTML=`<div class="admin-two"><form class="admin-card" style="margin-top:0" id="supportBotForm"><div class="admin-card-head"><h2>💬 Canal de atención</h2></div><p style="color:var(--sub);font-size:.68rem;line-height:1.55;margin-bottom:10px">Recibe dudas de productos y soporte general.</p><div class="field"><label>URL pública</label><input id="botSupportUrl" value="${esc(state.settings.supportBotUrl)}"/></div><div class="field" style="margin-top:9px"><label>Nombre exacto de variable</label><input id="botSupportVar" value="${esc(state.settings.supportVariable)}"/></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar</button><button class="btn btn-secondary" type="button" id="testSupport">Probar</button></div></form><form class="admin-card" style="margin-top:0" id="orderBotForm"><div class="admin-card-head"><h2>📦 Gestión de pedidos</h2></div><p style="color:var(--sub);font-size:.68rem;line-height:1.55;margin-bottom:10px">Recibe el pedido completo y variables individuales.</p><div class="field"><label>URL pública</label><input id="botOrderUrl" value="${esc(state.settings.orderBotUrl)}"/></div><div class="field" style="margin-top:9px"><label>Variable del texto completo</label><input id="botOrderVar" value="${esc(state.settings.orderVariable)}"/></div><div class="field" style="margin-top:9px"><label>Variable JSON</label><input id="botOrderJson" value="${esc(state.settings.orderJsonVariable)}"/></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar</button><button class="btn btn-secondary" type="button" id="testOrder">Probar</button></div></form></div><section class="admin-card"><div class="admin-card-head"><h2>Diagnóstico de enlaces</h2></div><div class="admin-list"><article class="admin-list-item"><div><h3>URL de consulta generada</h3><p style="word-break:break-all">${esc(botDiagnostic('support')||'Sin configurar')}</p></div><button class="btn btn-secondary btn-sm" id="copySupportUrl">Copiar</button></article><article class="admin-list-item"><div><h3>URL de pedido generada</h3><p style="word-break:break-all">${esc(botDiagnostic('order')||'Sin configurar')}</p></div><button class="btn btn-secondary btn-sm" id="copyOrderUrl">Copiar</button></article></div><div class="notice" style="margin-top:12px">En el servicio de atención conectado, los nombres de variables deben coincidir exactamente con los configurados aquí. Para enlaces de WhatsApp reales, el sistema utiliza automáticamente el parámetro <b>text</b>.</div></section>`;$('supportBotForm').onsubmit=e=>{e.preventDefault();state.settings.supportBotUrl=$('botSupportUrl').value.trim()||'#';state.settings.supportVariable=$('botSupportVar').value.trim()||'Consulta';write(KEYS.settings,state.settings);renderAdminSection('bots');applySettings();toast('Canal de atención guardado.','success')};$('orderBotForm').onsubmit=e=>{e.preventDefault();state.settings.orderBotUrl=$('botOrderUrl').value.trim()||'#';state.settings.orderVariable=$('botOrderVar').value.trim()||'Pedido';state.settings.orderJsonVariable=$('botOrderJson').value.trim()||'PedidoJSON';write(KEYS.settings,state.settings);renderAdminSection('bots');toast('Gestión de pedidos guardada.','success')};$('testSupport').onclick=()=>openBot('support','Prueba de consulta CRULOX',{Tipo:'Consulta'});$('testOrder').onclick=()=>openBot('order','PRUEBA DE PEDIDO NOVAPRIME GT',{'Pedido ID':'NP-PRUEBA',Nombre:'Cliente de prueba',Productos:'Producto x1',Total:money(1),Tipo:'Pedido'});$('copySupportUrl').onclick=()=>copyText(botDiagnostic('support'));$('copyOrderUrl').onclick=()=>copyText(botDiagnostic('order'))}
+function adminBackup(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Respaldos y restauración</h2></div><div class="toolbar"><button class="btn btn-primary" id="exportBackup">Exportar respaldo JSON</button><label class="btn btn-secondary" for="importBackup">Importar respaldo</label><input class="hidden" id="importBackup" type="file" accept="application/json"/><button class="btn btn-secondary" id="exportProducts">Exportar productos CSV</button></div></section><section class="admin-card danger-zone"><div class="admin-card-head"><h2>Zona de restauración</h2></div><p style="color:var(--sub);font-size:.7rem;line-height:1.55">Restaura productos, combos, FAQ y configuración inicial. Los usuarios y pedidos pueden conservarse o eliminarse.</p><div class="form-actions"><button class="btn btn-red" id="resetCatalog">Restaurar catálogo inicial</button><button class="btn btn-red" id="resetEverything">Borrar todos los datos locales</button></div></section>`;$('exportBackup').onclick=exportBackup;$('importBackup').onchange=importBackup;$('exportProducts').onclick=()=>exportCsv('productos',state.products);$('resetCatalog').onclick=async()=>{if(!await npConfirm('¿Restaurar catálogo, combos, FAQ y configuración?'))return;state.products=clone(DEFAULT_PRODUCTS);state.combos=clone(DEFAULT_COMBOS);state.faqs=clone(DEFAULT_FAQS);state.settings=clone(DEFAULT_SETTINGS);persistCore();renderStore();renderAdminSection('dashboard');logActivity('Catálogo restaurado','Valores iniciales')};$('resetEverything').onclick=async()=>{if(!await npConfirm('Esto eliminará cuentas, pedidos, carrito, favoritos y configuración local. ¿Continuar?'))return;Object.values(KEYS).forEach(k=>localStorage.removeItem(k));location.reload()}}
+function adminActivity(){$('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Registro de actividad</h2><button class="btn btn-red btn-sm" id="clearActivity">Limpiar</button></div><div class="activity">${state.activity.length?state.activity.map(a=>`<article class="activity-item"><b>${esc(a.action)}</b><span>${esc(a.detail)} · ${new Date(a.at).toLocaleString('es-GT')}</span></article>`).join(''):'<div class="empty">No hay actividad registrada.</div>'}</div></section>`;$('clearActivity').onclick=()=>{state.activity=[];write(KEYS.activity,[]);renderAdminSection('activity')}}
+function downloadFile(name,content,type='application/json'){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000)}
+function exportBackup(){const data={version:5,exportedAt:new Date().toISOString(),products:state.products,combos:state.combos,faqs:state.faqs,settings:state.settings,users:state.users,orders:state.orders,activity:state.activity};downloadFile(`novaprime-backup-${new Date().toISOString().slice(0,10)}.json`,JSON.stringify(data,null,2));logActivity('Respaldo exportado','JSON completo')}
+function importBackup(e){const file=e.target.files[0];if(!file)return;const reader=new FileReader();reader.onload=()=>{try{const d=JSON.parse(reader.result);if(!Array.isArray(d.products)||!Array.isArray(d.faqs))throw new Error('Formato inválido');state.products=d.products;state.combos=Array.isArray(d.combos)?d.combos:[];state.faqs=d.faqs;state.settings={...DEFAULT_SETTINGS,...d.settings};state.users=Array.isArray(d.users)?d.users:state.users;state.orders=Array.isArray(d.orders)?d.orders:state.orders;state.activity=Array.isArray(d.activity)?d.activity:state.activity;persistCore();renderStore();renderAdminSection('dashboard');toast('Respaldo importado.','success')}catch(err){toast('El archivo no es un respaldo válido.','error')}};reader.readAsText(file)}
+function exportCsv(name,rows){if(!rows.length)return toast('No hay datos para exportar.','warn');const keys=[...new Set(rows.flatMap(Object.keys))];const quote=v=>`"${String(v??'').replaceAll('"','""')}"`;const csv=[keys.map(quote).join(','),...rows.map(r=>keys.map(k=>quote(typeof r[k]==='object'?JSON.stringify(r[k]):r[k])).join(','))].join('\n');downloadFile(`${name}-${new Date().toISOString().slice(0,10)}.csv`,csv,'text/csv;charset=utf-8')}
+const FULL_CATALOG_TEMPLATE_B64='';
+function decodeBase64Utf8(value){const bytes=Uint8Array.from(atob(value),c=>c.charCodeAt(0));return new TextDecoder().decode(bytes)}
+const FULL_CATALOG_TEMPLATE=decodeBase64Utf8(FULL_CATALOG_TEMPLATE_B64);
+function fullCatalogMarkup(){const user=currentUser();const payload={products:state.products,settings:state.settings,user,logo:BRAND_LOGO};const data=JSON.stringify(payload).replace(/</g,'\u003c');return FULL_CATALOG_TEMPLATE.replace('__DATA__',data)}
+function openEmbeddedCatalog(markup){const frame=$('fullFrame');$('fullFallback').classList.add('open');document.body.classList.add('lock');frame.removeAttribute('src');frame.srcdoc='';requestAnimationFrame(()=>{try{frame.srcdoc=markup}catch(error){console.warn('srcdoc no disponible; usando document.write.',error);try{const doc=frame.contentWindow.document;doc.open();doc.write(markup);doc.close()}catch(writeError){console.error('No fue posible cargar el catálogo completo.',writeError);$('fullFallback').classList.remove('open');document.body.classList.remove('lock');toast('No fue posible cargar el catálogo completo.','error')}}})}
+function openFullCatalog(){openEmbeddedCatalog(fullCatalogMarkup())}
+function renderStore(){applySettings();renderHeader();renderCategories();renderProducts();renderCombos();renderFaqs();renderCart();renderFavorites()}
+// Global events
+$('menuBtn').onclick=()=>openPanel('drawer','drawerOverlay');$('drawerClose').onclick=closeAllPanels;$('drawerOverlay').onclick=closeAllPanels;$('cartBtn').onclick=()=>{renderCart();openPanel('cartPanel','cartOverlay')};$('cartClose').onclick=closeAllPanels;$('cartOverlay').onclick=closeAllPanels;$('favBtn').onclick=()=>{renderFavorites();openPanel('favPanel','favOverlay')};$('favClose').onclick=closeAllPanels;$('favOverlay').onclick=closeAllPanels;$('profileBtn').onclick=()=>{renderAccount();openModal('accountModal')};$('drawerProfile').onclick=()=>{closeAllPanels();renderAccount();openModal('accountModal')};$('drawerFavorites').onclick=()=>{renderFavorites();openPanel('favPanel','favOverlay')};$('drawerCart').onclick=()=>{renderCart();openPanel('cartPanel','cartOverlay')};$('checkoutBtn').onclick=openCheckout;$('checkoutForm').onsubmit=submitOrder;$('heroSupport').onclick=$('footerSupport').onclick=$('floatSupport').onclick=()=>openBot('support','Hola. Necesito ayuda con CRULOX.',{Tipo:'Consulta general'});$('footerProfile').onclick=()=>{renderAccount();openModal('accountModal')};$('searchInput').onfocus=renderSuggestions;let npPublicSearchTimer=0;$('searchInput').oninput=()=>{state.query=$('searchInput').value.trim();$('searchClear').classList.toggle('show',!!state.query);clearTimeout(npPublicSearchTimer);npPublicSearchTimer=setTimeout(()=>{renderProducts();renderSuggestions()},90)};$('searchInput').onkeydown=e=>{const opts=$('suggestions').querySelectorAll('.suggestion');if(e.key==='ArrowDown'){e.preventDefault();if(!$('suggestions').classList.contains('open'))renderSuggestions();activateSuggestion(state.activeSuggestion+1)}else if(e.key==='ArrowUp'){e.preventDefault();activateSuggestion(state.activeSuggestion-1)}else if(e.key==='Enter'&&state.activeSuggestion>=0){e.preventDefault();opts[state.activeSuggestion]?.click()}else if(e.key==='Escape')closeSuggestions()};$('searchClear').onclick=()=>{$('searchInput').value='';state.query='';$('searchClear').classList.remove('show');closeSuggestions();renderProducts()};document.addEventListener('click',e=>{if(!e.target.closest('.search-wrap'))closeSuggestions()});document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>closeModal(b.dataset.close));document.querySelectorAll('.modal-overlay').forEach(m=>m.onclick=e=>{if(e.target===m)closeModal(m.id)});window.addEventListener('scroll',()=>{$('floatTop').classList.toggle('show',scrollY>1450)});$('floatTop').onclick=()=>scrollTo({top:0,behavior:'smooth'});{const adminNavEl=$('adminNav');if(adminNavEl)adminNavEl.onclick=e=>{const b=e.target.closest('[data-admin]');if(b)renderAdminSection(b.dataset.admin)};const adminStoreEl=$('adminStoreBtn');if(adminStoreEl)adminStoreEl.onclick=()=>{$('adminOverlay').classList.remove('open');document.body.classList.remove('lock')};const adminLogoutEl=$('adminLogout');if(adminLogoutEl)adminLogoutEl.onclick=()=>{state.session=null;write(KEYS.session,null);$('adminOverlay').classList.remove('open');document.body.classList.remove('lock');renderHeader();toast('Sesión administrativa cerrada.','success')}};window.addEventListener('message',e=>{if(e.data?.type==='np-close-full'){$('fullFallback').classList.remove('open');$('fullFrame').srcdoc='';document.body.classList.remove('lock')}else if(e.data?.type==='np-request-login'){$('fullFallback').classList.remove('open');renderAccount();openModal('accountModal')}else if(e.data?.type==='np-order'&&e.data.order){registerOrder(e.data.order);toast(`Pedido ${e.data.order.id} registrado desde el catálogo completo.`,'success')}});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeAllPanels();document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id));if($('fullFallback').classList.contains('open')){$('fullFallback').classList.remove('open');$('fullFrame').srcdoc='';document.body.classList.remove('lock')}}});
+
+/* v8.8 store patch: combos independientes + pedidos internos */
+const NP_V88_STYLE=`
+.combo{padding:0!important;display:grid!important;grid-template-columns:minmax(0,.94fr) minmax(0,1.06fr)!important;gap:0!important;overflow:hidden!important;border-radius:30px!important;background:linear-gradient(160deg,rgba(10,22,38,.98),rgba(8,19,34,.97) 58%,rgba(8,20,36,.99))!important;border:1px solid rgba(78,184,255,.18)!important;box-shadow:0 28px 50px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.03)!important}
+.combo-visual.combo-visual-single{position:relative;min-height:350px!important;padding:20px!important;border-radius:30px 0 0 30px!important;background:radial-gradient(circle at 18% 18%,rgba(0,217,255,.18),transparent 30%),radial-gradient(circle at 80% 78%,rgba(58,131,255,.16),transparent 30%),linear-gradient(170deg,#081526,#0c1d33 65%,#091526)!important;display:flex!important;align-items:center!important;justify-content:center!important}
+.combo-poster{position:relative;width:100%;height:100%;min-height:310px;border-radius:26px;background:linear-gradient(180deg,rgba(7,18,32,.88),rgba(11,24,42,.96));border:1px solid rgba(75,196,255,.14);box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 20px 36px rgba(0,0,0,.2);overflow:hidden;display:flex;align-items:center;justify-content:center}
+.combo-poster::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 20% 18%,rgba(0,217,255,.2),transparent 28%),radial-gradient(circle at 82% 82%,rgba(58,131,255,.18),transparent 28%);pointer-events:none}
+.combo-poster img{position:relative;z-index:1;width:100%!important;height:100%!important;object-fit:contain!important;padding:16px!important;filter:drop-shadow(0 18px 34px rgba(0,0,0,.34))}
+.combo-copy{padding:24px 24px 22px!important}
+.combo .price{font-size:2.12rem!important}
+.combo .old{font-size:1rem!important}
+.combo-products{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px!important}
+.combo-products span{display:inline-flex;align-items:center;gap:7px;padding:8px 11px!important;border-radius:999px;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.06)!important;font-size:.68rem!important;color:#d7e5f7!important}
+.combo-actions{display:grid;gap:10px;margin-top:18px!important}.combo-main-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.combo-main-actions .btn,.combo-actions .btn-secondary{width:100%}.combo-actions .btn{min-height:46px!important;font-size:.86rem!important}
+.combo-actions .btn-secondary{background:rgba(255,255,255,.05)!important;border:1px solid rgba(170,222,255,.14)!important}
+.combo-detail-stage.combo-detail-stage--single{display:flex;align-items:center;justify-content:center;min-height:320px;padding:8px}
+.combo-detail-stage.combo-detail-stage--single img{width:100%;height:100%;object-fit:contain;border-radius:22px;background:linear-gradient(180deg,rgba(7,18,32,.88),rgba(11,24,42,.96));border:1px solid rgba(75,196,255,.14);padding:18px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 20px 36px rgba(0,0,0,.2)}
+.combo-detail-items{display:grid;gap:10px;margin-top:16px}.combo-detail-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:18px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06)}.combo-detail-item i{width:34px;height:34px;border-radius:12px;display:grid;place-items:center;background:rgba(0,217,255,.12);color:var(--cyan);font-style:normal;font-weight:800}
+@media(max-width:760px){.combo{grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)!important}.combo-visual.combo-visual-single{min-height:300px!important;padding:14px!important}.combo-poster{min-height:270px}.combo-poster img{padding:12px!important}.combo-copy{padding:16px 14px 16px!important}.combo h3{font-size:1.18rem!important}.combo p{font-size:.78rem!important;line-height:1.58!important}.combo .price{font-size:1.76rem!important}.combo-actions .btn{min-height:42px!important;font-size:.78rem!important}.combo-main-actions{grid-template-columns:1fr!important}}
+@media(max-width:420px){.combo{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr)!important}.combo-visual.combo-visual-single{min-height:280px!important;padding:12px!important}.combo-poster{min-height:246px}.combo h3{font-size:1.06rem!important}.combo p{font-size:.72rem!important}.combo .price{font-size:1.54rem!important}.combo-actions .btn{font-size:.72rem!important;min-height:39px!important}}
+`;
+if(!document.getElementById('np-v88-style')){const s=document.createElement('style');s.id='np-v88-style';s.textContent=NP_V88_STYLE;document.head.appendChild(s)}
+
+function normalizeComboRecord(combo){
+  const linked=Array.isArray(combo?.productIds)?combo.productIds.map(id=>state.products.find(p=>p.id===id)).filter(Boolean):[];
+  const includes=Array.isArray(combo?.includes)?combo.includes.filter(Boolean):typeof combo?.includes==='string'?combo.includes.split(',').map(x=>x.trim()).filter(Boolean):linked.map(p=>p.name);
+  return {
+    id:combo?.id||uid('combo'),
+    name:(combo?.name||'Paquete digital').trim(),
+    image:(combo?.image||combo?.mainImage||combo?.poster||linked[0]?.image||BRAND_LOGO).trim ? (combo?.image||combo?.mainImage||combo?.poster||linked[0]?.image||BRAND_LOGO).trim() : (combo?.image||combo?.mainImage||combo?.poster||linked[0]?.image||BRAND_LOGO),
+    price:Number(combo?.price||0),
+    oldPrice:combo?.oldPrice===null||combo?.oldPrice===''||typeof combo?.oldPrice==='undefined'?null:Number(combo.oldPrice),
+    description:(combo?.description||combo?.summary||'Combo personalizado disponible en CRULOX.').trim(),
+    details:(combo?.details||combo?.longDescription||combo?.description||'').trim(),
+    includes:includes.length?includes:['Incluye productos seleccionados'],
+    badgeText:(combo?.badgeText||combo?.kicker||'').trim()||null,
+    featured:combo?.featured!==false
+  };
+}
+state.combos=(state.combos||[]).map(normalizeComboRecord);
+state.cart=(state.cart||[]).map(item=>item&&typeof item==='object'&&('type' in item)?item:{...item,type:'product'});
+state.faqs=(state.faqs||[]).map(f=>{
+  if(!f||!f.q)return f;
+  if(norm(f.q).includes('cuanto tarda el envio'))return {...f,a:'El tiempo de entrega se coordina según tu ubicación y la disponibilidad del producto. Como referencia general, manejamos entregas de 2 a 3 días hábiles.'};
+  if(norm(f.q).includes('como confirmo mi pedido'))return {...f,a:'Agrega productos o combos al carrito, inicia sesión, revisa tus datos de entrega y envía el pedido desde la tienda.'};
+  if(norm(f.q).includes('como contacto con soporte'))return {...f,a:'Utiliza el botón de WhatsApp para consultas o escribe a . Las compras ya no se envían por WhatsApp.'};
+  return f;
+});
+write(KEYS.combos,state.combos);write(KEYS.cart,state.cart);write(KEYS.faqs,state.faqs);
+if($('adminNav')&&!$('adminNav').querySelector('[data-admin="combos"]')){const btn=document.createElement('button');btn.dataset.admin='combos';btn.textContent='🔥 Combos';const ref=$('adminNav').querySelector('[data-admin="categories"]')||null;$('adminNav').insertBefore(btn,ref)}
+
+function cartKey(item){return `${item.type||'product'}::${item.id}`}
+function parseCartKey(key){const parts=String(key||'').split('::');return{type:parts[0]==='combo'?'combo':'product',id:parts.slice(1).join('::')}}
+function cartEntity(type,id){
+  if(type==='combo'){
+    const c=state.combos.find(x=>x.id===id);
+    return c?{type:'combo',id:c.id,name:c.name,image:c.image,price:Number(c.price||0),description:c.description,stockLabel:'Combo personalizado'}:null;
+  }
+  const p=state.products.find(x=>x.id===id);
+  return p?{...p,type:'product'}:null;
+}
+
+function applySettings(){
+  document.title=`${state.settings.storeName||'CRULOX'} · Tienda Premium`;
+  if($('heroSubtitle'))$('heroSubtitle').textContent=state.settings.subtitle;
+  if($('footerSubtitle'))$('footerSubtitle').textContent=state.settings.subtitle;
+  if($('footerEmail'))$('footerEmail').textContent=`📧 ${state.settings.email}`;
+  if($('footerEmail'))$('footerEmail').href=`mailto:${state.settings.email}`;
+  if($('shippingBenefit'))$('shippingBenefit').textContent=state.settings.shippingText||'Entrega digital';
+  if($('returnBenefit'))$('returnBenefit').textContent=state.settings.returnText||'Según servicio digital';
+  const heroLogo=document.querySelector('.hero-brand-top img');
+  if(heroLogo){heroLogo.src=state.settings.heroLogoData||BRAND_LOGO_FULL;heroLogo.alt=state.settings.storeName||'CRULOX'}
+  renderSocials();
+}
+
+function renderHeader(){
+  const user=currentUser();
+  $('profileDot').textContent=state.session?.role==='admin'?'A':user?(user.fullName||user.username||'U').charAt(0).toUpperCase():'P';
+  $('cartCount').textContent=state.cart.reduce((s,i)=>s+Number(i.qty||0),0);
+  $('favCount').textContent=state.favorites.length;
+  if($('heroProductCount'))$('heroProductCount').textContent='TOP';
+  if($('heroCategoryCount'))$('heroCategoryCount').textContent='MIX';
+}
+
+function renderCategories(){
+  const cats=categories();
+  $('categoryChips').innerHTML=[`<button class="cat ${state.category==='all'?'active':''}" data-cat="all">Todos</button>`,...cats.map(c=>`<button class="cat ${state.category===c?'active':''}" data-cat="${esc(c)}">${esc(c)}</button>`)].join('');
+  $('categoryChips').querySelectorAll('[data-cat]').forEach(btn=>btn.onclick=()=>{state.category=btn.dataset.cat;renderCategories();renderProducts()});
+}
+
+function comboForm(combo=null){
+  const c=combo||{id:'',name:'',price:'',oldPrice:'',image:'',description:'',details:'',includes:['']};
+  return `<form id="comboForm"><div class="form-grid"><div class="field full"><label>Nombre del combo</label><input id="cfName" value="${esc(c.name)}" required/></div><div class="field"><label>Precio</label><input id="cfPrice" type="number" step="0.01" min="0" value="${c.price||''}" required/></div><div class="field"><label>Precio anterior</label><input id="cfOldPrice" type="number" step="0.01" min="0" value="${c.oldPrice??''}"/></div><div class="field full"><label>URL o data URI de imagen</label><input id="cfImage" value="${esc(c.image||'')}" required/></div><div class="field full"><label>Cargar imagen local</label><input id="cfFile" type="file" accept="image/*"/></div><div class="field full"><label>Información breve</label><textarea id="cfDescription" required>${esc(c.description||'')}</textarea></div><div class="field full"><label>Detalles ampliados</label><textarea id="cfDetails">${esc(c.details||'')}</textarea></div><div class="field full"><label>Elementos incluidos (separados por coma)</label><input id="cfIncludes" value="${esc((c.includes||[]).join(', '))}" placeholder="Auriculares Nova X1, Altavoz Bluetooth Nova"/></div><div class="field"><label>Etiqueta superior opcional</label><input id="cfBadgeText" value="${esc(c.badgeText||'')}" placeholder="AHORRA 21%"/></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar combo</button><button class="btn btn-secondary" type="button" data-close="crudModal">Cancelar</button></div></form>`;
+}
+
+function openComboEditor(id=null){
+  const combo=id?state.combos.find(c=>c.id===id):null;
+  $('crudTitle').textContent=combo?'Editar combo':'Agregar combo';
+  $('crudBody').innerHTML=comboForm(combo);
+  openModal('crudModal');
+  let fileData='';
+  $('cfFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{fileData=await optimizeImageFile(f,{maxWidth:1600,maxHeight:1600,quality:.9});$('cfImage').value=fileData}catch(error){toast('No fue posible procesar la imagen.','error')}};
+  $('comboForm').onsubmit=e=>{e.preventDefault();const data=normalizeComboRecord({name:$('cfName').value.trim(),price:Number($('cfPrice').value||0),oldPrice:$('cfOldPrice').value?Number($('cfOldPrice').value):null,image:fileData||$('cfImage').value.trim(),description:$('cfDescription').value.trim(),details:$('cfDetails').value.trim(),includes:$('cfIncludes').value.split(',').map(v=>v.trim()).filter(Boolean),badgeText:$('cfBadgeText').value.trim()||null});if(combo)Object.assign(combo,data);else state.combos.unshift({id:uid('c'),...data});write(KEYS.combos,state.combos);logActivity(combo?'Combo editado':'Combo agregado',data.name);closeModal('crudModal');renderStore();renderAdminSection('combos');toast('Combo guardado.','success')};
+}
+
+function adminCombos(){
+  $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Gestión de combos</h2><div class="toolbar"><input id="adminComboSearch" placeholder="Buscar combo"/><button class="btn btn-primary btn-sm" id="adminAddCombo">Agregar combo</button></div></div><div class="table-wrap"><table><thead><tr><th>Combo</th><th>Precio</th><th>Incluye</th><th>Etiqueta</th><th>Acciones</th></tr></thead><tbody id="adminComboRows"></tbody></table></div></section>`;
+  const renderRows=()=>{const q=norm($('adminComboSearch').value);const list=state.combos.filter(c=>!q||norm(`${c.name} ${c.description} ${(c.includes||[]).join(' ')}`).includes(q));$('adminComboRows').innerHTML=list.map(c=>`<tr><td><div style="display:flex;align-items:center;gap:8px"><img src="${esc(c.image)}" alt=""><b>${esc(c.name)}</b></div></td><td>${money(c.price)}</td><td>${esc((c.includes||[]).join(', ')||'—')}</td><td>${esc(c.badgeText||'—')}</td><td><div class="toolbar"><button class="btn btn-secondary btn-sm" data-edit-combo="${c.id}">Editar</button><button class="btn btn-secondary btn-sm" data-duplicate-combo="${c.id}">Duplicar</button><button class="btn btn-red btn-sm" data-delete-combo="${c.id}">Eliminar</button></div></td></tr>`).join('')||'<tr><td colspan="5">No hay combos en este filtro.</td></tr>';$('adminComboRows').querySelectorAll('[data-edit-combo]').forEach(b=>b.onclick=()=>openComboEditor(b.dataset.editCombo));$('adminComboRows').querySelectorAll('[data-duplicate-combo]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.duplicateCombo);state.combos.unshift({...clone(c),id:uid('c'),name:`${c.name} copia`});write(KEYS.combos,state.combos);renderRows();renderStore();logActivity('Combo duplicado',c.name)});$('adminComboRows').querySelectorAll('[data-delete-combo]').forEach(b=>b.onclick=async()=>{const c=state.combos.find(x=>x.id===b.dataset.deleteCombo);if(!await npConfirm(`Eliminar ${c.name}?`))return;state.combos=state.combos.filter(x=>x.id!==c.id);state.cart=state.cart.filter(x=>!((x.type||'product')==='combo'&&x.id===c.id));persistCore();renderRows();renderStore();logActivity('Combo eliminado',c.name)})};
+  renderRows();$('adminComboSearch').oninput=renderRows;$('adminAddCombo').onclick=()=>openComboEditor();
+}
+
+function renderAdminSection(section){
+  state.adminSection=section;
+  renderAdminNav();
+  const titles={dashboard:'Resumen',products:'Productos',combos:'Combos',inventory:'Inventario',categories:'Categorías',faqs:'Preguntas frecuentes',users:'Clientes',orders:'Pedidos',settings:'Tienda',bots:'Atención',backup:'Respaldos',activity:'Actividad'};
+  $('adminTitle').textContent=titles[section]||'Administración';
+  const fn={dashboard:adminDashboard,products:adminProducts,combos:adminCombos,inventory:adminInventory,categories:adminCategories,faqs:adminFaqs,users:adminUsers,orders:adminOrders,settings:adminSettings,bots:adminBots,backup:adminBackup,activity:adminActivity}[section]||adminDashboard;
+  fn();
+}
+
+function adminDashboard(){
+  const sales=state.orders.reduce((s,o)=>s+Number(o.total||0),0);
+  const low=state.products.filter(p=>p.stock>0&&p.stock<=Number(state.settings.lowStock||5)).length;
+  const out=state.products.filter(p=>p.stock<=0).length;
+  $('adminContent').innerHTML=`<div class="notice"><b>Importante:</b> este panel funciona localmente en el navegador actual. Para producción real se necesita backend, base de datos y autenticación del servidor.</div><div class="admin-grid">${metric('Productos',state.products.length)}${metric('Combos',state.combos.length)}${metric('Categorías',categories().length)}${metric('Clientes',state.users.length)}${metric('Pedidos',state.orders.length)}${metric('Ventas registradas',money(sales))}${metric('Stock bajo',low)}${metric('Agotados',out)}${metric('FAQ',state.faqs.length)}</div><div class="admin-two"><section class="admin-card"><div class="admin-card-head"><h2>Acciones rápidas</h2></div><div class="toolbar"><button class="btn btn-primary btn-sm" id="quickAddProduct">Agregar producto</button><button class="btn btn-secondary btn-sm" id="quickAddCombo">Agregar combo</button><button class="btn btn-secondary btn-sm" id="quickOrders">Revisar pedidos</button><button class="btn btn-secondary btn-sm" id="quickBackup">Crear respaldo</button></div></section><section class="admin-card"><div class="admin-card-head"><h2>Estado técnico</h2></div><div class="admin-list"><article class="admin-list-item"><div><h3>Canal de consultas</h3><p>${esc(state.settings.supportBotUrl)}</p></div><span class="status ${state.settings.supportBotUrl==='#'?'warn':''}">${state.settings.supportBotUrl==='#'?'Pendiente':'Configurado'}</span></article><article class="admin-list-item"><div><h3>Pedidos de tienda</h3><p>Las compras se registran directamente en el panel de administración.</p></div><span class="status">Interno</span></article></div></section></div>`;
+  $('quickAddProduct').onclick=()=>openProductEditor();
+  $('quickAddCombo').onclick=()=>openComboEditor();
+  $('quickOrders').onclick=()=>renderAdminSection('orders');
+  $('quickBackup').onclick=exportBackup;
+}
+
+function adminSettings(){
+  $('adminContent').innerHTML=`<form class="admin-card" style="margin-top:0" id="settingsForm"><div class="admin-card-head"><h2>Identidad y datos de la tienda</h2></div><div class="form-grid"><div class="field"><label>Nombre de tienda</label><input id="setName" value="${esc(state.settings.storeName)}"/></div><div class="field"><label>Correo</label><input id="setEmail" type="email" value="${esc(state.settings.email)}"/></div><div class="field full"><label>Eslogan</label><input id="setSlogan" value="${esc(state.settings.slogan)}"/></div><div class="field full"><label>Descripción</label><textarea id="setSubtitle">${esc(state.settings.subtitle)}</textarea></div><div class="field full"><label>Logo del bloque principal</label><input id="setHeroLogo" value="${esc(state.settings.heroLogoData||BRAND_LOGO)}"/></div><div class="field full"><label>Cargar logo local</label><input id="setHeroLogoFile" type="file" accept="image/*"/></div><div class="field"><label>Moneda</label><input id="setCurrency" value="${esc(state.settings.currency)}"/></div><div class="field"><label>Límite de stock bajo</label><input id="setLowStock" type="number" min="0" value="${state.settings.lowStock}"/></div><div class="field"><label>Facebook</label><input id="setFacebook" value="${esc(state.settings.facebookUrl)}"/></div><div class="field"><label>Instagram</label><input id="setInstagram" value="${esc(state.settings.instagramUrl)}"/></div><div class="field"><label>TikTok</label><input id="setTiktok" value="${esc(state.settings.tiktokUrl)}"/></div><div class="field"><label>Texto de entrega</label><input id="setShipping" value="${esc(state.settings.shippingText)}"/></div><div class="field"><label>Texto de cambios</label><input id="setReturn" value="${esc(state.settings.returnText)}"/></div></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar configuración</button></div></form>`;
+  let heroLogoFile='';
+  $('setHeroLogoFile').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{heroLogoFile=await optimizeImageFile(f,{maxWidth:1000,maxHeight:350,quality:.94});$('setHeroLogo').value=heroLogoFile}catch(error){toast('No fue posible procesar el logo.','error')}};
+  $('settingsForm').onsubmit=e=>{e.preventDefault();Object.assign(state.settings,{storeName:$('setName').value.trim(),email:$('setEmail').value.trim(),slogan:$('setSlogan').value.trim(),subtitle:$('setSubtitle').value.trim(),heroLogoData:heroLogoFile||$('setHeroLogo').value.trim()||'',currency:$('setCurrency').value.trim()||'Q',lowStock:Number($('setLowStock').value||5),facebookUrl:$('setFacebook').value.trim()||'#',instagramUrl:$('setInstagram').value.trim()||'#',tiktokUrl:$('setTiktok').value.trim()||'#',shippingText:$('setShipping').value.trim(),returnText:$('setReturn').value.trim()});write(KEYS.settings,state.settings);applySettings();renderStore();logActivity('Configuración de tienda','Actualizada');toast('Configuración guardada.','success')};
+}
+
+function adminBots(){
+  $('adminContent').innerHTML=`<div class="admin-two"><form class="admin-card" style="margin-top:0" id="supportBotForm"><div class="admin-card-head"><h2>💬 Canal de consultas</h2></div><p style="color:var(--sub);font-size:.68rem;line-height:1.55;margin-bottom:10px">Recibe dudas de productos y soporte general.</p><div class="field"><label>URL pública</label><input id="botSupportUrl" value="${esc(state.settings.supportBotUrl)}"/></div><div class="field" style="margin-top:9px"><label>Nombre exacto de variable</label><input id="botSupportVar" value="${esc(state.settings.supportVariable)}"/></div><div class="form-actions"><button class="btn btn-primary" type="submit">Guardar</button><button class="btn btn-secondary" type="button" id="testSupport">Probar</button></div></form><section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>📦 Pedidos internos</h2></div><p style="color:var(--sub);font-size:.72rem;line-height:1.65">Las compras ya no se envían por bot ni por WhatsApp. Cada pedido se guarda directamente en la sección <b>Pedidos</b> del panel de administración.</p></section></div>`;
+  $('supportBotForm').onsubmit=e=>{e.preventDefault();state.settings.supportBotUrl=$('botSupportUrl').value.trim()||'#';state.settings.supportVariable=$('botSupportVar').value.trim()||'Consulta';write(KEYS.settings,state.settings);renderAdminSection('bots');applySettings();toast('Canal de consultas guardado.','success')};
+  $('testSupport').onclick=()=>openBot('support','Prueba de consulta CRULOX',{Tipo:'Consulta'});
+}
+
+function addToCart(id,qty=1){
+  const p=state.products.find(x=>x.id===id);
+  if(!p||Number(p.stock)<=0)return toast('Producto agotado.','warn');
+  const item=state.cart.find(x=>(x.type||'product')==='product'&&x.id===id);
+  const current=item?item.qty:0;
+  const next=Math.min(current+qty,Number(p.stock));
+  if(item)item.qty=next; else state.cart.push({type:'product',id:p.id,qty:Math.min(qty,Number(p.stock))});
+  write(KEYS.cart,state.cart);renderHeader();renderCart();toast(`${p.name} añadido al carrito.`,'success');
+}
+function addCombo(combo){
+  if(!combo)return;
+  const item=state.cart.find(x=>(x.type||'product')==='combo'&&x.id===combo.id);
+  if(item)item.qty=Math.min((item.qty||0)+1,99); else state.cart.push({type:'combo',id:combo.id,qty:1});
+  write(KEYS.cart,state.cart);renderHeader();renderCart();toast(`${combo.name} añadido al carrito.`,'success');
+}
+function changeQty(key,delta){
+  const {type,id}=parseCartKey(key);const item=state.cart.find(x=>(x.type||'product')===type&&x.id===id);if(!item)return;
+  if(type==='combo'){item.qty=Math.max(0,Math.min((item.qty||0)+delta,99));}
+  else {const p=state.products.find(x=>x.id===id);if(!p)return;item.qty=Math.max(0,Math.min((item.qty||0)+delta,Number(p.stock)))}
+  if(item.qty===0)state.cart=state.cart.filter(x=>!((x.type||'product')===type&&x.id===id));
+  write(KEYS.cart,state.cart);renderHeader();renderCart();
+}
+function removeCart(key){const {type,id}=parseCartKey(key);state.cart=state.cart.filter(x=>!((x.type||'product')===type&&x.id===id));write(KEYS.cart,state.cart);renderHeader();renderCart()}
+function cartDetails(){return state.cart.map(i=>{const data=cartEntity((i.type||'product'),i.id);return data?{...data,qty:Number(i.qty||1)}:null}).filter(Boolean)}
+function renderCart(){
+  const items=cartDetails();
+  $('cartItems').innerHTML=items.length?items.map(i=>{const key=cartKey(i);const sub=i.type==='combo'?'Combo personalizado':stockInfo(i)[0];return `<article class="list-card"><img src="${esc(i.image)}" alt="${esc(i.name)}"/><div><h3>${esc(i.name)}</h3><p>${money(i.price)} · ${esc(sub)}</p><div class="list-actions"><div class="qty"><button data-dec="${esc(key)}">−</button><span>${i.qty}</span><button data-inc="${esc(key)}">＋</button></div><button class="btn btn-red btn-sm" data-remove-cart="${esc(key)}">Eliminar</button></div></div><strong>${money(i.price*i.qty)}</strong></article>`}).join(''):'<div class="empty">Tu carrito está vacío.</div>';
+  $('cartTotal').textContent=money(items.reduce((s,i)=>s+i.price*i.qty,0));
+  $('cartItems').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));
+  $('cartItems').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));
+  $('cartItems').querySelectorAll('[data-remove-cart]').forEach(b=>b.onclick=()=>removeCart(b.dataset.removeCart));
+}
+
+function renderCombos(){
+  $('combosGrid').innerHTML=state.combos.length?state.combos.map(c=>{const discount=c.oldPrice?Math.round((1-c.price/c.oldPrice)*100):0;const badge=c.badgeText||(discount?`AHORRA ${discount}%`:'COMBO NOVA');return `<article class="combo"><div class="combo-visual combo-visual-single"><div class="combo-poster"><img src="${esc(c.image||BRAND_LOGO)}" alt="${esc(c.name)}" loading="lazy" decoding="async"/></div></div><div class="combo-copy"><span class="section-kicker">${esc(badge)}</span><h3>${esc(c.name)}</h3><p>${esc(c.description)}</p><div class="combo-products">${(c.includes||[]).map((item,index)=>`<span><i>${index===0?'◉':'◎'}</i>${esc(item)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div><button class="btn btn-secondary" data-combo-detail="${c.id}">Ver más detalles</button></div></div></article>`}).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  $('combosGrid').querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  $('combosGrid').querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  $('combosGrid').querySelectorAll('[data-combo-detail]').forEach(b=>b.onclick=()=>openComboDetail(b.dataset.comboDetail));
+}
+
+function openComboDetail(id){
+  const c=state.combos.find(x=>x.id===id);if(!c)return;const discount=c.oldPrice?Math.round((1-c.price/c.oldPrice)*100):0;
+  $('detailBody').innerHTML=`<div class="combo-detail"><div class="combo-detail-visual"><div class="combo-detail-stage combo-detail-stage--single"><img class="combo-detail-main" src="${esc(c.image||BRAND_LOGO)}" alt="${esc(c.name)}"/></div></div><div><span class="section-kicker">Combo inteligente${discount?` · Ahorra ${discount}%`:''}</span><h2>${esc(c.name)}</h2><div class="price-row" style="margin:12px 0"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><p>${esc(c.details||c.description)}</p><div class="combo-detail-items">${(c.includes||[]).map(item=>`<div class="combo-detail-item"><i>◎</i><div><h4>${esc(item)}</h4><p>Incluido en este combo.</p></div></div>`).join('')}</div><div class="combo-detail-actions"><button class="btn btn-primary" id="detailAddCombo">🛒 Añadir combo</button><button class="btn btn-green" id="detailSupportCombo">WhatsApp</button><button class="btn btn-secondary" id="detailCloseCombo">Seguir viendo combos</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailAddCombo').onclick=()=>{addCombo(c);closeModal('detailModal')};
+  $('detailSupportCombo').onclick=()=>openBot('support',`Hola. Necesito información detallada sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'});
+  $('detailCloseCombo').onclick=()=>closeModal('detailModal');
+}
+
+function buildOrder(user,items,notes=''){return{id:`NP-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${Math.random().toString(36).slice(2,7).toUpperCase()}`,userId:user.id,customer:{fullName:user.fullName,email:user.email,phone:user.phone,department:user.department,municipality:user.municipality,address:user.address,reference:user.reference},items:items.map(i=>({type:i.type||'product',id:i.id,name:i.name,price:Number(i.price),qty:Number(i.qty)})),total:items.reduce((s,i)=>s+Number(i.price)*Number(i.qty),0),notes,status:'Nuevo',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}}
+function submitOrder(e){e.preventDefault();const user=currentUser();if(!user)return openCheckout();const items=cartDetails();if(!items.length)return toast('Tu carrito está vacío.','warn');const order=buildOrder(user,items,$('coNotes').value.trim());registerOrder(order);state.cart=[];write(KEYS.cart,state.cart);renderHeader();renderCart();closeModal('checkoutModal');$('coNotes').value='';toast(`Pedido ${order.id} enviado correctamente.`,'success')}
+
+function adminOrders(){
+  $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Pedidos</h2><div class="toolbar"><input id="orderSearch" placeholder="Buscar pedido o cliente"/><select id="orderStatus"><option value="all">Todos los estados</option>${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" id="exportOrders">Exportar CSV</button></div></div><div class="admin-list" id="orderAdminList"></div></section>`;
+  const render=()=>{const q=norm($('orderSearch').value),st=$('orderStatus').value;const list=state.orders.filter(o=>(st==='all'||o.status===st)&&(!q||norm(`${o.id} ${o.customer?.fullName} ${o.customer?.email}`).includes(q)));$('orderAdminList').innerHTML=list.map(o=>`<article class="admin-list-item"><div><h3>${esc(o.id)} · ${esc(o.customer?.fullName||'Cliente')}</h3><p>${new Date(o.createdAt).toLocaleString('es-GT')} · ${o.items.length} artículos · ${money(o.total)}</p><p style="margin-top:6px;color:var(--sub);font-size:.68rem">${esc(o.items.map(i=>`${i.name} x${i.qty}${i.type==='combo'?' · combo':''}`).join(' • '))}</p></div><div class="toolbar"><select data-order-status="${o.id}">${['Nuevo','Confirmado','Preparando','Enviado','Entregado','Cancelado'].map(s=>`<option ${o.status===s?'selected':''}>${s}</option>`).join('')}</select><button class="btn btn-secondary btn-sm" data-copy-order="${o.id}">Copiar</button><button class="btn btn-red btn-sm" data-delete-order="${o.id}">Eliminar</button></div></article>`).join('')||'<div class="empty">No hay pedidos en este filtro.</div>';$('orderAdminList').querySelectorAll('[data-order-status]').forEach(s=>s.onchange=()=>{const o=state.orders.find(x=>x.id===s.dataset.orderStatus);o.status=s.value;o.updatedAt=new Date().toISOString();write(KEYS.orders,state.orders);logActivity('Estado de pedido',`${o.id} → ${o.status}`)});$('orderAdminList').querySelectorAll('[data-copy-order]').forEach(b=>b.onclick=()=>{const o=state.orders.find(x=>x.id===b.dataset.copyOrder);copyText(orderMessage(o));toast('Pedido copiado.','success')});$('orderAdminList').querySelectorAll('[data-delete-order]').forEach(b=>b.onclick=async()=>{const o=state.orders.find(x=>x.id===b.dataset.deleteOrder);if(!await npConfirm(`Eliminar pedido ${o.id}?`))return;state.orders=state.orders.filter(x=>x.id!==o.id);write(KEYS.orders,state.orders);render();logActivity('Pedido eliminado',o.id)})};
+  render();$('orderSearch').oninput=render;$('orderStatus').onchange=render;$('exportOrders').onclick=()=>exportCsv('pedidos.csv',state.orders.map(o=>({id:o.id,cliente:o.customer?.fullName,correo:o.customer?.email,total:o.total,estado:o.status,creado:o.createdAt,items:o.items.map(i=>`${i.name} x${i.qty}`).join(' | ')})));
+}
+
+
+/* v8.9 combos visual patch */
+const NP_V89_STYLE=`
+.combo{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:0!important;
+  padding:0!important;
+  border-radius:32px!important;
+  overflow:hidden!important;
+  background:linear-gradient(160deg,rgba(9,21,37,.98),rgba(8,20,35,.97) 58%,rgba(8,19,33,.99))!important;
+  border:1px solid rgba(84,192,255,.20)!important;
+  box-shadow:0 26px 60px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.03)!important;
+}
+.combo-visual{
+  position:relative;
+  min-height:420px;
+  background:radial-gradient(circle at 18% 18%,rgba(0,221,255,.18),transparent 34%),radial-gradient(circle at 78% 82%,rgba(59,129,255,.18),transparent 30%),linear-gradient(165deg,#071322,#09192c 52%,#081526 100%);
+  border-right:1px solid rgba(84,192,255,.12);
+  overflow:hidden;
+}
+.combo-visual::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(0deg,rgba(0,0,0,.10),rgba(0,0,0,0) 24%),linear-gradient(135deg,rgba(255,255,255,.02),transparent 50%);
+  pointer-events:none;
+}
+.combo-hero-photo,.combo-auto-hero{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:stretch;
+  justify-content:stretch;
+}
+.combo-hero-photo img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  display:block;
+}
+.combo-auto-hero{
+  align-items:flex-end;
+  justify-content:center;
+  padding:22px;
+}
+.combo-auto-glow{
+  position:absolute;
+  inset:10% 10% auto 10%;
+  height:64%;
+  border-radius:34px;
+  background:radial-gradient(circle at 50% 20%,rgba(40,231,255,.20),transparent 44%),linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01));
+  border:1px solid rgba(90,202,255,.10);
+}
+.combo-auto-floor{
+  position:absolute;
+  left:8%;
+  right:8%;
+  bottom:28px;
+  height:42px;
+  border-radius:999px;
+  background:radial-gradient(circle at 50% 50%,rgba(26,200,255,.40),rgba(26,200,255,.15) 45%,rgba(26,200,255,0) 70%);
+  filter:blur(1px);
+}
+.combo-product-shot{
+  position:absolute;
+  display:block;
+  object-fit:contain;
+  filter:drop-shadow(0 22px 38px rgba(0,0,0,.42));
+  z-index:2;
+}
+.combo-product-shot.primary{left:2%;bottom:18px;width:62%;height:78%;object-position:left bottom;}
+.combo-product-shot.secondary{right:1%;bottom:16px;width:44%;height:58%;object-position:right bottom;z-index:3;}
+.combo-product-shot.single{left:10%;right:10%;bottom:16px;width:80%;height:76%;object-position:center bottom;}
+.combo-copy{
+  padding:30px 28px 26px!important;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+}
+.combo .section-kicker{display:inline-flex;align-self:flex-start;margin-bottom:14px;padding:10px 18px;border-radius:999px;border:1px solid rgba(81,190,255,.18);background:rgba(8,24,42,.66);font-size:.78rem;letter-spacing:.05em}
+.combo h3{font-size:2.05rem!important;line-height:1.05!important;margin:0 0 12px!important}
+.combo p{font-size:1rem!important;line-height:1.62!important;margin:0 0 16px!important;color:#d6e4f5!important}
+.combo-products{display:flex;flex-wrap:wrap;gap:10px;margin:0 0 18px!important}
+.combo-products span{display:inline-flex;align-items:center;gap:8px;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.05)!important;border:1px solid rgba(255,255,255,.07)!important;color:#dce7f8!important;font-size:.84rem!important;line-height:1.2!important}
+.combo-products span i{font-style:normal;color:var(--cyan)}
+.combo .price-row{display:flex;align-items:flex-end;gap:12px;margin:0 0 20px!important;flex-wrap:wrap}
+.combo .price{font-size:3rem!important;line-height:1!important;font-weight:900!important}
+.combo .old{font-size:1.25rem!important;opacity:.7!important;text-decoration:line-through!important}
+.combo-actions{display:grid;gap:12px;margin-top:4px!important}
+.combo-main-actions{display:grid;grid-template-columns:1fr;gap:12px}
+.combo-main-actions .btn,.combo-actions .btn-secondary{width:100%;min-height:54px!important;border-radius:18px!important;font-size:1rem!important;font-weight:800!important}
+.combo-actions .btn-secondary{background:rgba(255,255,255,.05)!important;border:1px solid rgba(172,223,255,.14)!important}
+.combo-detail-stage{position:relative;min-height:380px;background:radial-gradient(circle at 20% 20%,rgba(0,221,255,.16),transparent 34%),radial-gradient(circle at 78% 82%,rgba(59,129,255,.18),transparent 30%),linear-gradient(165deg,#071322,#09192c 52%,#081526 100%);border-radius:30px;overflow:hidden;border:1px solid rgba(84,192,255,.12)}
+.combo-detail-stage .combo-hero-photo,.combo-detail-stage .combo-auto-hero{position:absolute;inset:0}
+.combo-detail-stage img.combo-detail-main,.combo-detail-stage img.combo-detail-secondary{width:auto;height:auto}
+@media(max-width:860px){
+  .combo{grid-template-columns:1fr!important}
+  .combo-visual{min-height:360px;border-right:0;border-bottom:1px solid rgba(84,192,255,.12)}
+  .combo-copy{padding:22px 18px 20px!important}
+  .combo h3{font-size:1.7rem!important}
+  .combo p{font-size:.92rem!important}
+  .combo .price{font-size:2.45rem!important}
+  .combo-main-actions{grid-template-columns:1fr!important}
+}
+@media(max-width:480px){
+  .combo-visual{min-height:310px}
+  .combo-auto-hero{padding:16px}
+  .combo-product-shot.primary{left:1%;width:64%;height:76%}
+  .combo-product-shot.secondary{right:0;width:46%;height:56%}
+  .combo .section-kicker{font-size:.72rem;padding:8px 14px}
+  .combo h3{font-size:1.5rem!important}
+  .combo p{font-size:.86rem!important}
+  .combo-products span{font-size:.76rem!important;padding:8px 12px}
+  .combo .price{font-size:2.15rem!important}
+  .combo-main-actions .btn,.combo-actions .btn-secondary{min-height:48px!important;font-size:.92rem!important}
+}
+`;
+if(!document.getElementById('np-v89-style')){const st=document.createElement('style');st.id='np-v89-style';st.textContent=NP_V89_STYLE;document.head.appendChild(st)}
+
+function comboLinkedProducts(combo){
+  const ids=Array.isArray(combo?.productIds)?combo.productIds.filter(Boolean):[];
+  const byId=ids.map(id=>state.products.find(p=>p.id===id)).filter(Boolean);
+  if(byId.length)return byId;
+  const includes=Array.isArray(combo?.includes)?combo.includes.filter(Boolean):[];
+  const matched=[];
+  includes.forEach(name=>{
+    const found=state.products.find(p=>norm(p.name)===norm(name)||norm(p.name).includes(norm(name))||norm(name).includes(norm(p.name)));
+    if(found && !matched.some(x=>x.id===found.id))matched.push(found);
+  });
+  return matched;
+}
+function comboHasCustomHero(combo, linked){
+  const img=(combo?.image||'').trim();
+  if(!img || img===BRAND_LOGO)return false;
+  if(linked.some(p=>p?.image===img))return false;
+  return true;
+}
+function comboBadgeText(combo){
+  if(combo?.badgeText)return combo.badgeText;
+  const discount=combo?.oldPrice?Math.round((1-combo.price/combo.oldPrice)*100):0;
+  return discount?`AHORRA ${discount}%`:'COMBO NOVA';
+}
+function comboIncludesList(combo, linked){
+  const fromCombo=Array.isArray(combo?.includes)?combo.includes.filter(Boolean):[];
+  if(fromCombo.length)return fromCombo;
+  return linked.map(p=>p.name);
+}
+function renderComboVisual(combo, linked, detail=false){
+  const cls=detail?'combo-detail-stage':'combo-visual';
+  if(comboHasCustomHero(combo, linked)){
+    return `<div class="${cls}"><div class="combo-hero-photo"><img ${detail?'class="combo-detail-main"':''} src="${esc(combo.image)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/></div></div>`;
+  }
+  const primary=linked[0]||null;
+  const secondary=linked[1]||null;
+  return `<div class="${cls}"><div class="combo-auto-hero"><div class="combo-auto-glow"></div><div class="combo-auto-floor"></div>${primary?`<img ${detail?'class="combo-detail-main combo-product-shot primary"':'class="combo-product-shot primary"'} src="${esc(primary.image)}" alt="${esc(primary.name)}" loading="lazy" decoding="async"/>`:''}${secondary?`<img ${detail?'class="combo-detail-secondary combo-product-shot secondary"':'class="combo-product-shot secondary"'} src="${esc(secondary.image)}" alt="${esc(secondary.name)}" loading="lazy" decoding="async"/>`:primary?``:`<img ${detail?'class="combo-detail-main combo-product-shot single"':'class="combo-product-shot single"'} src="${esc(combo.image||BRAND_LOGO)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/>`}</div></div>`;
+}
+
+function renderCombos(){
+  const grid=$('combosGrid');
+  if(!grid)return;
+  grid.innerHTML=state.combos.length?state.combos.map(c=>{
+    const linked=comboLinkedProducts(c);
+    const includes=comboIncludesList(c, linked);
+    return `<article class="combo">${renderComboVisual(c, linked, false)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeText(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo personalizado de CRULOX.')}</p><div class="combo-products">${includes.map((name,i)=>`<span><i>${i===0?'◉':'◎'}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div><button class="btn btn-secondary" data-combo-detail="${c.id}">Ver más detalles</button></div></div></article>`;
+  }).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  grid.querySelectorAll('[data-combo-detail]').forEach(b=>b.onclick=()=>openComboDetail(b.dataset.comboDetail));
+}
+
+function openComboDetail(id){
+  const c=state.combos.find(x=>x.id===id);if(!c)return;
+  const linked=comboLinkedProducts(c);
+  const includes=comboIncludesList(c, linked);
+  const discount=c.oldPrice?Math.round((1-c.price/c.oldPrice)*100):0;
+  $('detailBody').innerHTML=`<div class="combo-detail">${renderComboVisual(c, linked, true)}<div><span class="section-kicker">Combo inteligente${discount?` · Ahorra ${discount}%`:''}</span><h2>${esc(c.name)}</h2><div class="price-row" style="margin:12px 0"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><p>${esc(c.details||c.description||'Combo personalizado disponible en CRULOX.')}</p><div class="combo-detail-items">${includes.map(name=>{const p=linked.find(x=>norm(x.name)===norm(name)||norm(x.name).includes(norm(name))||norm(name).includes(norm(x.name)));return `<div class="combo-detail-item">${p?`<img src="${esc(p.image)}" alt="${esc(p.name)}"/>`:`<i>◎</i>`}<div><h4>${esc(name)}</h4><p>${p?`${esc(p.category)} · ${money(p.price)}`:'Incluido en este combo.'}</p></div></div>`}).join('')}</div><div class="combo-detail-actions"><button class="btn btn-primary" id="detailAddCombo">🛒 Añadir combo</button><button class="btn btn-green" id="detailSupportCombo">WhatsApp</button><button class="btn btn-secondary" id="detailCloseCombo">Seguir viendo combos</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailAddCombo').onclick=()=>{addCombo(c);closeModal('detailModal')};
+  $('detailSupportCombo').onclick=()=>openBot('support',`Hola. Necesito información detallada sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'});
+  $('detailCloseCombo').onclick=()=>closeModal('detailModal');
+}
+
+
+/* v8.10 combo visual exact patch */
+const NP_V810_STYLE=`
+#combos .section-head{margin-bottom:16px!important}
+#combos .section-title{margin-bottom:0!important}
+#combos .grid{display:grid;gap:20px!important}
+.combo{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+  gap:0!important;
+  padding:0!important;
+  border-radius:32px!important;
+  overflow:hidden!important;
+  background:linear-gradient(90deg,rgba(7,18,31,.985) 0%,rgba(7,18,31,.985) 46%,rgba(10,23,39,.985) 46.1%,rgba(8,21,36,.985) 100%)!important;
+  border:1px solid rgba(65,183,255,.26)!important;
+  box-shadow:0 22px 50px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.04)!important;
+  min-height:420px;
+}
+.combo-photo{
+  position:relative;
+  min-height:420px;
+  background:linear-gradient(180deg,#06111f 0%,#071524 100%);
+  overflow:hidden;
+  border-right:1px solid rgba(69,186,255,.16);
+}
+.combo-photo::before{
+  content:'';
+  position:absolute;
+  left:-14%;
+  top:26px;
+  width:72%;
+  height:10px;
+  border-radius:999px;
+  background:linear-gradient(90deg,rgba(46,175,255,0),rgba(46,175,255,.95),rgba(46,175,255,.08));
+  transform:rotate(-37deg);
+  box-shadow:0 0 26px rgba(46,175,255,.55);
+  opacity:.92;
+  z-index:1;
+}
+.combo-photo::after{
+  content:'';
+  position:absolute;
+  left:9%;
+  right:9%;
+  bottom:26px;
+  height:44px;
+  border-radius:999px;
+  background:radial-gradient(circle at 50% 50%,rgba(35,203,255,.52),rgba(35,203,255,.18) 44%,rgba(35,203,255,0) 72%);
+  z-index:1;
+}
+.combo-photo img{
+  display:block;
+  user-select:none;
+  -webkit-user-drag:none;
+}
+.combo-photo-fill{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:center;
+  z-index:2;
+}
+.combo-stage{position:absolute;inset:0;z-index:2}
+.combo-floor{
+  position:absolute;
+  left:12%;
+  right:12%;
+  bottom:44px;
+  height:26px;
+  border-radius:999px;
+  border:2px solid rgba(43,196,255,.86);
+  box-shadow:0 0 16px rgba(43,196,255,.30), inset 0 0 12px rgba(43,196,255,.12);
+}
+.combo-shot{
+  position:absolute;
+  object-fit:contain;
+  filter:drop-shadow(0 24px 36px rgba(0,0,0,.48));
+}
+.combo-shot.primary{
+  left:3%;
+  bottom:52px;
+  width:70%;
+  height:74%;
+}
+.combo-shot.secondary{
+  right:4%;
+  bottom:48px;
+  width:42%;
+  height:48%;
+}
+.combo-shot.single{
+  left:8%;
+  right:8%;
+  bottom:42px;
+  width:84%;
+  height:74%;
+}
+.combo-copy{
+  padding:34px 34px 30px!important;
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+}
+.combo-copy .section-kicker{
+  align-self:flex-start;
+  margin:0 0 24px!important;
+  padding:12px 20px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(70,187,255,.20)!important;
+  background:rgba(11,23,39,.62)!important;
+  color:var(--cyan)!important;
+  font-size:clamp(.84rem,1.8vw,.98rem)!important;
+  letter-spacing:.06em!important;
+  font-weight:800!important;
+}
+.combo h3{
+  font-size:clamp(2.05rem,4vw,2.9rem)!important;
+  line-height:1.04!important;
+  margin:0 0 18px!important;
+  font-weight:900!important;
+}
+.combo p{
+  font-size:clamp(1.02rem,2.1vw,1.28rem)!important;
+  line-height:1.55!important;
+  color:#d6e3f2!important;
+  margin:0 0 18px!important;
+}
+.combo-products{display:grid!important;gap:12px!important;margin:0 0 24px!important}
+.combo-products span{
+  display:flex!important;
+  align-items:center!important;
+  gap:12px!important;
+  padding:14px 18px!important;
+  border-radius:999px!important;
+  background:rgba(255,255,255,.05)!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+  color:#e8f1fb!important;
+  font-size:clamp(.94rem,1.7vw,1.08rem)!important;
+  line-height:1.25!important;
+}
+.combo-products span i{font-style:normal!important;color:#dde9f8!important;opacity:.92}
+.combo .price-row{display:flex!important;flex-direction:column!important;align-items:flex-start!important;gap:6px!important;margin:0 0 22px!important}
+.combo .price{font-size:clamp(3.05rem,4.8vw,4rem)!important;line-height:1!important;font-weight:900!important;color:var(--cyan)!important}
+.combo .old{font-size:clamp(1.22rem,2vw,1.5rem)!important;line-height:1.1!important;color:rgba(233,242,252,.55)!important;text-decoration:line-through!important}
+.combo-actions{display:grid!important;gap:14px!important;margin-top:0!important}
+.combo-main-actions{display:grid!important;gap:14px!important}
+.combo-main-actions .btn{
+  width:100%!important;
+  min-height:66px!important;
+  border-radius:999px!important;
+  font-size:clamp(1rem,1.9vw,1.16rem)!important;
+  font-weight:900!important;
+  box-shadow:none!important;
+}
+.combo-actions .btn-secondary{display:none!important}
+@media(max-width:860px){
+  .combo{grid-template-columns:minmax(0,49%) minmax(0,51%)!important;min-height:340px}
+  .combo-photo{min-height:340px}
+  .combo-photo::before{top:20px;height:8px}
+  .combo-shot.primary{width:74%;height:68%;left:0;bottom:44px}
+  .combo-shot.secondary{width:40%;height:42%;right:5%;bottom:42px}
+  .combo-copy{padding:22px 18px 20px!important}
+  .combo-copy .section-kicker{margin-bottom:16px!important;padding:9px 16px!important}
+  .combo h3{font-size:clamp(1.55rem,5vw,2rem)!important;margin-bottom:12px!important}
+  .combo p{font-size:clamp(.82rem,2.45vw,.98rem)!important;margin-bottom:14px!important}
+  .combo-products{gap:10px!important;margin-bottom:18px!important}
+  .combo-products span{padding:11px 14px!important;font-size:clamp(.78rem,2vw,.92rem)!important;gap:8px!important}
+  .combo .price{font-size:clamp(2.35rem,5.5vw,2.8rem)!important}
+  .combo .old{font-size:clamp(.98rem,2.6vw,1.1rem)!important}
+  .combo-main-actions .btn{min-height:54px!important;font-size:clamp(.88rem,2.4vw,1rem)!important}
+}
+@media(max-width:480px){
+  .combo{grid-template-columns:minmax(0,47%) minmax(0,53%)!important;min-height:310px}
+  .combo-photo{min-height:310px}
+  .combo-photo::before{left:-18%;top:18px;width:74%}
+  .combo-shot.primary{width:78%;height:64%;left:-2%;bottom:40px}
+  .combo-shot.secondary{width:43%;height:38%;right:1%;bottom:40px}
+  .combo-floor{left:10%;right:10%;bottom:34px;height:22px}
+  .combo-copy{padding:18px 14px 16px!important}
+  .combo-copy .section-kicker{margin-bottom:14px!important;padding:8px 14px!important;font-size:.74rem!important}
+  .combo h3{font-size:clamp(1.34rem,6vw,1.72rem)!important;margin-bottom:10px!important}
+  .combo p{font-size:clamp(.74rem,3.2vw,.9rem)!important;line-height:1.48!important;margin-bottom:12px!important}
+  .combo-products{gap:8px!important;margin-bottom:15px!important}
+  .combo-products span{padding:9px 11px!important;font-size:clamp(.7rem,2.85vw,.84rem)!important;border-radius:18px!important;gap:6px!important}
+  .combo .price-row{margin-bottom:16px!important}
+  .combo .price{font-size:clamp(2rem,7.2vw,2.45rem)!important}
+  .combo .old{font-size:.9rem!important}
+  .combo-main-actions .btn{min-height:48px!important;font-size:.9rem!important;padding:0 14px!important}
+}
+`;
+if(!document.getElementById('np-v810-style')){const st=document.createElement('style');st.id='np-v810-style';st.textContent=NP_V810_STYLE;document.head.appendChild(st)}
+
+function comboProductsResolved(combo){
+  const ids=Array.isArray(combo?.productIds)?combo.productIds.filter(Boolean):[];
+  return ids.map(id=>state.products.find(p=>p.id===id)).filter(Boolean);
+}
+function comboItemsResolved(combo, products){
+  const arr=(Array.isArray(combo?.includes)&&combo.includes.length)?combo.includes:products.map(p=>p.name);
+  return arr.filter(Boolean);
+}
+function comboBadgeResolved(combo){
+  if(combo?.badgeText)return combo.badgeText;
+  const discount=combo?.oldPrice?Math.round((1-combo.price/combo.oldPrice)*100):0;
+  return discount?`AHORRA ${discount}%`:'COMBO NOVA';
+}
+function comboHeroExact(combo, products){
+  const img=(combo?.image||'').trim();
+  if(img && img!==BRAND_LOGO){
+    return `<div class="combo-photo"><img class="combo-photo-fill" src="${esc(img)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/></div>`;
+  }
+  const a=products[0]||null;
+  const b=products[1]||null;
+  return `<div class="combo-photo"><div class="combo-stage"><div class="combo-floor"></div>${a&&b?`<img class="combo-shot primary" src="${esc(a.image)}" alt="${esc(a.name)}" loading="lazy" decoding="async"/><img class="combo-shot secondary" src="${esc(b.image)}" alt="${esc(b.name)}" loading="lazy" decoding="async"/>`:a?`<img class="combo-shot single" src="${esc(a.image)}" alt="${esc(a.name)}" loading="lazy" decoding="async"/>`:`<img class="combo-shot single" src="${esc(BRAND_LOGO)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/>`}</div></div>`;
+}
+function renderCombos(){
+  const grid=$('combosGrid');
+  if(!grid)return;
+  grid.innerHTML=state.combos.length?state.combos.map(c=>{
+    const products=comboProductsResolved(c);
+    const items=comboItemsResolved(c,products);
+    return `<article class="combo">${comboHeroExact(c,products)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeResolved(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo especial disponible en CRULOX.')}</p><div class="combo-products">${items.map((name,i)=>`<span><i>${i===0?'🎧':'🔊'}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div></div></div></article>`;
+  }).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+}
+
+
+/* v8.11 hero and combos refinement */
+const NP_V811_STYLE=`
+.hero-copy{display:flex;flex-direction:column;justify-content:center}
+.hero-brand-top{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;margin-bottom:14px}
+.hero-brand-top img{width:min(100%,500px);height:96px;object-fit:contain;filter:drop-shadow(0 14px 28px rgba(0,0,0,.34))}
+.hero-brand-copy{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:-2px}
+.hero-brand-name{display:block;color:#fff;font-size:clamp(.82rem,2.2vw,1.04rem);font-weight:900;letter-spacing:.03em;line-height:1;text-transform:uppercase}
+.hero-tag{margin-bottom:8px}
+.hero-art{display:flex;align-items:flex-end;justify-content:center;padding:28px 32px 34px}
+.hero-mini{width:100%;max-width:430px;margin-top:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.hero-mini div{padding:16px 10px;border-radius:18px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);text-align:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.hero-mini b{font-size:1.05rem;letter-spacing:.02em}
+.hero-mini span{font-size:.68rem;line-height:1.35}
+.combo-actions{display:grid!important;gap:12px!important}
+.combo-main-actions{display:grid!important;grid-template-columns:1fr 1fr!important;gap:12px!important}
+.combo-main-actions .btn,.combo-actions .btn-secondary{width:100%!important}
+.combo-actions .btn-secondary{display:block!important;min-height:58px!important;border-radius:999px!important;background:rgba(255,255,255,.05)!important;border:1px solid rgba(170,222,255,.14)!important;color:#eef6ff!important;font-weight:900!important;font-size:clamp(.92rem,2vw,1.05rem)!important}
+.combo-actions .btn-secondary:hover{border-color:rgba(82,198,255,.28)!important;background:rgba(255,255,255,.07)!important}
+@media(max-width:860px){.hero-art{padding:8px 18px 24px}.hero-brand-top{justify-content:center;margin-bottom:12px}.hero-brand-top img{height:82px}.hero-mini{max-width:none;gap:10px}.hero-mini div{padding:14px 8px}.hero-mini b{font-size:.98rem}.hero-mini span{font-size:.66rem}}
+@media(max-width:520px){.hero-brand-top img{height:70px}.hero-copy{padding:20px 16px 8px}.hero-mini{gap:8px}.hero-mini div{padding:12px 8px;border-radius:16px}.hero-mini b{font-size:.92rem}.hero-mini span{font-size:.62rem}.combo-main-actions{grid-template-columns:1fr!important}.combo-actions .btn-secondary,.combo-main-actions .btn{min-height:50px!important;font-size:.9rem!important}}
+`;
+if(!document.getElementById('np-v811-style')){const st=document.createElement('style');st.id='np-v811-style';st.textContent=NP_V811_STYLE;document.head.appendChild(st)}
+function comboProductsResolved(combo){
+  const ids=Array.isArray(combo?.productIds)?combo.productIds.filter(Boolean):[];
+  return ids.map(id=>state.products.find(p=>p.id===id)).filter(Boolean);
+}
+function comboItemsResolved(combo, products){
+  const arr=(Array.isArray(combo?.includes)&&combo.includes.length)?combo.includes:products.map(p=>p.name);
+  return arr.filter(Boolean);
+}
+function comboBadgeResolved(combo){
+  if(combo?.badgeText)return combo.badgeText;
+  const discount=combo?.oldPrice?Math.round((1-Number(combo.price||0)/Number(combo.oldPrice||1))*100):0;
+  return discount?`AHORRA ${discount}%`:'COMBO NOVA';
+}
+function comboItemIcon(name,index){
+  const n=(name||'').toLowerCase();
+  if(n.includes('auricular')||n.includes('buds')||n.includes('head')) return '🎧';
+  if(n.includes('altavoz')||n.includes('parlante')||n.includes('speaker')) return '🔊';
+  if(n.includes('smartwatch')||n.includes('watch')) return '⌚';
+  if(n.includes('cargador')) return '⚡';
+  if(n.includes('funda')) return '🛡️';
+  return index===0?'◉':'◎';
+}
+function comboHeroExact(combo, products){
+  const a=products[0]||null;
+  const b=products[1]||null;
+  return `<div class="combo-photo"><div class="combo-stage"><div class="combo-floor"></div>${a&&b?`<img class="combo-shot primary" src="${esc(a.image)}" alt="${esc(a.name)}" loading="lazy" decoding="async"/><img class="combo-shot secondary" src="${esc(b.image)}" alt="${esc(b.name)}" loading="lazy" decoding="async"/>`:a?`<img class="combo-shot single" src="${esc(a.image)}" alt="${esc(a.name)}" loading="lazy" decoding="async"/>`:`<img class="combo-shot single" src="${esc(BRAND_LOGO)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/>`}</div></div>`;
+}
+function renderCombos(){
+  const grid=$('combosGrid');
+  if(!grid)return;
+  grid.innerHTML=state.combos.length?state.combos.map(c=>{
+    const products=comboProductsResolved(c);
+    const items=comboItemsResolved(c,products);
+    return `<article class="combo">${comboHeroExact(c,products)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeResolved(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo especial disponible en CRULOX.')}</p><div class="combo-products">${items.map((name,i)=>`<span><i>${comboItemIcon(name,i)}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div><button class="btn btn-secondary" data-combo-detail="${c.id}">Detalles</button></div></div></article>`;
+  }).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  grid.querySelectorAll('[data-combo-detail]').forEach(b=>b.onclick=()=>openComboDetail(b.dataset.comboDetail));
+}
+if(!document.getElementById('np-v811-script')){const s=document.createElement('script');s.id='np-v811-script';s.type='application/json';s.textContent='ok';document.body.appendChild(s)}
+
+
+/* v8.12: imágenes propias de combos y promociones */
+const NP_PROMOS_KEY='jm_digital_v1_promotions';
+const NP_APPLIED_PROMO_KEY='jm_digital_v1_applied_promotion';
+state.promos=read(NP_PROMOS_KEY,[]);
+state.appliedPromoCode=read(NP_APPLIED_PROMO_KEY,'');
+
+const NP_V812_STYLE=`
+.combo-photo.combo-photo-custom::before,.combo-photo.combo-photo-custom::after{display:none!important}
+.combo-photo.combo-photo-custom{background:#06111f!important}
+.combo-photo-custom .combo-photo-fill{inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;object-position:center!important;padding:0!important;filter:none!important}
+.combo-detail-stage.combo-detail-uploaded{display:flex!important;align-items:center!important;justify-content:center!important;min-height:390px!important;padding:0!important;background:#071321!important;overflow:hidden!important}
+.combo-detail-uploaded img{width:100%!important;height:100%!important;min-height:390px!important;object-fit:contain!important;object-position:center!important;padding:0!important;background:#071321!important;border:0!important;border-radius:0!important;filter:none!important;box-shadow:none!important}
+.promo-box{margin-bottom:14px;padding:13px;border-radius:17px;background:linear-gradient(145deg,rgba(10,32,52,.96),rgba(8,22,39,.96));border:1px solid rgba(0,217,255,.13);box-shadow:inset 0 1px 0 rgba(255,255,255,.03)}
+.promo-box label{display:block;margin-bottom:8px;color:#eaf5ff;font-size:.75rem;font-weight:900}
+.promo-entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.promo-entry input{width:100%;min-width:0;height:42px;padding:0 12px;border-radius:12px;border:1px solid rgba(255,255,255,.09);background:rgba(255,255,255,.045);color:var(--text);outline:0;text-transform:uppercase;font-weight:800;letter-spacing:.04em}
+.promo-entry input:focus{border-color:rgba(0,217,255,.38);box-shadow:0 0 0 3px rgba(0,217,255,.08)}
+.promo-entry button{height:42px;padding:0 15px;border:0;border-radius:12px;background:linear-gradient(135deg,var(--cyan),#1687ff);color:#031019;font-size:.72rem;font-weight:900}
+.promo-feedback{min-height:17px;margin-top:7px;color:var(--muted);font-size:.61rem;line-height:1.45}
+.promo-feedback.success{color:var(--green)}
+.promo-feedback.error{color:var(--red)}
+.subtotal-row{margin-bottom:7px;color:var(--sub);font-size:.75rem}
+.discount-row{margin-bottom:8px;color:var(--green);font-size:.78rem}
+.discount-row span:last-child{color:var(--green)!important}
+.cart-grand-total{padding-top:10px;border-top:1px solid var(--line)}
+.promo-admin-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-bottom:18px}
+.promo-admin-form .full{grid-column:1/-1}
+.promo-admin-list{display:grid;gap:10px}
+.promo-admin-item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px;align-items:center;padding:13px;border-radius:16px;background:rgba(255,255,255,.035);border:1px solid var(--line)}
+.promo-admin-item h3{font-size:.82rem}.promo-admin-item p{margin-top:4px;color:var(--muted);font-size:.65rem;line-height:1.5}
+@media(max-width:520px){.promo-admin-form{grid-template-columns:1fr}.promo-admin-form .full{grid-column:auto}.promo-admin-item{grid-template-columns:1fr}.combo-detail-uploaded img{min-height:280px}.combo-detail-stage.combo-detail-uploaded{min-height:280px}}
+`;
+if(!document.getElementById('np-v812-style')){const st=document.createElement('style');st.id='np-v812-style';st.textContent=NP_V812_STYLE;document.head.appendChild(st)}
+
+function normalizePromo(promo){
+  return {
+    id:promo?.id||uid('promo'),
+    code:String(promo?.code||'').trim().toUpperCase(),
+    description:String(promo?.description||'').trim(),
+    type:promo?.type==='fixed'?'fixed':'percent',
+    value:Math.max(0,Number(promo?.value||0)),
+    minPurchase:Math.max(0,Number(promo?.minPurchase||0)),
+    active:promo?.active!==false,
+    expiresAt:String(promo?.expiresAt||'').trim(),
+    uses:Math.max(0,Number(promo?.uses||0))
+  };
+}
+state.promos=(state.promos||[]).map(normalizePromo).filter(p=>p.code);
+write(NP_PROMOS_KEY,state.promos);
+
+function cartSubtotalValue(){return cartDetails().reduce((sum,item)=>sum+Number(item.price||0)*Number(item.qty||0),0)}
+function findPromo(code){const normalized=String(code||'').trim().toUpperCase();return state.promos.find(p=>p.code===normalized)||null}
+function promoValidation(code,subtotal=cartSubtotalValue()){
+  const promo=findPromo(code);
+  if(!promo)return{valid:false,message:'El código no existe.'};
+  if(!promo.active)return{valid:false,message:'Este código no está activo.'};
+  if(promo.expiresAt){const end=new Date(`${promo.expiresAt}T23:59:59`);if(!Number.isNaN(end.getTime())&&Date.now()>end.getTime())return{valid:false,message:'Este código ya venció.'}}
+  if(subtotal<Number(promo.minPurchase||0))return{valid:false,message:`Compra mínima requerida: ${money(promo.minPurchase)}.`};
+  const raw=promo.type==='fixed'?Number(promo.value):subtotal*(Number(promo.value)/100);
+  const discount=Math.max(0,Math.min(subtotal,raw));
+  if(discount<=0)return{valid:false,message:'Este código no genera descuento.'};
+  return{valid:true,promo,discount,message:`Código ${promo.code} aplicado: ahorras ${money(discount)}.`};
+}
+function currentPromoResult(subtotal=cartSubtotalValue()){
+  if(!state.appliedPromoCode)return null;
+  const result=promoValidation(state.appliedPromoCode,subtotal);
+  if(!result.valid){state.appliedPromoCode='';write(NP_APPLIED_PROMO_KEY,'');return null}
+  return result;
+}
+function applyPromoFromCart(){
+  const input=$('promoCodeInput');if(!input)return;
+  const result=promoValidation(input.value,cartSubtotalValue());
+  const message=$('promoMessage');
+  if(!result.valid){state.appliedPromoCode='';write(NP_APPLIED_PROMO_KEY,'');message.textContent=result.message;message.className='promo-feedback error';renderCart();return}
+  state.appliedPromoCode=result.promo.code;write(NP_APPLIED_PROMO_KEY,state.appliedPromoCode);renderCart();toast(result.message,'success');
+}
+
+function renderCart(){
+  const items=cartDetails();
+  $('cartItems').innerHTML=items.length?items.map(i=>{const key=cartKey(i);const sub=i.type==='combo'?'Combo personalizado':stockInfo(i)[0];return `<article class="list-card"><img src="${esc(i.image)}" alt="${esc(i.name)}"/><div><h3>${esc(i.name)}</h3><p>${money(i.price)} · ${esc(sub)}</p><div class="list-actions"><div class="qty"><button data-dec="${esc(key)}">−</button><span>${i.qty}</span><button data-inc="${esc(key)}">＋</button></div><button class="btn btn-red btn-sm" data-remove-cart="${esc(key)}">Eliminar</button></div></div><strong>${money(i.price*i.qty)}</strong></article>`}).join(''):'<div class="empty">Tu carrito está vacío.</div>';
+  const subtotal=items.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0);
+  const promoResult=currentPromoResult(subtotal);
+  const discount=promoResult?.discount||0;
+  const total=Math.max(0,subtotal-discount);
+  if($('cartSubtotal'))$('cartSubtotal').textContent=money(subtotal);
+  if($('cartDiscount'))$('cartDiscount').textContent=`-${money(discount)}`;
+  if($('cartDiscountRow'))$('cartDiscountRow').hidden=!promoResult;
+  $('cartTotal').textContent=money(total);
+  const input=$('promoCodeInput');if(input)input.value=state.appliedPromoCode||'';
+  const message=$('promoMessage');if(message){if(promoResult){message.textContent=promoResult.message;message.className='promo-feedback success'}else{message.textContent='Los códigos activos se aplican antes de enviar el pedido.';message.className='promo-feedback'}}
+  const applyBtn=$('promoApplyBtn');if(applyBtn)applyBtn.onclick=applyPromoFromCart;
+  if(input)input.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();applyPromoFromCart()}};
+  $('cartItems').querySelectorAll('[data-inc]').forEach(b=>b.onclick=()=>changeQty(b.dataset.inc,1));
+  $('cartItems').querySelectorAll('[data-dec]').forEach(b=>b.onclick=()=>changeQty(b.dataset.dec,-1));
+  $('cartItems').querySelectorAll('[data-remove-cart]').forEach(b=>b.onclick=()=>removeCart(b.dataset.removeCart));
+}
+
+function comboHeroExact(combo){
+  const image=String(combo?.image||'').trim()||BRAND_LOGO;
+  return `<div class="combo-photo combo-photo-custom"><img class="combo-photo-fill" src="${esc(image)}" alt="${esc(combo.name)}" loading="lazy" decoding="async"/></div>`;
+}
+function renderCombos(){
+  const grid=$('combosGrid');if(!grid)return;
+  grid.innerHTML=state.combos.length?state.combos.map(c=>{
+    const items=(Array.isArray(c.includes)?c.includes:[]).filter(Boolean);
+    return `<article class="combo">${comboHeroExact(c)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeResolved(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo especial disponible en CRULOX.')}</p><div class="combo-products">${items.map((name,i)=>`<span><i>${comboItemIcon(name,i)}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div><button class="btn btn-secondary" data-combo-detail="${c.id}">Detalles</button></div></div></article>`;
+  }).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+  grid.querySelectorAll('[data-combo-detail]').forEach(b=>b.onclick=()=>openComboDetail(b.dataset.comboDetail));
+}
+function openComboDetail(id){
+  const c=state.combos.find(x=>x.id===id);if(!c)return;
+  const discount=c.oldPrice?Math.round((1-Number(c.price||0)/Number(c.oldPrice||1))*100):0;
+  const image=String(c.image||'').trim()||BRAND_LOGO;
+  const items=(Array.isArray(c.includes)?c.includes:[]).filter(Boolean);
+  $('detailBody').innerHTML=`<div class="combo-detail"><div class="combo-detail-visual"><div class="combo-detail-stage combo-detail-uploaded"><img src="${esc(image)}" alt="${esc(c.name)}"/></div></div><div><span class="section-kicker">Combo${discount?` · Ahorra ${discount}%`:''}</span><h2>${esc(c.name)}</h2><div class="price-row" style="margin:12px 0"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><p>${esc(c.details||c.description||'Combo disponible en CRULOX.')}</p><div class="combo-detail-items">${items.map((name,i)=>`<div class="combo-detail-item"><i>${comboItemIcon(name,i)}</i><div><h4>${esc(name)}</h4><p>Incluido en este combo.</p></div></div>`).join('')}</div><div class="combo-detail-actions"><button class="btn btn-primary" id="detailAddCombo">🛒 Añadir combo</button><button class="btn btn-green" id="detailSupportCombo">WhatsApp</button><button class="btn btn-secondary" id="detailCloseCombo">Seguir viendo combos</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailAddCombo').onclick=()=>{addCombo(c);closeModal('detailModal')};
+  $('detailSupportCombo').onclick=()=>openBot('support',`Hola. Necesito información detallada sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'});
+  $('detailCloseCombo').onclick=()=>closeModal('detailModal');
+}
+
+function buildOrder(user,items,notes=''){
+  const subtotal=items.reduce((s,i)=>s+Number(i.price||0)*Number(i.qty||0),0);
+  const promoResult=currentPromoResult(subtotal);
+  const discount=promoResult?.discount||0;
+  return {id:`NP-${new Date().toISOString().slice(0,10).replaceAll('-','')}-${Math.random().toString(36).slice(2,7).toUpperCase()}`,userId:user.id,customer:{fullName:user.fullName,email:user.email,phone:user.phone,department:user.department,municipality:user.municipality,address:user.address,reference:user.reference},items:items.map(i=>({type:i.type||'product',id:i.id,name:i.name,price:Number(i.price),qty:Number(i.qty)})),subtotal,discount,promotion:promoResult?{code:promoResult.promo.code,type:promoResult.promo.type,value:promoResult.promo.value}:null,total:Math.max(0,subtotal-discount),notes,status:'Nuevo',createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+}
+function submitOrder(e){
+  e.preventDefault();const user=currentUser();if(!user)return openCheckout();const items=cartDetails();if(!items.length)return toast('Tu carrito está vacío.','warn');
+  const order=buildOrder(user,items,$('coNotes').value.trim());registerOrder(order);
+  if(order.promotion){const promo=findPromo(order.promotion.code);if(promo){promo.uses=Number(promo.uses||0)+1;write(NP_PROMOS_KEY,state.promos)}}
+  state.cart=[];state.appliedPromoCode='';write(KEYS.cart,state.cart);write(NP_APPLIED_PROMO_KEY,'');renderHeader();renderCart();closeModal('checkoutModal');$('coNotes').value='';toast(`Pedido ${order.id} enviado correctamente.`,'success');
+}
+
+function adminPromotions(){
+  $('adminContent').innerHTML=`<section class="admin-card" style="margin-top:0"><div class="admin-card-head"><h2>Códigos promocionales</h2></div><form id="promoAdminForm" class="promo-admin-form"><div class="field"><label>Código</label><input id="promoAdminCode" maxlength="24" placeholder="NOVA10" required/></div><div class="field"><label>Tipo</label><select id="promoAdminType"><option value="percent">Porcentaje</option><option value="fixed">Monto fijo</option></select></div><div class="field"><label>Valor</label><input id="promoAdminValue" type="number" min="0" step="0.01" required/></div><div class="field"><label>Compra mínima</label><input id="promoAdminMin" type="number" min="0" step="0.01" value="0"/></div><div class="field"><label>Válido hasta</label><input id="promoAdminExpiry" type="date"/></div><div class="field"><label>Estado</label><select id="promoAdminActive"><option value="true">Activo</option><option value="false">Inactivo</option></select></div><div class="field full"><label>Descripción</label><input id="promoAdminDescription" placeholder="10% de descuento en tu compra"/></div><div class="form-actions full"><button class="btn btn-primary" type="submit">Guardar código</button></div></form><div class="promo-admin-list" id="promoAdminList"></div></section>`;
+  const renderList=()=>{$('promoAdminList').innerHTML=state.promos.length?state.promos.map(p=>`<article class="promo-admin-item"><div><h3>${esc(p.code)} · ${p.type==='percent'?`${p.value}%`:money(p.value)}</h3><p>${esc(p.description||'Sin descripción')} · Compra mínima: ${money(p.minPurchase)}${p.expiresAt?` · Vence: ${esc(p.expiresAt)}`:''} · Usos: ${Number(p.uses||0)}</p></div><div class="toolbar"><button class="btn btn-secondary btn-sm" data-toggle-promo="${p.id}">${p.active?'Desactivar':'Activar'}</button><button class="btn btn-red btn-sm" data-delete-promo="${p.id}">Eliminar</button></div></article>`).join(''):'<div class="empty">Todavía no hay códigos promocionales.</div>';$('promoAdminList').querySelectorAll('[data-toggle-promo]').forEach(b=>b.onclick=()=>{const p=state.promos.find(x=>x.id===b.dataset.togglePromo);p.active=!p.active;write(NP_PROMOS_KEY,state.promos);renderList();renderCart()});$('promoAdminList').querySelectorAll('[data-delete-promo]').forEach(b=>b.onclick=async()=>{const p=state.promos.find(x=>x.id===b.dataset.deletePromo);if(!await npConfirm(`Eliminar el código ${p.code}?`))return;state.promos=state.promos.filter(x=>x.id!==p.id);if(state.appliedPromoCode===p.code){state.appliedPromoCode='';write(NP_APPLIED_PROMO_KEY,'')}write(NP_PROMOS_KEY,state.promos);renderList();renderCart()})};
+  renderList();
+  $('promoAdminForm').onsubmit=e=>{e.preventDefault();const code=$('promoAdminCode').value.trim().toUpperCase();const existing=state.promos.find(p=>p.code===code);const data=normalizePromo({id:existing?.id,code,type:$('promoAdminType').value,value:Number($('promoAdminValue').value||0),minPurchase:Number($('promoAdminMin').value||0),expiresAt:$('promoAdminExpiry').value,active:$('promoAdminActive').value==='true',description:$('promoAdminDescription').value.trim(),uses:existing?.uses||0});if(existing)Object.assign(existing,data);else state.promos.unshift(data);write(NP_PROMOS_KEY,state.promos);e.target.reset();$('promoAdminMin').value='0';renderList();toast('Código promocional guardado.','success')};
+}
+if($('adminNav')&&!$('adminNav').querySelector('[data-admin="promotions"]')){const btn=document.createElement('button');btn.dataset.admin='promotions';btn.textContent='🎟️ Promociones';const ref=$('adminNav').querySelector('[data-admin="orders"]')||null;$('adminNav').insertBefore(btn,ref)}
+function renderAdminSection(section){
+  state.adminSection=section;renderAdminNav();
+  const titles={dashboard:'Resumen',products:'Productos',combos:'Combos',inventory:'Inventario',categories:'Categorías',faqs:'Preguntas frecuentes',users:'Clientes',promotions:'Promociones',orders:'Pedidos',settings:'Tienda',bots:'Atención',backup:'Respaldos',activity:'Actividad'};
+  $('adminTitle').textContent=titles[section]||'Administración';
+  const fn={dashboard:adminDashboard,products:adminProducts,combos:adminCombos,inventory:adminInventory,categories:adminCategories,faqs:adminFaqs,users:adminUsers,promotions:adminPromotions,orders:adminOrders,settings:adminSettings,bots:adminBots,backup:adminBackup,activity:adminActivity}[section]||adminDashboard;
+  fn();
+}
+
+
+/* v8.13: hero compacto, promoción discreta y seguridad del pedido */
+const NP_V813_STYLE=`
+.hero-brand-top{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:2px!important;
+  width:100%!important;
+  margin:0 0 14px!important;
+}
+.hero-brand-top img{
+  width:min(100%,500px)!important;
+  height:92px!important;
+  object-fit:contain!important;
+  margin:0!important;
+  filter:drop-shadow(0 14px 28px rgba(0,0,0,.34))!important;
+}
+.hero-brand-slogan{
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin-top:-3px!important;
+  padding:5px 12px!important;
+  border-radius:999px!important;
+  background:rgba(0,217,255,.10)!important;
+  border:1px solid rgba(0,217,255,.17)!important;
+  color:var(--cyan)!important;
+  font-size:clamp(.54rem,1.6vw,.68rem)!important;
+  font-weight:900!important;
+  letter-spacing:.07em!important;
+  line-height:1.15!important;
+  text-transform:uppercase!important;
+  white-space:nowrap!important;
+}
+.hero-title-line{
+  width:100%!important;
+  margin:8px 0 12px!important;
+  font-size:clamp(1.42rem,5.4vw,3.15rem)!important;
+  line-height:1.08!important;
+  letter-spacing:-.045em!important;
+  text-align:center!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+}
+.hero-title-line>span{color:#dfe8f4!important;font-weight:700!important}
+.hero-title-line>strong{
+  color:var(--cyan)!important;
+  font-weight:900!important;
+}
+.hero-copy>p{text-align:center!important;margin-inline:auto!important}
+.hero-actions{display:block!important;width:100%!important;margin-top:18px!important}
+.hero-actions .btn{width:100%!important;min-height:48px!important}
+.hero-art{padding-top:8px!important}
+
+.promo-box{
+  margin:8px 0 12px!important;
+  padding:10px 11px!important;
+  border-radius:14px!important;
+  background:linear-gradient(145deg,rgba(10,31,50,.90),rgba(8,22,38,.90))!important;
+  border:1px solid rgba(0,217,255,.11)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+.promo-box label{
+  display:flex!important;
+  align-items:center!important;
+  gap:6px!important;
+  margin:0 0 7px!important;
+  color:#dceaf8!important;
+  font-size:.67rem!important;
+  line-height:1.2!important;
+  font-weight:900!important;
+}
+.promo-entry{grid-template-columns:minmax(0,1fr) auto!important;gap:7px!important}
+.promo-entry input{
+  height:38px!important;
+  padding:0 11px!important;
+  border-radius:11px!important;
+  font-size:.72rem!important;
+  letter-spacing:.035em!important;
+}
+.promo-entry input::placeholder{font-size:.69rem!important;letter-spacing:.02em!important}
+.promo-entry button{
+  height:38px!important;
+  min-width:74px!important;
+  padding:0 13px!important;
+  border-radius:11px!important;
+  font-size:.68rem!important;
+}
+.promo-feedback{
+  min-height:0!important;
+  margin-top:6px!important;
+  font-size:.55rem!important;
+  line-height:1.35!important;
+}
+.checkout-safe-notice{
+  display:block!important;
+  padding:13px 14px!important;
+  border-color:rgba(34,211,116,.25)!important;
+  background:linear-gradient(145deg,rgba(10,53,36,.78),rgba(7,34,28,.78))!important;
+  color:#bff8d5!important;
+  font-size:.78rem!important;
+  line-height:1.58!important;
+}
+.checkout-safe-notice strong{color:#50ec92!important}
+.checkout-safe-notice button{
+  display:inline!important;
+  padding:0!important;
+  border:0!important;
+  background:none!important;
+  color:#62f3a0!important;
+  font:inherit!important;
+  font-weight:900!important;
+  text-decoration:underline!important;
+  text-underline-offset:3px!important;
+  cursor:pointer!important;
+}
+@media(max-width:760px){
+  .hero-brand-top img{height:80px!important}
+  .hero-brand-slogan{font-size:.57rem!important;padding:5px 10px!important}
+  .hero-title-line{font-size:clamp(1.28rem,5.8vw,1.78rem)!important;letter-spacing:-.04em!important}
+}
+@media(max-width:390px){
+  .hero-brand-top img{height:72px!important}
+  .hero-brand-slogan{font-size:.52rem!important;letter-spacing:.055em!important;padding:4px 9px!important}
+  .hero-title-line{font-size:clamp(1.14rem,5.5vw,1.42rem)!important;letter-spacing:-.035em!important}
+  .promo-box{padding:9px 10px!important}
+  .promo-entry input,.promo-entry button{height:36px!important}
+}
+`;
+if(!document.getElementById('np-v813-style')){
+  const style=document.createElement('style');
+  style.id='np-v813-style';
+  style.textContent=NP_V813_STYLE;
+  document.head.appendChild(style);
+}
+const checkoutTrackLink=$('checkoutTrackLink');
+if(checkoutTrackLink){
+  checkoutTrackLink.onclick=()=>{
+    closeModal('checkoutModal');
+    renderAccount();
+    openModal('accountModal');
+    if(currentUser())renderClientOrders();
+  };
+}
+
+
+/* v8.14: slogan, FAQ copy and product detail polish */
+state.faqs=(state.faqs||[]).map(f=>{
+  if(!f||!f.q)return f;
+  if(norm(f.q).includes('cuanto tarda el envio'))return {...f,a:'El tiempo de entrega se coordina según tu ubicación y la disponibilidad del producto. Como referencia general, manejamos entregas de 2 a 3 días hábiles.'};
+  if(norm(f.q).includes('como confirmo mi pedido'))return {...f,a:'Agrega productos o combos al carrito, inicia sesión, revisa tus datos de entrega y envía el pedido desde la tienda.'};
+  return f;
+});
+write(KEYS.faqs,state.faqs);
+
+const NP_V814_STYLE=`
+.hero-brand-top{gap:0!important;margin:0 0 16px!important}
+.hero-brand-top img{
+  height:90px!important;
+  margin:0 0 -8px!important;
+}
+.hero-brand-slogan{
+  margin-top:-8px!important;
+  padding:4px 11px!important;
+  font-size:clamp(.5rem,1.45vw,.62rem)!important;
+  letter-spacing:.06em!important;
+}
+.hero-mini div{
+  display:flex!important;
+  flex-direction:column!important;
+  justify-content:center!important;
+  min-height:92px!important;
+}
+.hero-mini b{
+  white-space:nowrap!important;
+  font-size:.84rem!important;
+  line-height:1.1!important;
+}
+.hero-mini span{
+  font-size:.63rem!important;
+  line-height:1.35!important;
+}
+.product-detail .price-row.price-row--focus{
+  width:100%!important;
+  justify-content:center!important;
+  text-align:center!important;
+  gap:10px!important;
+}
+.product-detail .price-row.price-row--focus .price{
+  font-size:1.42rem!important;
+}
+.product-detail .stock.stock-detail{
+  display:block!important;
+  width:100%!important;
+  margin-top:12px!important;
+  text-align:center!important;
+  font-size:.8rem!important;
+  font-weight:900!important;
+  letter-spacing:.01em!important;
+}
+@media(max-width:760px){
+  .hero-brand-top img{height:78px!important;margin-bottom:-9px!important}
+  .hero-brand-slogan{margin-top:-9px!important;font-size:.52rem!important;padding:4px 10px!important}
+  .hero-mini b{font-size:.8rem!important}
+  .hero-mini span{font-size:.6rem!important}
+}
+@media(max-width:520px){
+  .hero-brand-top img{height:66px!important;margin-bottom:-10px!important}
+  .hero-brand-slogan{margin-top:-10px!important;font-size:.48rem!important;padding:4px 9px!important}
+  .hero-mini b{font-size:.76rem!important}
+}
+`;
+if(!document.getElementById('np-v814-style')){
+  const style=document.createElement('style');
+  style.id='np-v814-style';
+  style.textContent=NP_V814_STYLE;
+  document.head.appendChild(style);
+}
+
+function openDetail(id){
+  const p=state.products.find(x=>x.id===id);
+  if(!p)return;
+  const [stock,stockClass]=stockInfo(p);
+  $('detailBody').innerHTML=`<div class="product-detail"><img src="${esc(p.image)}" alt="${esc(p.name)}"/><div><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock stock-detail ${stockClass}">${stock}</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>Añadir al carrito</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailAdd').onclick=()=>{addToCart(p.id);closeModal('detailModal')};
+  $('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});
+  $('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)};
+}
+
+
+const NP_V815_STYLE=`
+.hero-brand-slogan{
+  margin-top:4px!important;
+  transform:translateX(52px)!important;
+}
+@media(max-width:860px){
+  .hero-brand-slogan{
+    margin-top:4px!important;
+    transform:translateX(44px)!important;
+  }
+}
+@media(max-width:520px){
+  .hero-brand-slogan{
+    margin-top:5px!important;
+    transform:translateX(36px)!important;
+  }
+}
+`;
+if(!document.getElementById('np-v815-style')){
+  const style=document.createElement('style');
+  style.id='np-v815-style';
+  style.textContent=NP_V815_STYLE;
+  document.head.appendChild(style);
+}
+
+
+
+/* v8.17: product detail image stability and combo detail removal */
+const NP_V817_STYLE=`
+.product-detail{
+  grid-template-columns:minmax(0,.98fr) minmax(0,1.02fr)!important;
+  align-items:start!important;
+  gap:20px!important;
+}
+.product-detail-media{
+  width:100%!important;
+  aspect-ratio:4 / 3!important;
+  max-height:360px!important;
+  overflow:hidden!important;
+  border-radius:18px!important;
+  background:#08101d!important;
+  border:1px solid rgba(255,255,255,.06)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025),0 16px 34px rgba(0,0,0,.20)!important;
+}
+.product-detail-media img{
+  display:block!important;
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  object-fit:cover!important;
+  object-position:center!important;
+}
+.product-detail-info{min-width:0!important}
+.combo-actions>.btn-secondary,
+.combo [data-combo-detail]{display:none!important}
+@media(max-width:560px){
+  .product-detail{
+    grid-template-columns:1fr!important;
+    gap:16px!important;
+  }
+  .product-detail-media{
+    width:100%!important;
+    aspect-ratio:4 / 3!important;
+    max-height:none!important;
+  }
+}
+`;
+if(!document.getElementById('np-v817-style')){
+  const style=document.createElement('style');
+  style.id='np-v817-style';
+  style.textContent=NP_V817_STYLE;
+  document.head.appendChild(style);
+}
+
+function openDetail(id){
+  const p=state.products.find(x=>x.id===id);
+  if(!p)return;
+  const [stock,stockClass]=stockInfo(p);
+  $('detailBody').innerHTML=`<div class="product-detail"><div class="product-detail-media"><img src="${esc(p.image)}" alt="${esc(p.name)}" loading="eager" decoding="async"/></div><div class="product-detail-info"><span class="section-kicker">${esc(p.category)}</span><h2>${esc(p.name)}</h2><div class="rating">★ ${Number(p.rating||0).toFixed(1)} <span>(${Number(p.reviews||0)} reseñas)</span></div><div class="price-row price-row--focus" style="margin:14px 0 8px"><strong class="price">${money(p.price)}</strong>${p.oldPrice?`<span class="old">${money(p.oldPrice)}</span>`:''}</div><p>${esc(p.description)}</p><p class="stock stock-detail ${stockClass}">${stock}</p><div class="form-actions"><button class="btn btn-primary" id="detailAdd" ${Number(p.stock)<=0?'disabled':''}>Añadir al carrito</button><button class="btn btn-green" id="detailSupport">WhatsApp</button><button class="btn btn-secondary" id="detailFav">${state.favorites.includes(p.id)?'Quitar favorito':'Guardar favorito'}</button></div></div></div>`;
+  openModal('detailModal');
+  $('detailAdd').onclick=()=>{addToCart(p.id);closeModal('detailModal')};
+  $('detailSupport').onclick=()=>openBot('support',`Hola. Necesito información sobre ${p.name}.`,{Producto:p.name,Tipo:'Consulta'});
+  $('detailFav').onclick=()=>{toggleFavorite(p.id);openDetail(p.id)};
+}
+
+function renderCombos(){
+  const grid=$('combosGrid');
+  if(!grid)return;
+  grid.innerHTML=state.combos.length?state.combos.map(c=>{
+    const items=(Array.isArray(c.includes)?c.includes:[]).filter(Boolean);
+    return `<article class="combo">${comboHeroExact(c)}<div class="combo-copy"><span class="section-kicker">${esc(comboBadgeResolved(c))}</span><h3>${esc(c.name)}</h3><p>${esc(c.description||'Combo especial disponible en CRULOX.')}</p><div class="combo-products">${items.map((name,i)=>`<span><i>${comboItemIcon(name,i)}</i>${esc(name)}</span>`).join('')}</div><div class="price-row"><strong class="price">${money(c.price)}</strong>${c.oldPrice?`<span class="old">${money(c.oldPrice)}</span>`:''}</div><div class="combo-actions"><div class="combo-main-actions"><button class="btn btn-primary" data-combo="${c.id}">🛒 Añadir combo</button><button class="btn btn-green" data-combo-support="${c.id}">WhatsApp</button></div></div></div></article>`;
+  }).join(''):'<div class="empty">Aún no hay combos publicados.</div>';
+  grid.querySelectorAll('[data-combo]').forEach(b=>b.onclick=()=>addCombo(state.combos.find(c=>c.id===b.dataset.combo)));
+  grid.querySelectorAll('[data-combo-support]').forEach(b=>b.onclick=()=>{const c=state.combos.find(x=>x.id===b.dataset.comboSupport);openBot('support',`Hola. Necesito información sobre el combo ${c.name}, precio ${money(c.price)}.`,{Producto:c.name,Precio:money(c.price),Tipo:'Consulta'})});
+}
+
+
+/* v8.18: hasta dos imágenes por producto y video emergente por enlace */
+const NP_V818_STYLE=`
+.product-detail-gallery{min-width:0!important}
+.product-detail-thumbs{
+  display:flex;
+  justify-content:center;
+  gap:9px;
+  margin-top:10px;
+}
+.product-detail-thumb{
+  width:66px;
+  height:50px;
+  padding:0;
+  overflow:hidden;
+  border-radius:11px;
+  border:1px solid rgba(255,255,255,.10);
+  background:#08101d;
+  opacity:.66;
+  transition:.18s ease;
+}
+.product-detail-thumb.active{
+  opacity:1;
+  border-color:rgba(0,217,255,.62);
+  box-shadow:0 0 0 2px rgba(0,217,255,.10);
+}
+.product-detail-thumb img{
+  width:100%!important;
+  height:100%!important;
+  max-width:none!important;
+  object-fit:cover!important;
+  border-radius:0!important;
+}
+.product-upload-note{
+  margin-top:6px;
+  color:var(--muted);
+  font-size:.6rem;
+  line-height:1.45;
+}
+.product-media-preview{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin-top:8px;
+}
+.product-media-preview:empty{display:none}
+.product-media-preview figure{
+  margin:0;
+  min-width:0;
+  padding:7px;
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.06);
+}
+.product-media-preview img{
+  display:block;
+  width:100%;
+  aspect-ratio:4/3;
+  object-fit:cover;
+  border-radius:9px;
+}
+.product-media-preview figcaption{
+  margin-top:5px;
+  color:var(--muted);
+  font-size:.56rem;
+  text-align:center;
+}
+.product-video-mini{
+  position:fixed;
+  left:12px;
+  bottom:max(12px,env(safe-area-inset-bottom));
+  z-index:3800;
+  width:min(238px,calc(100vw - 24px));
+  aspect-ratio:16/9;
+  overflow:hidden;
+  border-radius:18px;
+  background:#02060c;
+  border:1px solid rgba(0,217,255,.25);
+  box-shadow:0 20px 52px rgba(0,0,0,.58);
+}
+.product-video-mini .product-video-surface,
+.product-video-mini video,
+.product-video-mini iframe{
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+  object-fit:contain;
+  background:#000;
+}
+.product-video-mini-close,
+.product-video-full-close{
+  position:absolute;
+  z-index:4;
+  display:grid;
+  place-items:center;
+  border:1px solid rgba(255,255,255,.18);
+  background:rgba(4,11,21,.90);
+  color:#fff;
+  font-weight:900;
+  box-shadow:0 8px 22px rgba(0,0,0,.32);
+}
+.product-video-mini-close{
+  top:7px;
+  right:7px;
+  width:31px;
+  height:31px;
+  border-radius:50%;
+  font-size:.78rem;
+}
+.product-video-expand-hit{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  border:0;
+  background:linear-gradient(180deg,transparent 46%,rgba(0,0,0,.50));
+  color:#fff;
+  display:flex;
+  align-items:flex-end;
+  justify-content:center;
+  padding:12px 42px 10px 12px;
+  font-size:.66rem;
+  font-weight:900;
+  text-shadow:0 2px 8px rgba(0,0,0,.8);
+}
+.product-video-full{
+  position:fixed;
+  inset:0;
+  z-index:5200;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.96);
+}
+.product-video-full-stage{
+  width:min(1180px,100%);
+  height:min(82vh,720px);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  overflow:hidden;
+  border-radius:20px;
+  background:#000;
+  border:1px solid rgba(255,255,255,.10);
+}
+.product-video-full-stage video,
+.product-video-full-stage iframe{
+  display:block;
+  width:100%;
+  height:100%;
+  border:0;
+  object-fit:contain;
+  background:#000;
+}
+.product-video-full-close{
+  top:max(14px,env(safe-area-inset-top));
+  right:14px;
+  width:46px;
+  height:46px;
+  border-radius:50%;
+  font-size:1.05rem;
+}
+.product-video-fallback{
+  position:absolute;
+  left:50%;
+  bottom:max(16px,env(safe-area-inset-bottom));
+  transform:translateX(-50%);
+  z-index:3;
+  color:#d9e8f8;
+  font-size:.68rem;
+  text-decoration:none;
+  padding:9px 14px;
+  border-radius:999px;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.10);
+}
+@media(max-width:560px){
+  .product-detail-thumb{width:58px;height:44px}
+  .product-video-mini{width:196px;border-radius:15px}
+  .product-video-full{padding:10px}
+  .product-video-full-stage{height:min(76vh,620px);border-radius:16px}
+}
+`;
+if(!document.getElementById('np-v818-style')){
+  const style=document.createElement('style');
+  style.id='np-v818-style';
+  style.textContent=NP_V818_STYLE;
+  document.head.appendChild(style);
+}
+
+function normalizeProductMediaRecord(product){
+  const candidates=[];
+  if(Array.isArray(product?.images))candidates.push(...product.images);
+  if(product?.image)candidates.push(product.image);
+  if(product?.image2)candidates.push(product.image2);
+  const images=[];
+  candidates.forEach(value=>{
+    const clean=String(value||'').trim();
+    if(clean&&!images.includes(clean)&&images.length<2)images.push(clean);
+  });
+  return {
+    ...product,
+    image:images[0]||String(product?.image||'').trim(),
+    image2:images[1]||'',
+    images:images.slice(0,2),
+    videoUrl:String(product?.videoUrl||product?.video||'').trim()
+  };
+}
+{
+  let mediaSchemaChanged=false;
+  state.products=(state.products||[]).map(product=>{
+    const normalized=normalizeProductMediaRecord(product);
+    if(JSON.stringify(product.images||[])!==JSON.stringify(normalized.images)||String(product.image2||'')!==normalized.image2||String(product.videoUrl||'')!==normalized.videoUrl)mediaSchemaChanged=true;
+    return normalized;
+  });
+  if(mediaSchemaChanged)write(KEYS.products,state.products);
+}
+
+/* v11.23 · Producción: no insertar productos de prueba en el catálogo real. */
+{
+  const legacyDemoIds=new Set(['demo-media-nova-audio','demo-media-nova-tech']);
+  const before=Array.isArray(state.products)?state.products.length:0;
+  if(before){
+    state.products=state.products.filter(product=>!legacyDemoIds.has(String(product?.id||'')));
+    if(state.products.length!==before)write(KEYS.products,state.products);
+  }
+  try{localStorage.removeItem('np_v19_test_products_seeded')}catch(error){}
+}
+
+const migrateHeavyStoredMediaV818Base=migrateHeavyStoredMedia;
+migrateHeavyStoredMedia=async function(){
+  let changed=await migrateHeavyStoredMediaV818Base();
+  const migrationKey='np_v18_product_gallery_optimized';
+  if(localStorage.getItem(migrationKey)!=='1'){
+    for(const product of state.products||[]){
+      const source=(Array.isArray(product.images)&&product.images.length?product.images:[product.image,product.image2]).filter(Boolean).slice(0,2);
+      const optimized=[];
+      for(const image of source){
+        if(isRasterDataUrl(image)&&image.length>150000)optimized.push(await optimizeImageDataUrl(image,{maxWidth:1200,maxHeight:900,quality:.86}));
+        else optimized.push(image);
+      }
+      const unique=[...new Set(optimized.filter(Boolean))].slice(0,2);
+      if(JSON.stringify(unique)!==JSON.stringify(product.images||[]))changed=true;
+      product.images=unique;
+      product.image=unique[0]||product.image||'';
+      product.image2=unique[1]||'';
+    }
+    if(changed)write(KEYS.products,state.products);
+    try{localStorage.setItem(migrationKey,'1')}catch(error){}
+  }
+  return changed;
+};
+
+function productForm(product=null){
+  const p=normalizeProductMediaRecord(product||{id:'',name:'',category:'',price:'',oldPrice:'',stock:0,rating:5,reviews:0,image:'',image2:'',images:[],videoUrl:'',description:'',badge:'',badgeText:'',featured:false});
+  return `<form id="productForm"><div class="form-grid"><div class="field full"><label>Nombre</label><input id="pfName" value="${esc(p.name)}" required/></div><div class="field"><label>Categoría</label><input id="pfCategory" value="${esc(p.category)}" required/></div><div class="field"><label>Existencias</label><input id="pfStock" type="number" min="0" value="${Number(p.stock||0)}" required/></div><div class="field"><label>Precio</label><input id="pfPrice" type="number" step="0.01" min="0" value="${p.price}" required/></div><div class="field"><label>Precio anterior</label><input id="pfOldPrice" type="number" step="0.01" min="0" value="${p.oldPrice??''}"/></div><div class="field"><label>Calificación</label><input id="pfRating" type="number" step="0.1" min="0" max="5" value="${p.rating}"/></div><div class="field"><label>Reseñas</label><input id="pfReviews" type="number" min="0" value="${p.reviews}"/></div><div class
