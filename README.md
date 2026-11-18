@@ -1,5 +1,7 @@
-# CruLox Sistem V4.5.10
+# CruLox Sistem V4.5.11
 
-Cambios exclusivos del formulario de compra: el visor de comprobantes ajusta toda la fotografía al área de pantalla sin recortes ni deformación; se ocultan los campos redundantes «Entrega y seguimiento» y «Tiempo estimado» del paso de pago y se retira la repetición de entrega en los resúmenes del propio checkout. Se conserva el valor interno de canal de entrega para mantener la compatibilidad con el registro de pedidos. La referencia de pago sigue siendo opcional.
+Se retira temporalmente PayPal de los métodos ofrecidos en el checkout, incluso cuando el navegador tenga ajustes de versiones anteriores. También se actualizan los textos predeterminados, las preguntas frecuentes y el indicador de métodos.
 
-No modifica cuentas, precios, catálogo, carrito, reglas de Firebase ni almacenamiento de comprobantes. Los comprobantes continúan guardándose localmente y no se garantiza sincronización central.
+Se conservan todos los demás métodos, datos bancarios, compras, comprobantes, perfiles, carrito, restricciones de validación y estructura visual. Los pedidos históricos no se modifican.
+
+El build sigue validando la integridad del HTML final con SHA-256. El almacenamiento central de comprobantes continúa pendiente como en la versión anterior.

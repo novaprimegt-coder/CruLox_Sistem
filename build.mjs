@@ -34,9 +34,16 @@ const stepperCss=readFileSync('checkout-stepper-4.5.10.css','utf8');
 const stepperJs=readFileSync('checkout-stepper-4.5.10.js','utf8');
 if(!html.includes('</body>')||html.includes('crx-checkout-stepper-v4510'))throw Error('Checkout injection point mismatch');
 html=html.replace('</body>', `<style id="crx-checkout-stepper-v4510-style">\n${stepperCss}\n</style><script id="crx-checkout-stepper-v4510">\n${stepperJs}\n</script>\n</body>`);
+
+// CruLox V4.5.11: suspender temporalmente PayPal sin alterar pedidos históricos.
+for(const [before,after,required] of [["const methods=String(state.settings.paymentMethods||'').split(',').map(x=>x.trim()).filter(Boolean);","const methods=String(state.settings.paymentMethods||'').split(',').map(x=>x.trim()).filter(m=>m&&!/^paypal$/i.test(m));",1],["Banrural, Industrial, Azteca, PayPal, Remesas","Banrural, Industrial, Azteca, Remesas",6],["Banrural · Industrial · Azteca · PayPal · Remesas","Banrural · Industrial · Azteca · Remesas",1],["Banrural · BI · Azteca · PayPal · Remesas","Banrural · BI · Azteca · Remesas",1],["Banrural, Banco Industrial, Banco Azteca, PayPal y remesas.","Banrural, Banco Industrial, Banco Azteca y remesas.",1],["'Métodos de pago','5'","'Métodos de pago','4'",1],["<div class=\"faq-a\">${esc(f.a)}</div>","<div class=\"faq-a\">${esc(/m[eé]todos de pago/i.test(f.q)?String(f.a).replace(/,\\s*PayPal(?=\\s+y\\b)/gi,'').replace(/\\bPayPal\\b\\s*,?\\s*/gi,''):f.a)}</div>",1]]){
+  const found=html.split(before).length-1;
+  if(found!==required)throw Error('Payment availability baseline mismatch: '+before.slice(0,80));
+  html=html.split(before).join(after);
+}
 const output=Buffer.from(html,'utf8');
-const expected='524431c6b6494f339fdd9ac7c689c7501a1cb3884724476717b72216fdbbe4aa';
+const expected='9bce448e834a20b84d4982745b32eb07bb0a7fe6974b40290411b9b7b8e5bf8b';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.10 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.11 generated, ${output.length} bytes, SHA-256 ${expected}`);
