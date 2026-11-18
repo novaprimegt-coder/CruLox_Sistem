@@ -1,9 +1,9 @@
-# CruLox Sistem — V4.5.5
+# CruLox Sistem V4.5.6
 
-Actualización localizada de los textos visibles del formulario de sincronización de perfil. Se elimina el nombre del proveedor de infraestructura de los mensajes y botones de la cuenta sin alterar el proveedor, autenticación, permisos, datos ni los flujos existentes.
+Ventana de cuenta rediseñada y dos funciones nuevas: foto de perfil (hasta 100 MB de archivo original, optimización automática para almacenamiento en el perfil) y eliminación voluntaria de la cuenta con contraseña y confirmación. Solo se modifica el adaptador de cuenta.
 
-Ejecutar `npm run build` para obtener `dist/index.html`. El proceso verifica integridad de la versión base y del HTML final con SHA-256.
+Ejecutar `npm run build` produce `dist/index.html` y comprueba la integridad de la versión previa.
 
-La configuración del servicio y el código del adaptador se mantienen técnicamente iguales salvo los textos orientados a usuarios. Las reglas de Firestore siguen siendo una capa de seguridad imprescindible; no se sustituyen por ocultar el nombre del proveedor.
+**Despliegue condicionado:** para fotos sincronizadas y eliminación de cuentas remotas deben instalarse primero las reglas específicas de Firestore (`CRULOX_Firestore_Reglas_Perfil_V4_5_6.rules` entregadas por separado). El navegador no puede modificar estas reglas; no confundir una compilación correcta con una operación verificada en Firebase real.
 
-Sincronización real de catálogo, pedidos y panel administrativo sigue pendiente de reglas y pruebas de integración.
+Los pedidos preexistentes no se eliminan al borrar la cuenta: pueden conservarse para operaciones o registros legales.

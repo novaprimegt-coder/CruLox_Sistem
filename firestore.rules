@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Etapa inicial: cada usuario solo administra su propio perfil.
+    // Ningun cliente puede escribir precios, productos, pagos, pedidos o roles.
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function owner(uid) {
+      return signedIn() && request.auth.uid == uid;
+    }
+
+    function validProfile(uid) {
+      return request.resource.data.keys().hasOnly([
+        'id', 'firebaseUid', 'fullName', 'username', 'email',
+        'phone', 'department', 'municipality', 'address',
+        'reference', 'createdAt', 'updatedAt', 'updatedAtFirebase',
+        'avatarDataUrl'
+      ])
+      && request.resource.data.keys().hasAll(['id', 'firebaseUid', 'email'])
+      && request.resource.data.id == uid
+      && request.resource.data.firebaseUid == uid
+      && request.resource.data.email == request.auth.token.email
+      && ( !('avatarDataUrl' in request.resource.data)
+           || (request.resource.data.avatarDataUrl is string
+               && request.resource.data.avatarDataUrl.size() <= 200000
+               && (request.resource.data.avatarDataUrl == ''
+                   || request.resource.data.avatarDataUrl.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'))
+              )
+         );
+    }
+
+    match /users/{uid} {
+      allow get: if owner(uid);
+      allow list: if false;
+      allow create: if owner(uid) && validProfile(uid);
+      allow update: if owner(uid) && validProfile(uid)
+                    && request.resource.data.createdAt == resource.data.createdAt;
+      // Únicamente el titular autenticado puede borrar su documento.
+      allow delete: if owner(uid);
+    }
+
+    // Denegado por defecto hasta verificar modelos y flujos de autorizacion.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
