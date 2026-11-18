@@ -1,7 +1,5 @@
-# CruLox Sistem V4.5.9
+# CruLox Sistem V4.5.10
 
-Actualización limitada al diseño y flujo de compra, información de cuentas existentes, carga previa obligatoria de comprobante y restauración de fotografía en el encabezado.
+Cambios exclusivos del formulario de compra: el visor de comprobantes ajusta toda la fotografía al área de pantalla sin recortes ni deformación; se ocultan los campos redundantes «Entrega y seguimiento» y «Tiempo estimado» del paso de pago y se retira la repetición de entrega en los resúmenes del propio checkout. Se conserva el valor interno de canal de entrega para mantener la compatibilidad con el registro de pedidos. La referencia de pago sigue siendo opcional.
 
-La evidencia del pedido se guarda en almacenamiento del navegador porque Firestore restringe los pedidos y Firebase Storage no está habilitado. **Esto no garantiza disponibilidad del comprobante en otros dispositivos ni en el panel remoto.** No se han añadido cuentas bancarias inventadas: solo Banrural y Banco Azteca usan las cuentas que ya estaban publicadas en el detalle de pedidos. Para otros métodos se bloquea el avance hasta configurar detalles oficiales.
-
-El build conserva el HTML aprobado y reemplaza exclusivamente los módulos identificados. Las operaciones comerciales no deben declararse sincronizadas hasta disponer de backend y reglas seguras.
+No modifica cuentas, precios, catálogo, carrito, reglas de Firebase ni almacenamiento de comprobantes. Los comprobantes continúan guardándose localmente y no se garantiza sincronización central.
