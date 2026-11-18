@@ -1,9 +1,15 @@
-# CruLox Sistem V4.5.6
+# CruLox Sistem V4.5.8
 
-Ventana de cuenta rediseñada y dos funciones nuevas: foto de perfil (hasta 100 MB de archivo original, optimización automática para almacenamiento en el perfil) y eliminación voluntaria de la cuenta con contraseña y confirmación. Solo se modifica el adaptador de cuenta.
+Base V4.5.7 íntegra. Único cambio funcional: checkout en asistente animado de 3 pasos secuenciales obligatorios.
 
-Ejecutar `npm run build` produce `dist/index.html` y comprueba la integridad de la versión previa.
+## Flujo de compra
 
-**Despliegue condicionado:** para fotos sincronizadas y eliminación de cuentas remotas deben instalarse primero las reglas específicas de Firestore (`CRULOX_Firestore_Reglas_Perfil_V4_5_6.rules` entregadas por separado). El navegador no puede modificar estas reglas; no confundir una compilación correcta con una operación verificada en Firebase real.
+1. Datos de activación (validación obligatoria).
+2. Pago y entrega (validación obligatoria).
+3. Revisión final y envío por el manejador anterior, sin modificar pedidos, carrito ni precios.
 
-Los pedidos preexistentes no se eliminan al borrar la cuenta: pueden conservarse para operaciones o registros legales.
+Los controles no permiten saltar pasos. Se conserva la información reutilizable por cuenta en el mismo navegador: identificadores de juego, correos de activación y método de pago escogido. No se guardan contraseñas, credenciales financieras, referencia de pago ni notas específicas de cada pedido.
+
+El navegador respeta la preferencia de movimiento reducido. Las animaciones y el estilo son una implementación HTML/CSS/JS autocontenida del Stepper suministrado, evitando migrar el sistema a React.
+
+Para compilar: `npm run build`. El script comprueba SHA-256 del HTML reconstruido. No implica sincronización de pedidos con Firestore ni cambios en su base de datos.

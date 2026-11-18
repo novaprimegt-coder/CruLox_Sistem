@@ -25,9 +25,13 @@ for(const [id,file] of [
  if(contentEnd<0)throw Error(`Unclosed ${id}`);
  html=html.slice(0,contentStart)+readFileSync(file,'utf8')+html.slice(contentEnd);
 }
+const stepperCss=readFileSync('checkout-stepper-4.5.8.css','utf8');
+const stepperJs=readFileSync('checkout-stepper-4.5.8.js','utf8');
+if(!html.includes('</body>')||html.includes('crx-checkout-stepper-v458'))throw Error('Checkout injection point mismatch');
+html=html.replace('</body>', `<style id="crx-checkout-stepper-v458-style">\n${stepperCss}\n</style><script id="crx-checkout-stepper-v458">\n${stepperJs}\n</script>\n</body>`);
 const output=Buffer.from(html,'utf8');
-const expected='7b2b59897f142aa0e9314c2831fd342ef3a40469fed57a757b15470428b06aea';
+const expected='97bae6c4bb588e70cc53100d1788a555eaacbd2579a784b3d2647a82dcd6bf02';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.7 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.8 generated, ${output.length} bytes, SHA-256 ${expected}`);
