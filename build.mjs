@@ -15,7 +15,7 @@ html=html.replace(cspOld,cspNew);
 // Surgical replacement of two existing Firebase scripts; all other scripts stay unchanged.
 for(const [id,file] of [
  ['cruzclick-firebase-config-v420','firebase-config-4.5.4.js'],
- ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.4.js']
+ ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.5.js']
 ]){
  const start=html.search(new RegExp(`<script\\b[^>]*\\bid="${id}"[^>]*>`));
  if(start<0)throw Error(`Missing ${id}`);
@@ -25,8 +25,8 @@ for(const [id,file] of [
  html=html.slice(0,contentStart)+readFileSync(file,'utf8')+html.slice(contentEnd);
 }
 const output=Buffer.from(html,'utf8');
-const expected='b588bbe6c6816b882151bdd7c867e1fcece6bd2a2e975c1b50275c601b5e8b40';
+const expected='7887a3026b31d8ee3b50e13a7f2223d4f4eb74adb42aff56eaeb5efc83c67f2b';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.4 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.5 generated, ${output.length} bytes, SHA-256 ${expected}`);
