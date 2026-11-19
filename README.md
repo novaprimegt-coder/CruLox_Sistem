@@ -1,7 +1,9 @@
-# CruLox Sistem V4.5.11
+# CruLox Sistem V4.5.12
 
-Se retira temporalmente PayPal de los métodos ofrecidos en el checkout, incluso cuando el navegador tenga ajustes de versiones anteriores. También se actualizan los textos predeterminados, las preguntas frecuentes y el indicador de métodos.
+Cambio limitado a la cobertura geográfica mostrada en tarjetas y detalles de productos, y a la cabecera del menú lateral.
 
-Se conservan todos los demás métodos, datos bancarios, compras, comprobantes, perfiles, carrito, restricciones de validación y estructura visual. Los pedidos históricos no se modifican.
+Los países no se presuponen ni se inventan. El mapa `COVERAGE_BY_PRODUCT` de `availability-regions-4.5.12.js` está inicialmente vacío y se completará con los países oficiales que indique la administración. Permite asignar países por identificador o nombre exacto del producto; si la información está ausente, se muestra «Países por definir». También respeta `availableCountries` si un catálogo sincronizado lo proporciona.
 
-El build sigue validando la integridad del HTML final con SHA-256. El almacenamiento central de comprobantes continúa pendiente como en la versión anterior.
+La cabecera lateral reutiliza el logotipo oficial con una presentación visual mejorada. No se modificaron pagos, pedidos, precios, inventario, cuentas, Firebase ni el panel administrativo.
+
+El archivo publicado se genera desde la última base estable y se verifica mediante SHA-256 para impedir cambios inesperados. La configuración de países en el código se publica mediante GitHub y Vercel; el editor administrativo de la tienda permanece deshabilitado por seguridad y no debe presentarse como herramienta de edición operativa.

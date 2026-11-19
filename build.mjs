@@ -41,9 +41,17 @@ for(const [before,after,required] of [["const methods=String(state.settings.paym
   if(found!==required)throw Error('Payment availability baseline mismatch: '+before.slice(0,80));
   html=html.split(before).join(after);
 }
+const baseline11='9bce448e834a20b84d4982745b32eb07bb0a7fe6974b40290411b9b7b8e5bf8b';
+if(sha(Buffer.from(html,'utf8'))!==baseline11)throw Error('Stable V4.5.11 checksum mismatch');
+
+// CruLox V4.5.12: etiquetas de países sin inventar ubicaciones y cabecera visual del menú.
+const regionCss=readFileSync('availability-regions-4.5.12.css','utf8');
+const regionJs=readFileSync('availability-regions-4.5.12.js','utf8');
+if(html.split('</body>').length!==2||html.includes('crx-country-4512-script'))throw Error('Country module injection mismatch');
+html=html.replace('</body>', `<style id="crx-country-4512-style">\n${regionCss}</style>\n<script id="crx-country-4512-script">\n${regionJs}</script>\n</body>`);
 const output=Buffer.from(html,'utf8');
-const expected='9bce448e834a20b84d4982745b32eb07bb0a7fe6974b40290411b9b7b8e5bf8b';
+const expected='a1275881b7e2585f76378c2016d4146350d7df3c08cf409786f1725b73eb488b';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.11 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.12 generated, ${output.length} bytes, SHA-256 ${expected}`);

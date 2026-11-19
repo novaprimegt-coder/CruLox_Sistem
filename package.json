@@ -1,1 +1,1 @@
-{"name":"crulox-sistem","version":"4.5.11","private":true,"type":"module","scripts":{"build":"node build.mjs"}}
+{"name":"crulox-sistem","version":"4.5.12","private":true,"type":"module","scripts":{"build":"node build.mjs"}}
