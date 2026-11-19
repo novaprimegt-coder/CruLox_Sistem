@@ -1,0 +1,44 @@
+/* CruLox V4.5.16 — espaciado del pago y coste de repintado reducido. */
+/* Separar de forma clara los datos bancarios del bloque de observaciones. */
+#checkoutModal #crxCheckoutStepper #crxPaymentSlot .jmv2-payment-box {
+  margin-bottom:18px!important;
+}
+#checkoutModal #crxCheckoutStepper .crx-payment-showcase {
+  row-gap:22px!important;
+}
+#checkoutModal #crxCheckoutStepper #crxNotesSlot {
+  display:block;
+  margin-top:clamp(32px,4vw,44px)!important;
+  margin-bottom:14px!important;
+}
+#checkoutModal #crxCheckoutStepper #crxNotesSlot>.field {
+  margin:0!important;
+  padding:20px!important;
+}
+#checkoutModal #crxCheckoutStepper #crxNotesSlot label {
+  display:block;
+  margin-bottom:10px!important;
+}
+/* Los paneles inactivos no necesitan una capa de composición permanente. */
+#checkoutModal #crxCheckoutStepper .crx-pane {
+  will-change:auto!important;
+}
+@media (max-width:620px) {
+  #checkoutModal #crxCheckoutStepper #crxNotesSlot {
+    margin-top:32px!important;
+  }
+  #checkoutModal #crxCheckoutStepper #crxNotesSlot>.field {
+    padding:17px!important;
+  }
+  /* Pie casi opaco: desenfocarlo consume GPU sin aportar legibilidad. */
+  #checkoutModal .crx-step-footer {
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  #checkoutModal .crx-glider,
+  #checkoutModal .crx-progress>span {
+    transition:none!important;
+  }
+}

@@ -1,12 +1,7 @@
-# CruLox Sistem V4.5.15 — estabilidad y cuentas
+# CruLox Sistem V4.5.16
 
-Cambio limitado a reducir parpadeos y re-renderizados redundantes en el catálogo y sincronización Firebase, e impedir formularios de inicio/registro duplicados.
+Corrección localizada de separación entre las instrucciones bancarias y notas adicionales del segundo paso del checkout, sin modificar campos, bancos, pagos, carrito, pedidos ni cuentas.
 
-- Se retira el renderizado adicional al iniciar el módulo de regiones.
-- Firestore solo provoca actualización visual cuando cambia el contenido realmente.
-- Se evita reconstruir la ventana de cuenta mientras el cliente rellena el formulario.
-- Se elimina un bucle de repintado cuando el perfil no tiene fotografía: la inicial solo se actualiza si cambia.
-- Durante registro e inicio de sesión, se bloquean dobles envíos, se indica estado de envío y se preserva el perfil antes de restaurar la sesión.
-- Se evita sobrescribir repetidamente un perfil remoto ya creado durante la restauración de sesión.
+Optimización puntual del asistente: su `ResizeObserver` vigila el indicador de pasos, con actualización agrupada en `requestAnimationFrame`, en lugar de recalcular por cambios de tamaño del formulario. En móvil se elimina un desenfoque costoso del pie fijo y no se reservan capas permanentes de composición para paneles ocultos.
 
-No se modificaron catálogo, pagos, productos, pedidos, apariencia ni reglas de Firestore. La vinculación comercial real todavía debe verificarse con cuentas de prueba en el proyecto remoto. La compilación valida el HTML íntegro con SHA-256.
+Se conserva y verifica byte a byte la V4.5.15 como base estable. Las pruebas de interfaces y flujo son locales; no se garantiza comportamiento sin fallos en todos los dispositivos ni transacciones remotas con Firebase.

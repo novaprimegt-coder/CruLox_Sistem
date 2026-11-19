@@ -73,9 +73,19 @@ for(const [id,file] of [
  if(!pattern.test(html))throw Error('Cannot locate runtime script '+id);
  html=html.replace(pattern,(_match,open,close)=>open+'\n'+readFileSync(file,'utf8')+'\n'+close);
 }
+// CruLox V4.5.16: mantener la V4.5.15 idéntica antes de aplicar el cambio.
+const baseline=Buffer.from(html,'utf8');
+if(sha(baseline)!=='032a8652e78e40f7171d2c472978f5c703bcec539b6a9a605dd3d8ada75c6c28')throw Error('La V4.5.15 aprobada no coincide');
+const resizeBefore="observer=new ResizeObserver(()=>updateIndicator());observer.observe(root);";
+const resizeAfter="let pendingMeasure=0;observer=new ResizeObserver(()=>{if(pendingMeasure)return;pendingMeasure=requestAnimationFrame(()=>{pendingMeasure=0;updateIndicator();});});observer.observe(root.querySelector('.crx-track')||root);";
+if(html.split(resizeBefore).length!==2)throw Error('El observador del asistente ha cambiado');
+html=html.replace(resizeBefore,resizeAfter);
+const uiCss=readFileSync('checkout-spacing-performance-4.5.16.css','utf8');
+if(html.split('</body>').length!==2||html.includes('crx-4516-spacing-performance'))throw Error('Punto de estilos no encontrado');
+html=html.replace('</body>',`<style id="crx-4516-spacing-performance">\n${uiCss}</style>\n</body>`);
 const output=Buffer.from(html,'utf8');
-const expected='032a8652e78e40f7171d2c472978f5c703bcec539b6a9a605dd3d8ada75c6c28';
+const expected='af70d48809153edb675e6bcd1c658696e4cad2f470fb77dba272057a1b60ac3d';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.15 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.16 generated, ${output.length} bytes, SHA-256 ${expected}`);
