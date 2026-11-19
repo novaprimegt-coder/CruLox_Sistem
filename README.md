@@ -1,10 +1,12 @@
-# CruLox Sistem V4.5.14
+# CruLox Sistem V4.5.15 — estabilidad y cuentas
 
-## Corrección puntual de desaparición de productos
+Cambio limitado a reducir parpadeos y re-renderizados redundantes en el catálogo y sincronización Firebase, e impedir formularios de inicio/registro duplicados.
 
-- Cuando la lista local de productos está vacía por pérdida o error de sincronización, se recuperan los 10 productos y variantes del catálogo base aprobado, respetando sus nombres, precios e imágenes.
-- Cuando Firestore entrega una lista de productos vacía o documentos incompletos, la tienda conserva el último catálogo local válido. Si la colección contiene productos completos, mantiene la sincronización existente.
-- Nunca se reemplaza una lista local no vacía al iniciar el sistema.
-- Se conserva el diseño de disponibilidad por país y la cabecera lateral V4.5.13, y no se modifican compras, pagos, pedidos, usuarios, ni el panel administrativo.
+- Se retira el renderizado adicional al iniciar el módulo de regiones.
+- Firestore solo provoca actualización visual cuando cambia el contenido realmente.
+- Se evita reconstruir la ventana de cuenta mientras el cliente rellena el formulario.
+- Se elimina un bucle de repintado cuando el perfil no tiene fotografía: la inicial solo se actualiza si cambia.
+- Durante registro e inicio de sesión, se bloquean dobles envíos, se indica estado de envío y se preserva el perfil antes de restaurar la sesión.
+- Se evita sobrescribir repetidamente un perfil remoto ya creado durante la restauración de sesión.
 
-La corrección no recupera automáticamente productos personalizados que ya se hubieran perdido de cualquier almacenamiento. La integración central de catálogo sigue dependiendo de permisos y datos efectivos de Firestore. El HTML final se verifica por SHA-256 antes del despliegue.
+No se modificaron catálogo, pagos, productos, pedidos, apariencia ni reglas de Firestore. La vinculación comercial real todavía debe verificarse con cuentas de prueba en el proyecto remoto. La compilación valida el HTML íntegro con SHA-256.

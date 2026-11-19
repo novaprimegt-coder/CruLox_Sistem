@@ -62,9 +62,20 @@ const listenerBefore="    snap=>{\n      const rows=snap.docs.map(d=>({id:d.id,.
 const listenerAfter="    snap=>{\n      const rows=snap.docs.map(d=>({id:d.id,...d.data()}));\n      if(localKey===LOCAL_KEYS.products){\n        // Evitar borrar un catálogo existente cuando Cloud Firestore aún no contiene\n        // productos publicados o entrega una instantánea vacía temporal.\n        if(rows.length===0)return;\n        // No reemplazar productos válidos por documentos incompletos.\n        if(!rows.every(p=>p && String(p.name||'').trim() && Number.isFinite(Number(p.price))))return;\n      }\n      localSet(localKey,rows);\n      rerenderAfterRemote();\n    },";
 if(html.split(listenerBefore).length!==2)throw Error('No se puede localizar el fragmento del catálogo: listener');
 html=html.replace(listenerBefore,listenerAfter);
+// V4.5.15: corregir solo carga visible y autenticación, conservando el resto intacto.
+const stable14='f9a8a53d9db169d95edd50d911a7446aabbb66f4b492abc1e7c016493de75926';
+if(sha(Buffer.from(html,'utf8'))!==stable14) throw Error('Baseline V4.5.14 integrity mismatch');
+for(const [id,file] of [
+ ['cruzclick-firebase-adapter-v420','firebase-adapter-4.5.15.js'],
+ ['crx-country-4512-script','availability-regions-4.5.15.js']
+]){
+ const pattern=new RegExp(`(<script\\b[^>]*\\bid="${id}"[^>]*>)[\\s\\S]*?(<\\/script>)`);
+ if(!pattern.test(html))throw Error('Cannot locate runtime script '+id);
+ html=html.replace(pattern,(_match,open,close)=>open+'\n'+readFileSync(file,'utf8')+'\n'+close);
+}
 const output=Buffer.from(html,'utf8');
-const expected='f9a8a53d9db169d95edd50d911a7446aabbb66f4b492abc1e7c016493de75926';
+const expected='032a8652e78e40f7171d2c472978f5c703bcec539b6a9a605dd3d8ada75c6c28';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.14 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.15 generated, ${output.length} bytes, SHA-256 ${expected}`);
