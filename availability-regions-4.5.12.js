@@ -8,7 +8,9 @@
   // Claves admitidas: identificador exacto o nombre exacto del producto.
   const COVERAGE_BY_PRODUCT=Object.freeze({});
   const countriesOf=product=>{
-    const configured=COVERAGE_BY_PRODUCT[String(product?.id??'')]??COVERAGE_BY_PRODUCT[String(product?.name??'')]??[];
+    const originalName=String(product?.name??'');
+    const groupedName=originalName.replace(/^\s*\d+\s+/, '').trim();
+    const configured=COVERAGE_BY_PRODUCT[String(product?.id??'')]??COVERAGE_BY_PRODUCT[originalName]??COVERAGE_BY_PRODUCT[groupedName]??[];
     const original=(Array.isArray(product?.availableCountries)&&product.availableCountries.length) ? product.availableCountries : configured;
     const raw=Array.isArray(original)?original:String(original||'').split(/[,;\n]+/);
     const out=[],seen=new Set();
@@ -32,7 +34,7 @@
   if(typeof oldProductCard==='function'){
     const withRegions=function(product){
       const card=String(oldProductCard.apply(this,arguments));
-      const availability=/<span class="jm-product-availability\b[^>]*>[^<]*<\/span>/;
+      const availability=/<span class="(?:jm-product-availability|jmv2-stock)\b[^>]*>[^<]*<\/span>/;
       return availability.test(card)
         ?card.replace(availability,part=>part+regionMarkup(product))
         :card.replace('<div class="product-actions">',regionMarkup(product)+'<div class="product-actions">');
@@ -59,6 +61,23 @@
     window.openDetail=withDetail;
     try{openDetail=withDetail;}catch(_error){}
   }
+  // El buscador agrupa ciertas variantes con una tarjeta propia (no usa productCard).
+  // Completar únicamente esos resultados, conservando su selector y su comportamiento.
+  function decorateGroupedCards(){
+    const grid=D.getElementById('productsGrid');
+    if(!grid||typeof state==='undefined')return;
+    for(const card of grid.querySelectorAll('.product[data-product]')){
+      if(card.querySelector('.crx-availability-locations'))continue;
+      const item=state.products.find(p=>String(p.id)===String(card.dataset.product));
+      if(!item)continue;
+      const wrap=D.createElement('div');
+      wrap.innerHTML=regionMarkup(item);
+      const node=wrap.firstElementChild;
+      const anchor=card.querySelector('.jmv2-stock, .jm-product-availability, .stock');
+      if(anchor)anchor.after(node);
+      else card.querySelector('.product-actions')?.before(node);
+    }
+  }
   function enhanceDrawer(){
     const drawer=D.getElementById('drawer');
     const brand=drawer?.querySelector('.jmv24-drawer-head .jmv24-drawer-brand');
@@ -82,6 +101,9 @@
       new MutationObserver(()=>enhanceDrawer()).observe(drawer,{childList:true,subtree:true});
     }
     if(typeof renderProducts==='function')renderProducts();
+    decorateGroupedCards();
+    const grid=D.getElementById('productsGrid');
+    if(grid)new MutationObserver(()=>decorateGroupedCards()).observe(grid,{childList:true,subtree:true});
   }
   if(D.readyState==='loading')D.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();

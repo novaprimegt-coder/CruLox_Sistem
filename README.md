@@ -1,6 +1,6 @@
-# CruLox Sistem V4.5.12
+# CruLox Sistem V4.5.13
 
-Cambio limitado a la cobertura geográfica mostrada en tarjetas y detalles de productos, y a la cabecera del menú lateral.
+Cambio limitado a la cobertura geográfica mostrada en tarjetas, también las que agrupan variantes (por ejemplo, diamantes), y detalles de productos; además, nueva cabecera del menú lateral.
 
 Los países no se presuponen ni se inventan. El mapa `COVERAGE_BY_PRODUCT` de `availability-regions-4.5.12.js` está inicialmente vacío y se completará con los países oficiales que indique la administración. Permite asignar países por identificador o nombre exacto del producto; si la información está ausente, se muestra «Países por definir». También respeta `availableCountries` si un catálogo sincronizado lo proporciona.
 
