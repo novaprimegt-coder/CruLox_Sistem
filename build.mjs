@@ -1,3 +1,4 @@
+import { patchOrbit } from './orbit-patch-4.5.17.mjs';
 import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 
@@ -83,9 +84,11 @@ html=html.replace(resizeBefore,resizeAfter);
 const uiCss=readFileSync('checkout-spacing-performance-4.5.16.css','utf8');
 if(html.split('</body>').length!==2||html.includes('crx-4516-spacing-performance'))throw Error('Punto de estilos no encontrado');
 html=html.replace('</body>',`<style id="crx-4516-spacing-performance">\n${uiCss}</style>\n</body>`);
-const output=Buffer.from(html,'utf8');
-const expected='af70d48809153edb675e6bcd1c658696e4cad2f470fb77dba272057a1b60ac3d';
-if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
+const baseline16=Buffer.from(html,'utf8');
+const expected16='af70d48809153edb675e6bcd1c658696e4cad2f470fb77dba272057a1b60ac3d';
+if(sha(baseline16)!==expected16)throw Error('CruLox V4.5.16 baseline integrity mismatch');
+const output=Buffer.from(patchOrbit(html),'utf8');
+if(output.length<=baseline16.length)throw Error('CruLox V4.5.17 orbit patch missing');
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.16 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.17 generated, ${output.length} bytes, SHA-256 ${sha(output)}`);

@@ -1,4 +1,8 @@
-# CruLox Sistem V4.5.16
+# CruLox Sistem V4.5.17
+
+La órbita del inicio muestra cinco productos reales del catálogo, priorizando imágenes distintas. Al volver a ingresar selecciona otra combinación cuando hay más opciones; los cambios de catálogo se reflejan sin alterar detalles, compras ni cuentas.
+
+## Historial base: V4.5.16
 
 Corrección localizada de separación entre las instrucciones bancarias y notas adicionales del segundo paso del checkout, sin modificar campos, bancos, pagos, carrito, pedidos ni cuentas.
 
