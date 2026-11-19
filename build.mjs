@@ -49,9 +49,22 @@ const regionCss=readFileSync('availability-regions-4.5.12.css','utf8');
 const regionJs=readFileSync('availability-regions-4.5.12.js','utf8');
 if(html.split('</body>').length!==2||html.includes('crx-country-4512-script'))throw Error('Country module injection mismatch');
 html=html.replace('</body>', `<style id="crx-country-4512-style">\n${regionCss}</style>\n<script id="crx-country-4512-script">\n${regionJs}</script>\n</body>`);
+
+// CruLox V4.5.14: reparar vaciado accidental del catálogo.
+// No tocar colecciones válidas, pedidos ni cualquier información del comprador.
+const previousVersionSha='dcb920eb039c3fac74042364a8b3eb7f0728dffeab3fedd8fe64d8d35dbaceb5';
+if(sha(Buffer.from(html,'utf8'))!==previousVersionSha)throw Error('Versión estable V4.5.13 no coincide');
+const startBefore="let state={products:readArray(KEYS.products,DEFAULT_PRODUCTS),combos:readArray(KEYS.combos,DEFAULT_COMBOS)";
+const startAfter="let state={products:(()=>{\n  const saved=readArray(KEYS.products,DEFAULT_PRODUCTS);\n  if(saved.length)return saved;\n  // No es una búsqueda vacía: un catálogo local vacío no debe ocultar todo el inventario.\n  const restored=clone(DEFAULT_PRODUCTS);\n  try{localStorage.setItem(KEYS.products,JSON.stringify(restored));}catch(_error){}\n  return restored;\n})(),combos:readArray(KEYS.combos,DEFAULT_COMBOS)";
+if(html.split(startBefore).length!==2)throw Error('No se puede localizar el fragmento del catálogo: start');
+html=html.replace(startBefore,startAfter);
+const listenerBefore="    snap=>{\n      const rows=snap.docs.map(d=>({id:d.id,...d.data()}));\n      localSet(localKey,rows);\n      rerenderAfterRemote();\n    },";
+const listenerAfter="    snap=>{\n      const rows=snap.docs.map(d=>({id:d.id,...d.data()}));\n      if(localKey===LOCAL_KEYS.products){\n        // Evitar borrar un catálogo existente cuando Cloud Firestore aún no contiene\n        // productos publicados o entrega una instantánea vacía temporal.\n        if(rows.length===0)return;\n        // No reemplazar productos válidos por documentos incompletos.\n        if(!rows.every(p=>p && String(p.name||'').trim() && Number.isFinite(Number(p.price))))return;\n      }\n      localSet(localKey,rows);\n      rerenderAfterRemote();\n    },";
+if(html.split(listenerBefore).length!==2)throw Error('No se puede localizar el fragmento del catálogo: listener');
+html=html.replace(listenerBefore,listenerAfter);
 const output=Buffer.from(html,'utf8');
-const expected='dcb920eb039c3fac74042364a8b3eb7f0728dffeab3fedd8fe64d8d35dbaceb5';
+const expected='f9a8a53d9db169d95edd50d911a7446aabbb66f4b492abc1e7c016493de75926';
 if(sha(output)!==expected)throw Error(`Built HTML hash mismatch: ${sha(output)}`);
 mkdirSync('dist',{recursive:true});
 writeFileSync('dist/index.html',output);
-console.log(`CruLox V4.5.13 generated, ${output.length} bytes, SHA-256 ${expected}`);
+console.log(`CruLox V4.5.14 generated, ${output.length} bytes, SHA-256 ${expected}`);

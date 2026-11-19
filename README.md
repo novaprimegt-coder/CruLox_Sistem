@@ -1,9 +1,10 @@
-# CruLox Sistem V4.5.13
+# CruLox Sistem V4.5.14
 
-Cambio limitado a la cobertura geográfica mostrada en tarjetas, también las que agrupan variantes (por ejemplo, diamantes), y detalles de productos; además, nueva cabecera del menú lateral.
+## Corrección puntual de desaparición de productos
 
-Los países no se presuponen ni se inventan. El mapa `COVERAGE_BY_PRODUCT` de `availability-regions-4.5.12.js` está inicialmente vacío y se completará con los países oficiales que indique la administración. Permite asignar países por identificador o nombre exacto del producto; si la información está ausente, se muestra «Países por definir». También respeta `availableCountries` si un catálogo sincronizado lo proporciona.
+- Cuando la lista local de productos está vacía por pérdida o error de sincronización, se recuperan los 10 productos y variantes del catálogo base aprobado, respetando sus nombres, precios e imágenes.
+- Cuando Firestore entrega una lista de productos vacía o documentos incompletos, la tienda conserva el último catálogo local válido. Si la colección contiene productos completos, mantiene la sincronización existente.
+- Nunca se reemplaza una lista local no vacía al iniciar el sistema.
+- Se conserva el diseño de disponibilidad por país y la cabecera lateral V4.5.13, y no se modifican compras, pagos, pedidos, usuarios, ni el panel administrativo.
 
-La cabecera lateral reutiliza el logotipo oficial con una presentación visual mejorada. No se modificaron pagos, pedidos, precios, inventario, cuentas, Firebase ni el panel administrativo.
-
-El archivo publicado se genera desde la última base estable y se verifica mediante SHA-256 para impedir cambios inesperados. La configuración de países en el código se publica mediante GitHub y Vercel; el editor administrativo de la tienda permanece deshabilitado por seguridad y no debe presentarse como herramienta de edición operativa.
+La corrección no recupera automáticamente productos personalizados que ya se hubieran perdido de cualquier almacenamiento. La integración central de catálogo sigue dependiendo de permisos y datos efectivos de Firestore. El HTML final se verifica por SHA-256 antes del despliegue.
